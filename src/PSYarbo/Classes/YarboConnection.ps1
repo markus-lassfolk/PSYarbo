@@ -35,7 +35,7 @@ class YarboConnection {
     # Signal released whenever an event is added to TelemetryQueue
     hidden [System.Threading.SemaphoreSlim]$TelemetrySignal
     # Bounded log of recent push-telemetry events (DeviceMSG, heartbeat, feedback)
-    hidden [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryLog
+    [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryLog
 
     YarboConnection() {
         $this.ResponseQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
