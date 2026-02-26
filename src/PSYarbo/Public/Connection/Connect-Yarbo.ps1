@@ -187,7 +187,8 @@ function Connect-Yarbo {
                                     Topic       = $topic
                                 })
                             if ($conn.TelemetryLog.Count -gt 200) { 
-                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
                             }
                         }
                     } elseif ($topic -like '*/device/plan_feedback') {
@@ -207,7 +208,8 @@ function Connect-Yarbo {
                                     Topic       = $topic
                                 })
                             if ($conn.TelemetryLog.Count -gt 200) { 
-                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
                             }
                         }
                     } elseif ($topic -like '*/device/recharge_feedback') {
@@ -227,7 +229,8 @@ function Connect-Yarbo {
                                     Topic       = $topic
                                 })
                             if ($conn.TelemetryLog.Count -gt 200) { 
-                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
                             }
                         }
                     }
