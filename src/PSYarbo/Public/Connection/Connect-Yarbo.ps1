@@ -180,6 +180,7 @@ function Connect-Yarbo {
                 }
             }
         } catch {
+            $originalError = $_
             $conn.State = [MqttConnectionState]::Disconnected
             if ($conn.MqttClient) {
                 try {
@@ -189,9 +190,9 @@ function Connect-Yarbo {
                 }
             }
             $conn.Dispose()
-            if ($_.Exception -is [YarboException]) { throw }
+            if ($originalError.Exception -is [YarboException]) { throw }
             throw [YarboConnectionException]::new(
-                "Failed to connect to MQTT broker at ${Broker}:${Port}: $($_.Exception.Message)",
+                "Failed to connect to MQTT broker at ${Broker}:${Port}: $($originalError.Exception.Message)",
                 $Broker
             )
         }

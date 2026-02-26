@@ -35,8 +35,6 @@ class YarboTelemetry {
     [int]$UltrasonicLeftFront
     [int]$UltrasonicMiddle
     [int]$UltrasonicRightFront
-    [int]$ElecNavFrontRight
-    [int]$ElecNavRearRight
 
     # Wireless charging
     [int]$WirelessChargeState
