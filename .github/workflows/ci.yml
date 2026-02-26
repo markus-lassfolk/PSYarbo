@@ -164,7 +164,7 @@ jobs:
           Write-Host "SARIF written with $($allFindings.Count) finding(s)."
 
       - name: Upload SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: output/pssa.sarif
           category: PSScriptAnalyzer
