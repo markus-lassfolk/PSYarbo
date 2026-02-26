@@ -112,7 +112,7 @@ class YarboCloudSession {
         if (-not $response.IsSuccessStatusCode) {
             throw [YarboCloudAuthException]::new(
                 "Token refresh failed with HTTP $([int]$response.StatusCode): $responseBody",
-                [int]$response.StatusCode
+                ([int]$response.StatusCode).ToString()
             )
         }
 
@@ -121,7 +121,7 @@ class YarboCloudSession {
         } catch {
             throw [YarboCloudAuthException]::new(
                 "Token refresh returned non-JSON response: $responseBody",
-                0
+                'INVALID_JSON'
             )
         }
 
@@ -132,7 +132,8 @@ class YarboCloudSession {
                 $this.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
             }
         } else {
-            throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", [string]$result.code)
+            $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
+            throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", $codeStr)
         }
     }
 

@@ -88,18 +88,16 @@ function Connect-Yarbo {
         if (-not $Port) { $Port = $cfg['Port'] }
 
         # Generate unique ClientId per pipeline iteration if not provided
-        if (-not $ClientId) {
-            $ClientId = "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))"
-        }
+        $effectiveClientId = if ($ClientId) { $ClientId } else { "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))" }
 
         $conn = [YarboConnection]::new()
         $conn.Broker = $Broker
         $conn.Port = $Port
         $conn.SerialNumber = $SerialNumber
-        $conn.ClientId = $ClientId
+        $conn.ClientId = $effectiveClientId
         $conn.State = [MqttConnectionState]::Connecting
 
-        Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connecting to ${Broker}:${Port} as $ClientId")
+        Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connecting to ${Broker}:${Port} as $effectiveClientId")
 
         try {
             # Guard: MQTTnet assembly must be loaded before any connection attempt
@@ -117,7 +115,7 @@ function Connect-Yarbo {
 
             # Build connection options
             $optionsBuilder = $conn.MqttFactory.CreateClientOptionsBuilder()
-            $options = $optionsBuilder.WithTcpServer($Broker, $Port).WithClientId($ClientId).WithTimeout(
+            $options = $optionsBuilder.WithTcpServer($Broker, $Port).WithClientId($effectiveClientId).WithTimeout(
                 [TimeSpan]::FromSeconds($TimeoutSeconds)
             ).Build()
 
@@ -136,100 +134,103 @@ function Connect-Yarbo {
             # Set up message handler for routing responses
             $conn.MqttClient.ApplicationMessageReceivedAsync.Add({
                     param($args)
-                    try {
-                        $topic = $args.ApplicationMessage.Topic
-                        $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
+                    $topic = $args.ApplicationMessage.Topic
+                    $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
 
-                        # Guard: skip empty/null payloads
-                        if ($null -eq $payload -or $payload.Length -eq 0) {
-                            return [System.Threading.Tasks.Task]::CompletedTask
+                    # Guard: skip empty/null payloads
+                    if ($null -eq $payload -or $payload.Length -eq 0) {
+                        return [System.Threading.Tasks.Task]::CompletedTask
+                    }
+
+                    if ($topic -like '*/device/data_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.ResponseQueue.Enqueue($decoded)
+                            $conn.ResponseSignal.Release() | Out-Null  # Wake Send-MqttCommand waiter
                         }
-
-                        if ($topic -like '*/device/data_feedback') {
-                            $decoded = ConvertFrom-ZlibPayload -Data $payload
-                            if ($decoded) {
-                                $conn.ResponseQueue.Enqueue($decoded)
-                                $conn.ResponseSignal.Release() | Out-Null  # Wake Send-MqttCommand waiter
+                    } elseif ($topic -like '*/device/heart_beat') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastHeartbeat = [datetime]::UtcNow
+                            $conn.LastWorkingState = [int]($decoded.working_state)
+                            # Reset controller on sleep
+                            if ($decoded.working_state -eq 0 -and $conn.ControllerAcquired) {
+                                $conn.ControllerAcquired = $false
+                                $conn.State = [MqttConnectionState]::Connected
                             }
-                        } elseif ($topic -like '*/device/heart_beat') {
-                            $decoded = ConvertFrom-ZlibPayload -Data $payload
-                            if ($decoded) {
-                                $conn.LastHeartbeat = [datetime]::UtcNow
-                                if ($null -ne $decoded.working_state) {
-                                    $conn.LastWorkingState = [int]($decoded.working_state)
-                                }
-                                # Reset controller on sleep
-                                if ($null -ne $decoded.working_state -and $decoded.working_state -eq 0 -and $conn.ControllerAcquired) {
-                                    $conn.ControllerAcquired = $false
-                                    $conn.State = [MqttConnectionState]::Connected
-                                }
-                                # Enqueue to telemetry event stream
-                                $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
-                                        MessageType = 'HeartBeat'
-                                        Timestamp   = [datetime]::UtcNow
-                                        Data        = $decoded
-                                    })
-                                $conn.TelemetrySignal.Release() | Out-Null
-                            }
-                        } elseif ($topic -like '*/device/DeviceMSG') {
-                            $decoded = ConvertFrom-ZlibPayload -Data $payload
-                            if ($decoded) {
-                                $conn.Robot = ConvertTo-YarboRobot -DeviceMsg $decoded -SerialNumber $conn.SerialNumber -Broker $conn.Broker -Port $conn.Port
-                                # Enqueue to event-driven telemetry stream
-                                $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
-                                        MessageType = 'DeviceMSG'
-                                        Timestamp   = [datetime]::UtcNow
-                                        Data        = $decoded
-                                    })
-                                $conn.TelemetrySignal.Release() | Out-Null
-                                # Keep a bounded telemetry log (last 200 entries)
-                                $conn.TelemetryLog.Add([PSCustomObject]@{
-                                        Timestamp   = [datetime]::UtcNow
-                                        MessageType = 'DeviceMSG'
-                                        Direction   = 'Pushed'
-                                        Topic       = $topic
-                                    })
-                                if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
-                            }
-                        } elseif ($topic -like '*/device/plan_feedback') {
-                            $decoded = ConvertFrom-ZlibPayload -Data $payload
-                            if ($decoded) {
-                                $conn.LastPlanFeedback = $decoded
-                                $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
-                                        MessageType = 'PlanFeedback'
-                                        Timestamp   = [datetime]::UtcNow
-                                        Data        = $decoded
-                                    })
-                                $conn.TelemetrySignal.Release() | Out-Null
-                                $conn.TelemetryLog.Add([PSCustomObject]@{
-                                        Timestamp   = [datetime]::UtcNow
-                                        MessageType = 'PlanFeedback'
-                                        Direction   = 'Pushed'
-                                        Topic       = $topic
-                                    })
-                                if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
-                            }
-                        } elseif ($topic -like '*/device/recharge_feedback') {
-                            $decoded = ConvertFrom-ZlibPayload -Data $payload
-                            if ($decoded) {
-                                $conn.LastRechargeFeedback = $decoded
-                                $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
-                                        MessageType = 'RechargeFeedback'
-                                        Timestamp   = [datetime]::UtcNow
-                                        Data        = $decoded
-                                    })
-                                $conn.TelemetrySignal.Release() | Out-Null
-                                $conn.TelemetryLog.Add([PSCustomObject]@{
-                                        Timestamp   = [datetime]::UtcNow
-                                        MessageType = 'RechargeFeedback'
-                                        Direction   = 'Pushed'
-                                        Topic       = $topic
-                                    })
-                                if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                            # Enqueue to telemetry event stream
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                    MessageType = 'HeartBeat'
+                                    Timestamp   = [datetime]::UtcNow
+                                    Data        = $decoded
+                                })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                        }
+                    } elseif ($topic -like '*/device/DeviceMSG') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.Robot = ConvertTo-YarboRobot -DeviceMsg $decoded -SerialNumber $conn.SerialNumber -Broker $conn.Broker -Port $conn.Port
+                            # Enqueue to event-driven telemetry stream
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                    MessageType = 'DeviceMSG'
+                                    Timestamp   = [datetime]::UtcNow
+                                    Data        = $decoded
+                                })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            # Keep a bounded telemetry log (last 200 entries)
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
+                                    Timestamp   = [datetime]::UtcNow
+                                    MessageType = 'DeviceMSG'
+                                    Direction   = 'Pushed'
+                                    Topic       = $topic
+                                })
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
                             }
                         }
-                    } catch {
-                        Write-Debug "[Connect-Yarbo] MQTT message handler error (non-fatal): $($_.Exception.Message)"
+                    } elseif ($topic -like '*/device/plan_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastPlanFeedback = $decoded
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                    MessageType = 'PlanFeedback'
+                                    Timestamp   = [datetime]::UtcNow
+                                    Data        = $decoded
+                                })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
+                                    Timestamp   = [datetime]::UtcNow
+                                    MessageType = 'PlanFeedback'
+                                    Direction   = 'Pushed'
+                                    Topic       = $topic
+                                })
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
+                            }
+                        }
+                    } elseif ($topic -like '*/device/recharge_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastRechargeFeedback = $decoded
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                    MessageType = 'RechargeFeedback'
+                                    Timestamp   = [datetime]::UtcNow
+                                    Data        = $decoded
+                                })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
+                                    Timestamp   = [datetime]::UtcNow
+                                    MessageType = 'RechargeFeedback'
+                                    Direction   = 'Pushed'
+                                    Topic       = $topic
+                                })
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $discard = $null
+                                $conn.TelemetryLog.TryDequeue([ref]$discard) | Out-Null
+                            }
+                        }
                     }
 
                     return [System.Threading.Tasks.Task]::CompletedTask
@@ -250,10 +251,7 @@ function Connect-Yarbo {
             $conn.State = [MqttConnectionState]::Disconnected
             if ($conn.MqttClient) {
                 try {
-                    $conn.MqttClient.DisconnectAsync(
-                        $conn.MqttFactory.CreateClientDisconnectOptionsBuilder().Build(),
-                        [System.Threading.CancellationToken]::None
-                    ).GetAwaiter().GetResult() | Out-Null
+                    $conn.MqttClient.DisconnectAsync([System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
                 } catch {
                     Write-Debug "MQTT cleanup error (non-fatal): $($_.Exception.Message)"
                 }
