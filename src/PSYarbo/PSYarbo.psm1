@@ -66,4 +66,5 @@ $script:YarboCloudSession = $null
 $script:DefaultConnection = $null
 #endregion
 
-Write-Verbose "PSYarbo module loaded. Version: $((Get-Module PSYarbo).Version)"
+$script:ModuleVersion = (Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot 'PSYarbo.psd1')).ModuleVersion
+Write-Verbose "PSYarbo module loaded. Version: $script:ModuleVersion"

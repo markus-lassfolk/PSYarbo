@@ -155,5 +155,42 @@
       </TableControl>
     </View>
 
+    <!-- YarboSchedule Table View -->
+    <View>
+      <Name>YarboSchedule</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboSchedule</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Id</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Name</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>PlanId</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Enabled</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Days</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Start</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>End</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Weather</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>PlanId</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.Enabled){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>
+                if ($_.WeekDay -eq 127) { 'Daily' }
+                else { ($_.GetDays() | ForEach-Object { $_.ToString().Substring(0,3) }) -join ',' }
+              </ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>StartTime</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>EndTime</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.IsWeatherSchedule){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
   </ViewDefinitions>
 </Configuration>

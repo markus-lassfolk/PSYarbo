@@ -11,6 +11,7 @@
     # MQTTnet loaded via AssemblyLoadContext in PSYarbo.psm1 — not via RequiredAssemblies
     # RequiredAssemblies = @()
     FormatsToProcess  = @('PSYarbo.Format.ps1xml')
+    TypesToProcess    = @('PSYarbo.Types.ps1xml')
     FunctionsToExport = @(
         # Connection
         'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',

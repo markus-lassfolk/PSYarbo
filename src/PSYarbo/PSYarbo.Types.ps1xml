@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PSYarbo.Types.ps1xml
+    Default display property sets for PSYarbo types.
+    These control which properties appear when piping objects to Format-Table/Format-List
+    without explicit property selection.
+-->
+<Types>
+
+  <!-- YarboRobot: key identity + status fields -->
+  <Type>
+    <Name>YarboRobot</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>SerialNumber</Name>
+          <Name>Name</Name>
+          <Name>HeadType</Name>
+          <Name>BatteryCapacity</Name>
+          <Name>WorkingState</Name>
+          <Name>ChargingStatus</Name>
+          <Name>ErrorCode</Name>
+          <Name>RtkStatus</Name>
+          <Name>Heading</Name>
+          <Name>LastUpdated</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboConnection: key connection fields -->
+  <Type>
+    <Name>YarboConnection</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>SerialNumber</Name>
+          <Name>Broker</Name>
+          <Name>Port</Name>
+          <Name>State</Name>
+          <Name>ControllerAcquired</Name>
+          <Name>ConnectedAt</Name>
+          <Name>LastHeartbeat</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboTelemetry: key telemetry fields -->
+  <Type>
+    <Name>YarboTelemetry</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>Timestamp</Name>
+          <Name>SerialNumber</Name>
+          <Name>BatteryCapacity</Name>
+          <Name>WorkingState</Name>
+          <Name>RtkStatus</Name>
+          <Name>Heading</Name>
+          <Name>X</Name>
+          <Name>Y</Name>
+          <Name>OdomConfidence</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboPlan: key plan fields -->
+  <Type>
+    <Name>YarboPlan</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>Id</Name>
+          <Name>Name</Name>
+          <Name>AreaIds</Name>
+          <Name>EnableSelfOrder</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboSchedule: key schedule fields -->
+  <Type>
+    <Name>YarboSchedule</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>Id</Name>
+          <Name>Name</Name>
+          <Name>PlanId</Name>
+          <Name>Enabled</Name>
+          <Name>WeekDay</Name>
+          <Name>StartTime</Name>
+          <Name>EndTime</Name>
+          <Name>IsWeatherSchedule</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboCommandResult: key result fields -->
+  <Type>
+    <Name>YarboCommandResult</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>Topic</Name>
+          <Name>Success</Name>
+          <Name>TimedOut</Name>
+          <Name>State</Name>
+          <Name>Message</Name>
+          <Name>Timestamp</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboLightState: all LED channels -->
+  <Type>
+    <Name>YarboLightState</Name>
+    <Members>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>HeadLight</Name>
+          <Name>LeftWhite</Name>
+          <Name>RightWhite</Name>
+          <Name>BodyLeftRed</Name>
+          <Name>BodyRightRed</Name>
+          <Name>TailLeftRed</Name>
+          <Name>TailRightRed</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+</Types>
