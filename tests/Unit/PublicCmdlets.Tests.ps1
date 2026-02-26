@@ -166,7 +166,7 @@ InModuleScope PSYarbo {
             $conn.Dispose()
 
             $result | Should -Not -BeNullOrEmpty
-            $result | Should -BeOfType [YarboTelemetry]
+            $result.GetType().Name | Should -Be 'YarboTelemetry'
             $result.BatteryCapacity | Should -Be 83
         }
 

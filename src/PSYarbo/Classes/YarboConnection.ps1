@@ -31,11 +31,11 @@ class YarboConnection {
     # Signal released each time a response is enqueued; eliminates busy-wait
     hidden [System.Threading.SemaphoreSlim]$ResponseSignal
     # Event-driven telemetry queue for Watch-YarboTelemetry (tagged PSCustomObjects)
-    hidden [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryQueue
+    [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryQueue
     # Signal released whenever an event is added to TelemetryQueue
     hidden [System.Threading.SemaphoreSlim]$TelemetrySignal
     # Bounded log of recent push-telemetry events (DeviceMSG, heartbeat, feedback)
-    hidden [System.Collections.Generic.List[PSCustomObject]]$TelemetryLog
+    [System.Collections.Generic.List[PSCustomObject]]$TelemetryLog
 
     YarboConnection() {
         $this.ResponseQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()

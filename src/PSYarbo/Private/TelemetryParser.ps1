@@ -15,6 +15,7 @@ function ConvertFrom-GnggaSentence {
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory)]
+        [AllowEmptyString()]
         [string]$Sentence
     )
 
