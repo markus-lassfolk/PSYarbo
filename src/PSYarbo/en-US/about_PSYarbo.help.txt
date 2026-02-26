@@ -1,0 +1,54 @@
+TOPIC
+    about_PSYarbo
+
+SHORT DESCRIPTION
+    PowerShell module for controlling Yarbo robot mowers via local MQTT
+    and cloud REST API.
+
+LONG DESCRIPTION
+    PSYarbo provides cmdlets for:
+
+    - Discovering and connecting to Yarbo robots on the local network
+    - Reading robot status, battery, firmware, and telemetry
+    - Controlling lights, buzzer, plans, and manual drive
+    - Streaming real-time telemetry data
+    - Managing plans, schedules, and maps
+    - Cloud operations: device listing, video tokens, plan history
+
+    QUICK START
+
+        # Connect to your robot
+        Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
+
+        # Check status
+        Get-YarboStatus
+
+        # Turn on lights
+        Set-YarboLight AllOn
+
+        # Stream telemetry for 5 minutes
+        Watch-YarboTelemetry -Duration 00:05:00
+
+        # Disconnect
+        Disconnect-Yarbo
+
+    TRANSPORT LAYERS
+
+        Local MQTT (primary):
+          Direct connection to the robot's EMQX MQTT broker.
+          Anonymous auth, zlib-compressed JSON payloads.
+
+        Cloud REST:
+          JWT-authenticated REST API via AWS API Gateway.
+
+    CONFIGURATION
+
+        1. Explicit cmdlet parameters
+        2. Environment variables ($env:YARBO_BROKER, etc.)
+        3. Config file (~/.psyarbo/config.json)
+        4. Module defaults
+
+SEE ALSO
+    about_PSYarbo_MQTT
+    Connect-Yarbo
+    Connect-YarboCloud

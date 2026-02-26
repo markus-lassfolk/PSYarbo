@@ -1,0 +1,87 @@
+TOPIC
+    about_PSYarbo_MQTT
+
+SHORT DESCRIPTION
+    How PSYarbo communicates with Yarbo robots over local MQTT.
+
+LONG DESCRIPTION
+    PSYarbo uses MQTTnet (loaded via an isolated AssemblyLoadContext) to
+    connect directly to the EMQX MQTT broker embedded in each Yarbo robot.
+    The connection is anonymous (no username/password), uses port 1883, and
+    carries zlib-compressed JSON payloads.
+
+    BROKER ADDRESS
+        The robot runs an EMQX MQTT broker on port 1883.  Its IP address
+        can be found in the Yarbo app (Settings → Network) or via
+        Find-Yarbo -Subnet <your-subnet>.
+
+    TOPIC LAYOUT
+        Publish (app → robot):
+            snowbot/{SN}/app/{command}
+
+        Subscribe (robot → app):
+            snowbot/{SN}/device/heart_beat     — 1 Hz heartbeat with state
+            snowbot/{SN}/device/DeviceMSG      — Full telemetry (periodic)
+            snowbot/{SN}/device/data_feedback  — Command acknowledgement
+
+    PAYLOAD FORMAT
+        All payloads are zlib-compressed UTF-8 JSON.  Some messages
+        (notably heart_beat from certain firmware versions) may arrive as
+        plain UTF-8 JSON — ConvertFrom-ZlibPayload handles both.
+
+        Outbound example:
+            {"timeStamp": 1740560400}     → zlib compressed → MQTT publish
+
+        Inbound data_feedback example:
+            {"topic":"get_controller","state":0,"msg":"success","data":{}}
+
+    CONTROLLER LOCK
+        Before any action command (start_plan, cmd_vel, set_light, …) can
+        be executed, the robot requires the app to "acquire the controller"
+        by sending:
+            snowbot/{SN}/app/get_controller
+
+        PSYarbo handles this automatically during Connect-Yarbo.  If the
+        controller is held by another client (e.g. the mobile app), the
+        command will be rejected with state != 0.
+
+        To acquire manually:
+            Send-YarboCommand -Command get_controller
+
+    SERIAL NUMBER DISCOVERY
+        The serial number (SN) is part of every MQTT topic.  Find-Yarbo
+        derives the SN by subscribing to `snowbot/+/device/heart_beat`
+        and extracting the second topic segment.
+
+    SEMAPHORE / INFLIGHT LIMIT
+        PSYarbo enforces a single-inflight command per connection using a
+        SemaphoreSlim(1,1).  This prevents response mismatches when commands
+        overlap.  The semaphore has a 30-second acquisition timeout.
+
+    RESPONSE SIGNAL
+        Instead of a busy-wait (Thread.Sleep) loop, PSYarbo uses a
+        SemaphoreSlim ResponseSignal that is released each time a
+        data_feedback message arrives.  Send-MqttCommand blocks on this
+        signal until the expected response arrives or the timeout expires.
+
+    ASSEMBLYLLOADCONTEXT ISOLATION
+        MQTTnet.dll is loaded into a named, collectible AssemblyLoadContext
+        (PSYarboMqttContext) to avoid binding conflicts with other modules
+        that may load a different version of MQTTnet.  This is intentional
+        — see PSYarbo-ARCHITECTURE.md §13 for rationale.
+
+    COMPATIBILITY
+        Tested firmware:
+            Yarbo G1 / snowblower head (SnowBlower)  — fully supported
+            Yarbo G1 / mower head                    — partially tested;
+                mowing plans and chute/roller commands are not applicable.
+
+        Untested but expected to work:
+            Any Yarbo G1 body with other heads, as long as the robot
+            publishes on the snowbot/+/device/ topic hierarchy.
+
+SEE ALSO
+    about_PSYarbo
+    Connect-Yarbo
+    Find-Yarbo
+    Send-YarboCommand

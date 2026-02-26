@@ -50,13 +50,13 @@ jobs:
         run: |
           $config = New-PesterConfiguration
           $config.Run.Path            = './tests'
+          $config.Run.Exit            = $true
           $config.Output.Verbosity    = 'Detailed'
           $config.TestResult.Enabled  = $true
           $config.TestResult.OutputPath   = 'output/test-results/pester.xml'
           $config.TestResult.OutputFormat = 'NUnitXml'
           New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
-          $result = Invoke-Pester -Configuration $config -PassThru
-          if ($result.FailedCount -gt 0) { exit 1 }
+          Invoke-Pester -Configuration $config
 
   # ── Build & publish ───────────────────────────────────────────────────────
   release:

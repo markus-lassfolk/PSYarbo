@@ -26,6 +26,9 @@ secrets.ps1
 *.pfx
 *.key
 
+# Yarbo RSA public key — extract from the Yarbo app (see assets/rsa_key/README.md)
+assets/rsa_key/rsa_public_key.pem
+
 # IDE
 .idea/
 .vscode/

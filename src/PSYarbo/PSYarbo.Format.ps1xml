@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <ViewDefinitions>
+
+    <!-- YarboRobot Table View -->
+    <View>
+      <Name>YarboRobot</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboRobot</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>SerialNumber</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Battery</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>RTK</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Heading</Label><Width>10</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Error</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>SerialNumber</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>"$($_.BatteryCapacity)%"</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.WorkingState){'Active'}else{'Idle'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>RtkStatus</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[math]::Round($_.Heading, 1)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>ErrorCode</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- YarboRobot List View -->
+    <View>
+      <Name>YarboRobotList</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboRobot</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem><PropertyName>SerialNumber</PropertyName></ListItem>
+              <ListItem><PropertyName>Name</PropertyName></ListItem>
+              <ListItem><PropertyName>HeadType</PropertyName></ListItem>
+              <ListItem><PropertyName>BatteryCapacity</PropertyName></ListItem>
+              <ListItem><PropertyName>BatteryStatus</PropertyName></ListItem>
+              <ListItem><PropertyName>WorkingState</PropertyName></ListItem>
+              <ListItem><PropertyName>ChargingStatus</PropertyName></ListItem>
+              <ListItem><PropertyName>ErrorCode</PropertyName></ListItem>
+              <ListItem><PropertyName>Heading</PropertyName></ListItem>
+              <ListItem><PropertyName>RtkStatus</PropertyName></ListItem>
+              <ListItem><PropertyName>OdomConfidence</PropertyName></ListItem>
+              <ListItem><PropertyName>ChuteAngle</PropertyName></ListItem>
+              <ListItem><PropertyName>LastUpdated</PropertyName></ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!-- YarboTelemetry Table View -->
+    <View>
+      <Name>YarboTelemetry</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboTelemetry</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Time</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Battery</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>RTK</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Heading</Label><Width>10</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>X</Label><Width>10</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Y</Label><Width>10</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Conf</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><ScriptBlock>$_.Timestamp.ToString('HH:mm:ss.ff')</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>"$($_.BatteryCapacity)%"</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.WorkingState){'Active'}else{'Idle'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>RtkStatus</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[math]::Round($_.Heading, 1)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[math]::Round($_.X, 3)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[math]::Round($_.Y, 3)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>[math]::Round($_.OdomConfidence, 3)</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- YarboLightState Table View -->
+    <View>
+      <Name>YarboLightState</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboLightState</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Head</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>L.White</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>R.White</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>BL.Red</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>BR.Red</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>TL.Red</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>TR.Red</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>HeadLight</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>LeftWhite</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>RightWhite</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>BodyLeftRed</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>BodyRightRed</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>TailLeftRed</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>TailRightRed</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- YarboPlan Table View -->
+    <View>
+      <Name>YarboPlan</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboPlan</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Id</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Name</Label><Width>30</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Areas</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>SelfOrder</Label><Width>10</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$_.AreaIds -join ', '</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.EnableSelfOrder){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- YarboSchedule Table View -->
+    <View>
+      <Name>YarboSchedule</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboSchedule</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Id</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Name</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>PlanId</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Enabled</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Days</Label><Width>20</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Start</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>End</Label><Width>8</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Weather</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>PlanId</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.Enabled){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>
+                if ($_.WeekDay -eq 127) { 'Daily' }
+                else { ($_.GetDays() | ForEach-Object { $_.ToString().Substring(0,3) }) -join ',' }
+              </ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>StartTime</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>EndTime</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if($_.IsWeatherSchedule){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+  </ViewDefinitions>
+</Configuration>

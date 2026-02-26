@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   checks: write          # upload test results
+  pull-requests: write   # PR comments from EnricoMi test reporter
   security-events: write # upload SARIF
 
 jobs:
@@ -21,7 +22,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PSScriptAnalyzer
         shell: pwsh
@@ -37,7 +38,9 @@ jobs:
                          Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' }
           $findings  = @()
           foreach ($f in $srcFiles) {
-            $findings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings -Severity Error,Warning
+            $findings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings -Severity Error,Warning 2>&1 |
+              Where-Object { $_ -is [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord] -and
+                             $_.Severity -in 'Error','Warning' }
           }
           if ($findings.Count -gt 0) {
             $findings | Format-Table -AutoSize
@@ -55,7 +58,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Pester
         shell: pwsh
@@ -75,28 +78,27 @@ jobs:
           Import-Module Pester -MinimumVersion 5.0.0 -Force
           $config = New-PesterConfiguration
           $config.Run.Path              = './tests'
+          $config.Run.Exit              = $true
           $config.Output.Verbosity      = 'Detailed'
           $config.TestResult.Enabled    = $true
           $config.TestResult.OutputPath = 'output/test-results/pester-${{ matrix.os }}.xml'
           $config.TestResult.OutputFormat = 'NUnitXml'
           New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
-          $result = Invoke-Pester -Configuration $config -PassThru
-          if ($result.FailedCount -gt 0) { exit 1 }
+          Invoke-Pester -Configuration $config
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pester-results-${{ matrix.os }}
           path: output/test-results/*.xml
 
       - name: Publish test results
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
         with:
-          name: Pester (${{ matrix.os }})
-          path: output/test-results/*.xml
-          reporter: java-junit
+          check_name: Pester (${{ matrix.os }})
+          files: output/test-results/*.xml
 
   analyze:
     name: Code Scanning (SARIF)
@@ -106,7 +108,7 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PSScriptAnalyzer
         shell: pwsh
@@ -164,7 +166,7 @@ jobs:
           Write-Host "SARIF written with $($allFindings.Count) finding(s)."
 
       - name: Upload SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: output/pssa.sarif
           category: PSScriptAnalyzer
