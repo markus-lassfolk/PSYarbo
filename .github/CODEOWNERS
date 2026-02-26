@@ -1,0 +1,5 @@
+# Global owner — all files require review by @markus-lassfolk
+* @markus-lassfolk
+
+# Workflow changes need extra scrutiny
+.github/workflows/ @markus-lassfolk

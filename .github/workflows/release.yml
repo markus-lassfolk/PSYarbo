@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # create GitHub release
+  checks: write
+
+jobs:
+  # ── Re-run full CI before releasing ──────────────────────────────────────
+  lint:
+    name: Lint (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Lint
+        shell: pwsh
+        run: |
+          $findings = Get-ChildItem -Path './src' -Include '*.ps1','*.psm1','*.psd1' -Recurse |
+            Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' } |
+            ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Settings './PSScriptAnalyzerSettings.psd1' -Severity Error,Warning }
+          if ($findings) { $findings | Format-Table -AutoSize; exit 1 }
+
+  test:
+    name: Test (ubuntu-latest)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install modules
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester          -MinimumVersion 5.0.0  -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path            = './tests'
+          $config.Output.Verbosity    = 'Detailed'
+          $config.TestResult.Enabled  = $true
+          $config.TestResult.OutputPath   = 'output/test-results/pester.xml'
+          $config.TestResult.OutputFormat = 'NUnitXml'
+          New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
+          $result = Invoke-Pester -Configuration $config -PassThru
+          if ($result.FailedCount -gt 0) { exit 1 }
+
+  # ── Build & publish ───────────────────────────────────────────────────────
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for changelog extraction
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v1.2.3
+          VERSION="${TAG#v}"                # e.g. 1.2.3
+          echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install PSScriptAnalyzer + Pester
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+          Install-Module -Name Pester          -MinimumVersion 5.0.0  -Scope CurrentUser -Force -SkipPublisherCheck
+
+      - name: Build module
+        shell: pwsh
+        run: |
+          ./build/build.ps1 -Version '${{ steps.version.outputs.version }}' -Verbose
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Extract the block between the version header and the next one
+          NOTES=$(awk "/^## \[$VERSION\]/{flag=1;next} /^## \[/{flag=0} flag" CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details."
+          fi
+          # Write to a file to avoid quoting issues
+          echo "$NOTES" > release-notes.txt
+          cat release-notes.txt
+
+      - name: Upload built module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSYarbo-${{ steps.version.outputs.version }}
+          path: output/PSYarbo/
+
+      - name: Publish to PowerShell Gallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+            Write-Warning 'PSGALLERY_API_KEY secret not set — skipping PSGallery publish.'
+            exit 0
+          }
+          Publish-Module -Path './output/PSYarbo' -NuGetApiKey $env:PSGALLERY_API_KEY -Verbose
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: PSYarbo ${{ steps.version.outputs.version }}
+          body_path: release-notes.txt
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          files: output/PSYarbo/**/*

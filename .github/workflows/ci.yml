@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write          # upload test results
+  security-events: write # upload SARIF
+
+jobs:
+  lint:
+    name: Lint (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Run PSScriptAnalyzer (fail on Error/Warning)
+        shell: pwsh
+        run: |
+          $settings  = './PSScriptAnalyzerSettings.psd1'
+          $srcFiles  = Get-ChildItem -Path './src' -Include '*.ps1','*.psm1','*.psd1' -Recurse |
+                         Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' }
+          $findings  = @()
+          foreach ($f in $srcFiles) {
+            $findings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings -Severity Error,Warning
+          }
+          if ($findings.Count -gt 0) {
+            $findings | Format-Table -AutoSize
+            exit 1
+          }
+          Write-Host "PSSA: 0 findings — PASSED" -ForegroundColor Green
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -MinimumVersion 5.0.0 -Scope CurrentUser -Force -SkipPublisherCheck
+
+      - name: Install PSScriptAnalyzer (for PSSA tests)
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $config = New-PesterConfiguration
+          $config.Run.Path              = './tests'
+          $config.Output.Verbosity      = 'Detailed'
+          $config.TestResult.Enabled    = $true
+          $config.TestResult.OutputPath = 'output/test-results/pester-${{ matrix.os }}.xml'
+          $config.TestResult.OutputFormat = 'NUnitXml'
+          New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
+          $result = Invoke-Pester -Configuration $config -PassThru
+          if ($result.FailedCount -gt 0) { exit 1 }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-results-${{ matrix.os }}
+          path: output/test-results/*.xml
+
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Pester (${{ matrix.os }})
+          path: output/test-results/*.xml
+          reporter: java-junit
+
+  analyze:
+    name: Code Scanning (SARIF)
+    runs-on: ubuntu-latest
+    needs: lint
+    permissions:
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Run PSScriptAnalyzer → SARIF
+        shell: pwsh
+        run: |
+          $settings = './PSScriptAnalyzerSettings.psd1'
+          $srcFiles = Get-ChildItem -Path './src' -Include '*.ps1','*.psm1','*.psd1' -Recurse |
+                        Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' }
+          $allFindings = @()
+          foreach ($f in $srcFiles) {
+            $allFindings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings
+          }
+
+          # Convert to SARIF
+          $runs = @(
+            @{
+              tool = @{
+                driver = @{
+                  name    = 'PSScriptAnalyzer'
+                  version = (Get-Module PSScriptAnalyzer).Version.ToString()
+                  rules   = @()
+                }
+              }
+              results = $allFindings | ForEach-Object {
+                $sev = switch ($_.Severity) {
+                  'Error'       { 'error' }
+                  'Warning'     { 'warning' }
+                  'Information' { 'note' }
+                  default       { 'note' }
+                }
+                @{
+                  ruleId  = $_.RuleName
+                  level   = $sev
+                  message = @{ text = $_.Message }
+                  locations = @(
+                    @{
+                      physicalLocation = @{
+                        artifactLocation = @{ uri = $_.ScriptPath -replace '\\','/' }
+                        region           = @{ startLine = $_.Line; startColumn = $_.Column }
+                      }
+                    }
+                  )
+                }
+              }
+            }
+          )
+          $sarif = @{ version = '2.1.0'; runs = $runs } | ConvertTo-Json -Depth 20
+          New-Item -ItemType Directory -Path 'output' -Force | Out-Null
+          Set-Content -Path 'output/pssa.sarif' -Value $sarif -Encoding UTF8
+          Write-Host "SARIF written with $($allFindings.Count) finding(s)."
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: output/pssa.sarif
+          category: PSScriptAnalyzer
