@@ -315,8 +315,9 @@ Describe 'Private Functions' {
         It 'Handles empty payload gracefully' {
             $compressed = ConvertTo-ZlibPayload -Payload @{}
             $decompressed = ConvertFrom-ZlibPayload -Data $compressed
-            # Empty payloads return $null (guarded) rather than throwing
-            $decompressed | Should -BeNullOrEmpty
+            # @{} serialises to '{}' which decompresses to an empty PSCustomObject (not $null)
+            ($null -eq $decompressed) | Should -BeFalse
+            $decompressed | Should -BeOfType [PSCustomObject]
         }
     }
 

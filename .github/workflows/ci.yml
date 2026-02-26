@@ -37,7 +37,9 @@ jobs:
                          Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' }
           $findings  = @()
           foreach ($f in $srcFiles) {
-            $findings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings -Severity Error,Warning
+            $findings += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $settings -Severity Error,Warning 2>&1 |
+              Where-Object { $_ -is [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord] -and
+                             $_.Severity -in 'Error','Warning' }
           }
           if ($findings.Count -gt 0) {
             $findings | Format-Table -AutoSize
