@@ -32,6 +32,7 @@ function Set-YarboRoller {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set roller speed=$Speed RPM")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboRoller] Routing via local MQTT → cmd_roller")
             Send-MqttFireAndForget -Connection $conn -Command 'cmd_roller' -Payload @{ vel = $Speed }
         }

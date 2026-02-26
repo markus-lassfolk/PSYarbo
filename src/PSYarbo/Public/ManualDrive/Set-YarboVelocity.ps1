@@ -42,6 +42,7 @@ function Set-YarboVelocity {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set velocity vel=$LinearVelocity rev=$AngularVelocity")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboVelocity] Routing via local MQTT → cmd_vel")
             Send-MqttFireAndForget -Connection $conn -Command 'cmd_vel' -Payload @{ vel = $LinearVelocity; rev = $AngularVelocity }
         }

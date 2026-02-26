@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PSScriptAnalyzer
         shell: pwsh
@@ -55,7 +55,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Pester
         shell: pwsh
@@ -85,14 +85,14 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pester-results-${{ matrix.os }}
           path: output/test-results/*.xml
 
       - name: Publish test results
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         with:
           name: Pester (${{ matrix.os }})
           path: output/test-results/*.xml
@@ -106,7 +106,7 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install PSScriptAnalyzer
         shell: pwsh
@@ -164,7 +164,7 @@ jobs:
           Write-Host "SARIF written with $($allFindings.Count) finding(s)."
 
       - name: Upload SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: output/pssa.sarif
           category: PSScriptAnalyzer

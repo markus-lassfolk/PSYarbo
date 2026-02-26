@@ -35,6 +35,7 @@ function Set-YarboChute {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set chute velocity=$Velocity")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboChute] Routing via local MQTT → cmd_chute")
             Send-MqttFireAndForget -Connection $conn -Command 'cmd_chute' -Payload @{ vel = $Velocity }
         }

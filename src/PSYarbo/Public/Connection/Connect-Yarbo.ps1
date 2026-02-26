@@ -81,7 +81,7 @@ function Connect-Yarbo {
         if (-not $Broker -and $env:YARBO_BROKER) { $Broker = $env:YARBO_BROKER }
         if (-not $SerialNumber -and $env:YARBO_SN) { $SerialNumber = $env:YARBO_SN }
         if (-not $Port -and $env:YARBO_PORT) { $Port = [int]$env:YARBO_PORT }
-        
+
         # Apply final default for Port
         if (-not $Port) { $Port = 1883 }
 
@@ -192,6 +192,11 @@ function Connect-Yarbo {
                 "Failed to connect to MQTT broker at ${Broker}:${Port}: $($_.Exception.Message)",
                 $Broker
             )
+        }
+
+        # Dispose any existing connection for this serial number before overwriting
+        if ($script:YarboConnections.ContainsKey($SerialNumber)) {
+            $script:YarboConnections[$SerialNumber].Dispose()
         }
 
         # Store in module state
