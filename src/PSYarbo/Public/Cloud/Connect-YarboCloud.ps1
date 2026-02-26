@@ -54,7 +54,7 @@ function Connect-YarboCloud {
         } else {
             $session.Email = $Email
             $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
-            else { Join-Path $MyInvocation.MyCommand.Module.ModuleBase '../../assets/rsa_key/rsa_public_key.pem' }
+            else { Join-Path $PSScriptRoot '../../../../assets/rsa_key/rsa_public_key.pem' }
 
             if (-not (Test-Path $rsaKeyPath)) {
                 throw [YarboCloudAuthException]::new(
