@@ -54,7 +54,7 @@ function Connect-YarboCloud {
         } else {
             $session.Email = $Email
             $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
-            else { Join-Path $PSScriptRoot '../../../../assets/rsa_key/rsa_public_key.pem' }
+            else { Join-Path $MyInvocation.MyCommand.Module.ModuleBase '../../assets/rsa_key/rsa_public_key.pem' }
 
             if (-not (Test-Path $rsaKeyPath)) {
                 throw [YarboCloudAuthException]::new(
@@ -113,7 +113,7 @@ function Connect-YarboCloud {
             }
 
             if (-not $result.success) {
-                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", $result.code)
+                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", [string]$result.code)
             }
 
             $session.AccessToken = ConvertTo-SecureString -String $result.data.accessToken -AsPlainText -Force

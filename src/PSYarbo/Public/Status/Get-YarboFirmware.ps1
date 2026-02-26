@@ -1,11 +1,12 @@
 function Get-YarboFirmware {
     <#
 .SYNOPSIS
-    Returns the robot's firmware version information.
+    Returns the robot's hardware identity and optional latest firmware version.
 
 .DESCRIPTION
-    Queries the robot for current firmware version. With -IncludeLatest, also
-    queries the cloud API for the latest available version.
+    Returns the robot's SerialNumber, HeadType, and HeadSerialNumber from the
+    current connection. With -IncludeLatest and an active cloud session, also
+    queries the cloud API for the latest available firmware version.
 
 .PARAMETER Connection
     The connection to query. Defaults to the current default.

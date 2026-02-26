@@ -95,6 +95,8 @@ function Send-MqttCommand {
                 Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'")
                 $Connection.ResponseQueue.Enqueue($response)
                 $Connection.ResponseSignal.Release() | Out-Null
+                # Brief yield to prevent a tight CPU spin when responses keep arriving for other commands
+                Start-Sleep -Milliseconds 50
             }
         }
 

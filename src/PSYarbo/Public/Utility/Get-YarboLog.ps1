@@ -50,6 +50,7 @@ function Get-YarboLog {
         [YarboConnection]$Connection,
 
         [Parameter()]
+        [ValidateRange(1, [int]::MaxValue)]
         [int]$Last = 50,
 
         [Parameter()]

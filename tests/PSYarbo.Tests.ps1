@@ -282,10 +282,10 @@ Describe 'Private Functions' {
         It 'Round-trips a payload through compress/decompress' {
             $payload = @{ state = 1; timeStamp = 1234567890 }
             $compressed = ConvertTo-ZlibPayload -Payload $payload
-            # Assert return is non-empty byte array (avoid piping array to Should -BeOfType [byte])
+            # Assert return is a non-empty byte array using -is to avoid PowerShell enumeration
             $compressed | Should -Not -BeNullOrEmpty
             $compressed.Length | Should -BeGreaterThan 0
-            @($compressed)[0] | Should -BeOfType [byte]
+            ($compressed -is [byte[]]) | Should -BeTrue
 
             $decompressed = ConvertFrom-ZlibPayload -Data $compressed
             $decompressed.state | Should -Be 1
