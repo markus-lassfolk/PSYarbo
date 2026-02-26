@@ -161,7 +161,7 @@ function Connect-Yarbo {
                 }
 
                 return [System.Threading.Tasks.Task]::CompletedTask
-            })
+            }.GetNewClosure())
 
             # Acquire controller unless skipped
             if (-not $NoControllerInit) {

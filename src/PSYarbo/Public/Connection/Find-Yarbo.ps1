@@ -84,7 +84,7 @@ function Find-Yarbo {
     [Array]::Reverse($baseBytes)
     $hostBits  = 32 - $prefixLen
     $baseVal   = [System.BitConverter]::ToUInt32($baseBytes, 0)
-    $baseVal   = $baseVal -band ([uint32]::MaxValue -shl $hostBits)
+    $baseVal   = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
     $baseBytes = [System.BitConverter]::GetBytes($baseVal)
     $hostCount = [math]::Min([math]::Pow(2, $hostBits) - 2, $MaxHosts)
 
@@ -98,7 +98,7 @@ function Find-Yarbo {
 
     for ($i = 1; $i -le $hostCount; $i++) {
         $ipVal = ([System.BitConverter]::ToUInt32($baseBytes, 0)) + $i
-        $newBytes = [System.BitConverter]::GetBytes($ipVal)
+        $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
         # Restore to network byte order for IPAddress constructor
         [Array]::Reverse($newBytes)
         $ip = [System.Net.IPAddress]::new($newBytes).ToString()
