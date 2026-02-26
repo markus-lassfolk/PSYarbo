@@ -89,7 +89,24 @@ function Connect-YarboCloud {
             "$($session.BaseUrl)/yarbo/robot-service/robot/commonUser/login",
             $content
         ).GetAwaiter().GetResult()
-        $result = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
+
+        $responseBody = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+
+        if (-not $response.IsSuccessStatusCode) {
+            throw [YarboCloudAuthException]::new(
+                "Login failed with HTTP $([int]$response.StatusCode): $responseBody",
+                [int]$response.StatusCode
+            )
+        }
+
+        try {
+            $result = $responseBody | ConvertFrom-Json
+        } catch {
+            throw [YarboCloudAuthException]::new(
+                "Login returned non-JSON response: $responseBody",
+                0
+            )
+        }
 
         if (-not $result.success) {
             throw [YarboCloudAuthException]::new("Login failed: $($result.message)", $result.code)

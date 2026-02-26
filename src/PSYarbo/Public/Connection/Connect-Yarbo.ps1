@@ -171,7 +171,11 @@ function Connect-Yarbo {
 
             # Acquire controller unless skipped
             if (-not $NoControllerInit) {
-                Assert-YarboController -Connection $conn
+                try {
+                    Assert-YarboController -Connection $conn
+                } catch [YarboTimeoutException] {
+                    Write-Warning "Controller acquisition timed out (robot may be sleeping). Connection established without controller; use Resume-Yarbo to wake the robot."
+                }
             }
         } catch {
             $conn.State = [MqttConnectionState]::Disconnected

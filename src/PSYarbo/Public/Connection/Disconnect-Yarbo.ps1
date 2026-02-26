@@ -70,11 +70,7 @@ function Disconnect-Yarbo {
                     $conn.State = [MqttConnectionState]::Disconnected
                     $conn.ControllerAcquired = $false
 
-                    # Dispose managed resources
-                    try { $conn.CancellationSource.Dispose() } catch { $null = $_ }
-                    try { if ($conn.MqttClient -is [System.IDisposable]) { $conn.MqttClient.Dispose() } } catch { $null = $_ }
-                    try { $conn.CommandSemaphore.Dispose() } catch { $null = $_ }
-                    try { $conn.ResponseSignal.Dispose() } catch { $null = $_ }
+                    $conn.Dispose()
 
                     $script:YarboConnections.Remove($conn.SerialNumber) | Out-Null
                     if ($script:DefaultConnection -eq $conn) {

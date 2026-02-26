@@ -32,7 +32,7 @@ class YarboCloudSession {
         $isIdempotent = ($method -eq 'GET')
         $lastError = $null
 
-        $maxAttempts = if ($isIdempotent) { [YarboCloudSession]::MaxRetries } else { 1 }
+        $maxAttempts = if ($isIdempotent) { [YarboCloudSession]::MaxRetries + 1 } else { 1 }
 
         for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
             try {
