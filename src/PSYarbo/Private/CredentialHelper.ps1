@@ -7,12 +7,9 @@
     Intended primarily for storing cloud JWT refresh tokens between sessions.
 #>
 
-$script:YarboCredentialDir  = Join-Path $HOME '.psyarbo'
+$script:YarboCredentialDir = Join-Path $HOME '.psyarbo'
 $script:YarboCredentialFile = Join-Path $script:YarboCredentialDir 'credentials.json'
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-    'PSUseShouldProcessForStateChangingFunctions', '',
-    Justification = 'Private credential helper — called only from Connect-YarboCloud which gates ShouldProcess')]
 function Save-YarboCredential {
     <#
     .SYNOPSIS
@@ -24,6 +21,9 @@ function Save-YarboCredential {
     .PARAMETER VaultName
         SecretManagement vault name to use. Defaults to 'PSYarbo'.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Private credential helper — called only from Connect-YarboCloud which gates ShouldProcess')]
     param(
         [Parameter(Mandatory)]
         [string]$Name,
@@ -85,9 +85,6 @@ function Save-YarboCredential {
     Write-Verbose "PSYarbo: Saved credential '$Name' to $script:YarboCredentialFile"
 }
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-    'PSAvoidUsingConvertToSecureStringWithPlainText', '',
-    Justification = 'Credential retrieved from encrypted file storage must be re-wrapped in SecureString')]
 function Get-YarboCredential {
     <#
     .SYNOPSIS
@@ -99,6 +96,9 @@ function Get-YarboCredential {
     .OUTPUTS
         [SecureString] or $null if not found.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+        Justification = 'Credential retrieved from encrypted file storage must be re-wrapped in SecureString')]
     [OutputType([SecureString])]
     param(
         [Parameter(Mandatory)]
@@ -148,9 +148,6 @@ function Get-YarboCredential {
     }
 }
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-    'PSUseShouldProcessForStateChangingFunctions', '',
-    Justification = 'Private credential helper — state-change gate is in the calling public cmdlet')]
 function Remove-YarboCredential {
     <#
     .SYNOPSIS
@@ -160,6 +157,9 @@ function Remove-YarboCredential {
     .PARAMETER VaultName
         SecretManagement vault name. Defaults to 'PSYarbo'.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Private credential helper — state-change gate is in the calling public cmdlet')]
     param(
         [Parameter(Mandatory)]
         [string]$Name,

@@ -1,5 +1,5 @@
 #region Config file path
-$script:YarboConfigDir  = Join-Path $HOME '.psyarbo'
+$script:YarboConfigDir = Join-Path $HOME '.psyarbo'
 $script:YarboConfigFile = Join-Path $script:YarboConfigDir 'config.json'
 #endregion
 
@@ -46,9 +46,9 @@ function Get-YarboConfig {
 
     # Layer 2: environment variables
     if ($env:YARBO_BROKER) { $config['Broker'] = $env:YARBO_BROKER }
-    if ($env:YARBO_SN)     { $config['SN']     = $env:YARBO_SN }
-    if ($env:YARBO_PORT)   { $config['Port']   = [int]$env:YARBO_PORT }
-    if ($env:YARBO_EMAIL)  { $config['Email']  = $env:YARBO_EMAIL }
+    if ($env:YARBO_SN) { $config['SN'] = $env:YARBO_SN }
+    if ($env:YARBO_PORT) { $config['Port'] = [int]$env:YARBO_PORT }
+    if ($env:YARBO_EMAIL) { $config['Email'] = $env:YARBO_EMAIL }
 
     # Layer 3: explicit caller overrides (highest priority, skip null/empty)
     foreach ($key in $Overrides.Keys) {
@@ -59,9 +59,6 @@ function Get-YarboConfig {
     return $config
 }
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-    'PSUseShouldProcessForStateChangingFunctions', '',
-    Justification = 'Private helper — state-change gate is in the calling public cmdlet')]
 function Set-YarboConfig {
     <#
     .SYNOPSIS
@@ -71,6 +68,9 @@ function Set-YarboConfig {
     .PARAMETER Value
         Value to save.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Private helper — state-change gate is in the calling public cmdlet')]
     param(
         [Parameter(Mandatory)]
         [ValidateSet('Broker', 'Port', 'SN', 'Email')]

@@ -44,10 +44,12 @@ function ConvertFrom-GnggaSentence {
             $rawLat = $parts[2]
             $latDeg = [double]($rawLat.Substring(0, 2))
             $latMin = [double]($rawLat.Substring(2))
-            $lat    = $latDeg + $latMin / 60.0
-            if ($parts[3].ToUpper() -eq 'S') { $lat = -$lat }
+            $lat = $latDeg + $latMin / 60.0
+            if ($parts[3].ToUpper() -eq 'S') { $lat = - $lat }
             $result.Latitude = $lat
-        } catch { }
+        } catch {
+            Write-Verbose "PSYarbo: Failed to parse latitude: $($_.Exception.Message)"
+        }
     }
 
     # Longitude: DDDMM.MMMM → decimal degrees
@@ -56,10 +58,12 @@ function ConvertFrom-GnggaSentence {
             $rawLon = $parts[4]
             $lonDeg = [double]($rawLon.Substring(0, 3))
             $lonMin = [double]($rawLon.Substring(3))
-            $lon    = $lonDeg + $lonMin / 60.0
-            if ($parts[5].ToUpper() -eq 'W') { $lon = -$lon }
+            $lon = $lonDeg + $lonMin / 60.0
+            if ($parts[5].ToUpper() -eq 'W') { $lon = - $lon }
             $result.Longitude = $lon
-        } catch { }
+        } catch {
+            Write-Verbose "PSYarbo: Failed to parse longitude: $($_.Exception.Message)"
+        }
     }
 
     # Altitude (field 9)
@@ -150,9 +154,9 @@ function ConvertTo-YarboTelemetry {
     if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $DeviceMsg.rtk_base_data.rover.gngga) {
         $gps = ConvertFrom-GnggaSentence -Sentence ([string]$DeviceMsg.rtk_base_data.rover.gngga)
         $t.FixQuality = $gps.FixQuality
-        $t.Latitude   = $gps.Latitude
-        $t.Longitude  = $gps.Longitude
-        $t.Altitude   = $gps.Altitude
+        $t.Latitude = $gps.Latitude
+        $t.Longitude = $gps.Longitude
+        $t.Altitude = $gps.Altitude
     }
 
     return $t

@@ -69,9 +69,9 @@ function Get-YarboLog {
         $entries = $conn.CommandLog
 
         switch ($Filter) {
-            'Commands'  { $entries = $entries | Where-Object { $_.Direction -like 'Sent*' } }
-            'Received'  { $entries = $entries | Where-Object { $_.Direction -eq 'Received' } }
-            'Errors'    { $entries = $entries | Where-Object { $_.State -and $_.State -ne 0 } }
+            'Commands' { $entries = $entries | Where-Object { $_.Direction -like 'Sent*' } }
+            'Received' { $entries = $entries | Where-Object { $_.Direction -eq 'Received' } }
+            'Errors' { $entries = $entries | Where-Object { $_.State -and $_.State -ne 0 } }
         }
 
         $entries | Select-Object -Last $Last

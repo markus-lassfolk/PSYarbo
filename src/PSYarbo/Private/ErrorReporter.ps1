@@ -64,16 +64,16 @@ function Send-YarboErrorReport {
             extra       = $Extra
             exception   = @{
                 values = @(@{
-                    type       = $Exception.GetType().Name
-                    value      = $message
-                    stacktrace = @{
-                        frames = @(
-                            $Exception.ScriptStackTrace -split "`n" | ForEach-Object {
-                                @{ filename = $_; lineno = 0; function = $_ }
-                            }
-                        )
-                    }
-                })
+                        type       = $Exception.GetType().Name
+                        value      = $message
+                        stacktrace = @{
+                            frames = @(
+                                $Exception.ScriptStackTrace -split "`n" | ForEach-Object {
+                                    @{ filename = $_; lineno = 0; function = $_ }
+                                }
+                            )
+                        }
+                    })
             }
         } | ConvertTo-Json -Depth 10
 
@@ -83,8 +83,7 @@ function Send-YarboErrorReport {
         }
 
         Invoke-RestMethod -Uri $storeUrl -Method POST -Body $payload -Headers $headers -TimeoutSec 5 | Out-Null
-    }
-    catch {
+    } catch {
         # Never let error reporting itself cause failures
         Write-Verbose "Error reporting failed: $_"
     }

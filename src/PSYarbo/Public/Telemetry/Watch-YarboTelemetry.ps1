@@ -103,11 +103,11 @@ function Watch-YarboTelemetry {
 
                 # Filter by message type based on active switches
                 $include = switch ($event.MessageType) {
-                    'DeviceMSG'        { $true }
-                    'HeartBeat'        { [bool]$IncludeHeartbeat }
-                    'PlanFeedback'     { [bool]$IncludePlanFeedback }
+                    'DeviceMSG' { $true }
+                    'HeartBeat' { [bool]$IncludeHeartbeat }
+                    'PlanFeedback' { [bool]$IncludePlanFeedback }
                     'RechargeFeedback' { [bool]$IncludePlanFeedback }
-                    default            { $false }
+                    default { $false }
                 }
                 if (-not $include) { continue }
 
@@ -136,8 +136,8 @@ function Watch-YarboTelemetry {
                 } else {
                     # Heartbeat and feedback events: emit raw data
                     switch ($OutputFormat) {
-                        'Object'  { $PSCmdlet.WriteObject($event.Data) }
-                        'Json'    { $PSCmdlet.WriteObject(($event.Data | ConvertTo-Json -Compress -Depth 10)) }
+                        'Object' { $PSCmdlet.WriteObject($event.Data) }
+                        'Json' { $PSCmdlet.WriteObject(($event.Data | ConvertTo-Json -Compress -Depth 10)) }
                         'Summary' { $PSCmdlet.WriteObject("$($event.Timestamp.ToString('HH:mm:ss')) | Type:$($event.MessageType)") }
                     }
                 }

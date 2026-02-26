@@ -1,6 +1,3 @@
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-    'PSUseSingularNouns', '',
-    Justification = '"Params" is an established abbreviation for Parameters; renaming would break the documented API')]
 function Get-YarboGlobalParams {
     <#
 .SYNOPSIS
@@ -24,6 +21,9 @@ function Get-YarboGlobalParams {
 .LINK
     Set-YarboGlobalParams
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseSingularNouns', '',
+        Justification = '"Params" is an established abbreviation for Parameters; renaming would break the documented API')]
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
     param(
