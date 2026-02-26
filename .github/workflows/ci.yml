@@ -93,9 +93,16 @@ jobs:
           name: pester-results-${{ matrix.os }}
           path: output/test-results/*.xml
 
-      - name: Publish test results
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      - name: Publish test results (Linux)
+        if: always() && runner.os == 'Linux'
+        uses: EnricoMi/publish-unit-test-result-action/linux@v2
+        with:
+          check_name: Pester (${{ matrix.os }})
+          files: output/test-results/*.xml
+
+      - name: Publish test results (Windows)
+        if: always() && runner.os == 'Windows'
+        uses: EnricoMi/publish-unit-test-result-action/windows@v2
         with:
           check_name: Pester (${{ matrix.os }})
           files: output/test-results/*.xml
