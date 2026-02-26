@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   checks: write          # upload test results
+  pull-requests: write   # PR comments from EnricoMi test reporter
   security-events: write # upload SARIF
 
 jobs:
