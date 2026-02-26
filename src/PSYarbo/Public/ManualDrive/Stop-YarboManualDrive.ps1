@@ -37,6 +37,7 @@ function Stop-YarboManualDrive {
         $action = if ($Emergency) { 'Emergency stop' } else { 'Stop manual drive' }
 
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, $action)) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Stop-YarboManualDrive] Routing via local MQTT → $cmd")
             return Send-MqttCommand -Connection $conn -Command $cmd -Payload @{}
         }
