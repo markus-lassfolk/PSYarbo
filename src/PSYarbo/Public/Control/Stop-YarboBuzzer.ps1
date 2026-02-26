@@ -24,6 +24,7 @@ function Stop-YarboBuzzer {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Stop buzzer')) {
+            Assert-YarboController -Connection $conn
             $payload = @{ state = 0; timeStamp = [long]([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) }
             Send-MqttFireAndForget -Connection $conn -Command 'cmd_buzzer' -Payload $payload
         }

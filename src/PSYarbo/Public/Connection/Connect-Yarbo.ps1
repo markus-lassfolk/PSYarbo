@@ -50,7 +50,7 @@ function Connect-Yarbo {
         [string]$SerialNumber,
 
         [Parameter(ParameterSetName = 'Direct')]
-        [int]$Port = 1883,
+        [Nullable[int]]$Port,
 
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Pipeline')]
         [YarboRobot]$Robot,
@@ -72,13 +72,16 @@ function Connect-Yarbo {
         if ($PSCmdlet.ParameterSetName -eq 'Pipeline') {
             $Broker = $Robot.Broker
             $SerialNumber = $Robot.SerialNumber
-            $Port = if ($Robot.Port) { $Robot.Port } else { 1883 }
+            $Port = if ($Robot.Port) { $Robot.Port } else { $null }
         }
 
         # Resolve defaults from environment
         if (-not $Broker -and $env:YARBO_BROKER) { $Broker = $env:YARBO_BROKER }
         if (-not $SerialNumber -and $env:YARBO_SN) { $SerialNumber = $env:YARBO_SN }
         if (-not $Port -and $env:YARBO_PORT) { $Port = [int]$env:YARBO_PORT }
+        
+        # Apply final default for Port
+        if (-not $Port) { $Port = 1883 }
 
         # Generate unique ClientId per pipeline iteration if not provided
         if (-not $ClientId) {
@@ -159,6 +162,20 @@ function Connect-Yarbo {
         }
         catch {
             $conn.State = [MqttConnectionState]::Disconnected
+            if ($conn.MqttClient) {
+                try {
+                    $conn.MqttClient.DisconnectAsync([System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
+                }
+                catch {
+                    # Ignore cleanup errors
+                }
+                try {
+                    $conn.MqttClient.Dispose()
+                }
+                catch {
+                    # Ignore cleanup errors
+                }
+            }
             if ($_.Exception -is [YarboException]) { throw }
             throw [YarboConnectionException]::new(
                 "Failed to connect to MQTT broker at ${Broker}:${Port}: $($_.Exception.Message)",

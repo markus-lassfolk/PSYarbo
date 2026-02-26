@@ -64,7 +64,7 @@ function Find-Yarbo {
         try {
             $client = [System.Net.Sockets.TcpClient]::new()
             $connectTask = $client.ConnectAsync($ip, $Port)
-            if ($connectTask.Wait([TimeSpan]::FromMilliseconds(200))) {
+            if ($connectTask.Wait([TimeSpan]::FromSeconds($TimeoutSeconds))) {
                 if ($client.Connected) {
                     Write-Verbose "[Find-Yarbo] MQTT broker found at ${ip}:${Port}"
                     $robot = [YarboRobot]::new()

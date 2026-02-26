@@ -36,7 +36,7 @@ function Remove-YarboPlan {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Delete plan $PlanId")) {
             Write-Verbose (Protect-YarboLogMessage "[Remove-YarboPlan] Routing via local MQTT → del_plan")
-            Send-MqttCommand -Connection $conn -Command 'del_plan' -Payload @{ planId = "$PlanId" } | Out-Null
+            Send-MqttCommand -Connection $conn -Command 'del_plan' -Payload @{ planId = $PlanId } | Out-Null
         }
     }
 }

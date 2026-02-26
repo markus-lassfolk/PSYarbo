@@ -54,7 +54,7 @@ function Get-YarboPlan {
 
         if ($PSCmdlet.ParameterSetName -eq 'ById') {
             Write-Verbose (Protect-YarboLogMessage "[Get-YarboPlan] Routing via local MQTT → read_plan")
-            $result = Send-MqttCommand -Connection $conn -Command 'read_plan' -Payload @{ planId = "$PlanId" }
+            $result = Send-MqttCommand -Connection $conn -Command 'read_plan' -Payload @{ planId = $PlanId }
             if ($result -and $result.Success -and $result.Data) {
                 $plan = [YarboPlan]::new()
                 $plan.Id = $result.Data.id
