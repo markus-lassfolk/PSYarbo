@@ -191,7 +191,7 @@ function Find-Yarbo {
                         }
                     }
                     return [System.Threading.Tasks.Task]::CompletedTask
-                })
+                }.GetNewClosure())
 
             # Wait for heart_beat
             $gotHb = $signal.Wait($mqttTimeoutMs)

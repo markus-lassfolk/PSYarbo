@@ -100,6 +100,14 @@ function Connect-Yarbo {
         Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connecting to ${Broker}:${Port} as $ClientId")
 
         try {
+            # Guard: MQTTnet assembly must be loaded before any connection attempt
+            if ($null -eq $script:MqttAssembly) {
+                throw [YarboConnectionException]::new(
+                    "MQTTnet assembly is not loaded. Run 'build/Install-Dependencies.ps1' to install it, then restart your PowerShell session.",
+                    $Broker
+                )
+            }
+
             # Create MQTTnet factory and client
             $factory = $script:MqttAssembly.GetType('MQTTnet.MqttFactory')
             $conn.MqttFactory = [System.Activator]::CreateInstance($factory)

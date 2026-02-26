@@ -22,10 +22,10 @@ class YarboCloudSession {
     }
 
     [PSCustomObject] Invoke([string]$method, [string]$path, [hashtable]$body) {
-        return $this.InvokeWithRetry($method, $path, $body, $false)
+        return $this.InvokeWithRetry($method, $path, $body)
     }
 
-    hidden [PSCustomObject] InvokeWithRetry([string]$method, [string]$path, [hashtable]$body, [bool]$isRetry) {
+    hidden [PSCustomObject] InvokeWithRetry([string]$method, [string]$path, [hashtable]$body) {
         $url = "$($this.BaseUrl)$path"
         $bearer = $this.GetBearerToken()
 
