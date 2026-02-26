@@ -120,6 +120,15 @@ function Connect-YarboCloud {
             $session.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
             $session.TokenExpiry = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
             $session.BoundSerialNumbers = @($result.data.snList)
+
+            # Persist refresh token for future sessions (allows auto-login via:
+            #   Connect-YarboCloud -RefreshToken (Get-YarboCredential -Name 'CloudRefreshToken'))
+            try {
+                Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
+            } catch {
+                Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
+            }
         }
 
         # Dispose any existing cloud session before overwriting
