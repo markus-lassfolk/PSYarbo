@@ -46,12 +46,12 @@ function Connect-YarboCloud {
     )
 
     $session = [YarboCloudSession]::new()
-    $session.Email = $Email
 
     if ($PSCmdlet.ParameterSetName -eq 'Token') {
         $session.RefreshToken = $RefreshToken
         $session.RefreshAuth()
     } else {
+        $session.Email = $Email
         $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
         else { Join-Path $PSScriptRoot '../../../../assets/rsa_key/rsa_public_key.pem' }
 
@@ -119,6 +119,7 @@ function Connect-YarboCloud {
     }
 
     $script:YarboCloudSession = $session
-    Write-Verbose (Protect-YarboLogMessage "[Connect-YarboCloud] Authenticated as $Email")
+    $emailMsg = if ($session.Email) { " as $($session.Email)" } else { "" }
+    Write-Verbose (Protect-YarboLogMessage "[Connect-YarboCloud] Authenticated$emailMsg")
     return $session
 }
