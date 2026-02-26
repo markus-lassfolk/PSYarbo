@@ -63,7 +63,7 @@ function Send-MqttCommand {
             Topic     = $topic
             Broker    = "$($Connection.Broker):$($Connection.Port)"
         }
-        $Connection.CommandLog.Add($logEntry)
+        $Connection.CommandLog.Enqueue($logEntry)
 
         if ($NoWait) { return $null }
 
@@ -82,7 +82,7 @@ function Send-MqttCommand {
                 if ($response.topic -eq $Command) {
                     $result = [YarboCommandResult]::new($response)
                     # Log response
-                    $Connection.CommandLog.Add([PSCustomObject]@{
+                    $Connection.CommandLog.Enqueue([PSCustomObject]@{
                             Timestamp = [datetime]::UtcNow
                             Command   = $Command
                             Direction = 'Received'
@@ -143,7 +143,7 @@ function Send-MqttFireAndForget {
     $msg = $msgBuilder.WithTopic($topic).WithPayload($compressed).WithQualityOfServiceLevel(0).Build()
     $Connection.MqttClient.PublishAsync($msg, [System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
 
-    $Connection.CommandLog.Add([PSCustomObject]@{
+    $Connection.CommandLog.Enqueue([PSCustomObject]@{
             Timestamp = [datetime]::UtcNow
             Command   = $Command
             Direction = 'Sent (fire-and-forget)'

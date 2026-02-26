@@ -64,7 +64,7 @@ Describe 'YarboConnection — new telemetry members' {
 
     It 'TelemetryLog is initialized and empty' {
         $conn = [YarboConnection]::new()
-        # Use -ne check to avoid PowerShell enumerating the List when piping
+        # Use -ne check to avoid PowerShell enumerating the ConcurrentQueue when piping
         ($null -ne $conn.TelemetryLog) | Should -BeTrue
         $conn.TelemetryLog.Count | Should -Be 0
     }

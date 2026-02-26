@@ -99,7 +99,7 @@ function Connect-YarboCloud {
             if (-not $response.IsSuccessStatusCode) {
                 throw [YarboCloudAuthException]::new(
                     "Login failed with HTTP $([int]$response.StatusCode): $responseBody",
-                    [int]$response.StatusCode
+                    ([int]$response.StatusCode).ToString()
                 )
             }
 
@@ -108,12 +108,13 @@ function Connect-YarboCloud {
             } catch {
                 throw [YarboCloudAuthException]::new(
                     "Login returned non-JSON response: $responseBody",
-                    0
+                    'INVALID_JSON'
                 )
             }
 
             if (-not $result.success) {
-                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", [string]$result.code)
+                $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
+                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", $codeStr)
             }
 
             $session.AccessToken = ConvertTo-SecureString -String $result.data.accessToken -AsPlainText -Force
