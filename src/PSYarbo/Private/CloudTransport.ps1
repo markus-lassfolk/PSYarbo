@@ -27,9 +27,10 @@ function Invoke-YarboCloudApi {
     $result = $Session.Invoke($Method, $Path, $Body)
 
     if ($result.success -eq $false) {
+        $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
         throw [YarboCloudAuthException]::new(
             "Cloud API call failed: $($result.message). Path: $Path",
-            $result.code
+            $codeStr
         )
     }
 

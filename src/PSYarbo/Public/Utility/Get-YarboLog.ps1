@@ -63,11 +63,11 @@ function Get-YarboLog {
 
         if ($Filter -eq 'Telemetry') {
             # Return push-telemetry events (DeviceMSG, HeartBeat, PlanFeedback, etc.)
-            $conn.TelemetryLog | Select-Object -Last $Last
+            $conn.TelemetryLog.ToArray() | Select-Object -Last $Last
             return
         }
 
-        $entries = $conn.CommandLog
+        $entries = $conn.CommandLog.ToArray()
 
         switch ($Filter) {
             'Commands' { $entries = $entries | Where-Object { $_.Direction -like 'Sent*' } }
