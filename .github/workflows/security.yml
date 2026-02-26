@@ -67,7 +67,8 @@ jobs:
           $findings = Get-ChildItem -Path './src' -Include '*.ps1','*.psm1','*.psd1' -Recurse |
             ForEach-Object {
               Invoke-ScriptAnalyzer -Path $_.FullName -IncludeRule $securityRules -Severity Error,Warning
-            }
+            } |
+            Where-Object { $_.Severity -in 'Error','Warning' }
           if ($findings) {
             Write-Host "## Security findings:" -ForegroundColor Red
             $findings | Format-Table -AutoSize

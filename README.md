@@ -5,19 +5,31 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/markus-lassfolk/PSYarbo.svg)](https://github.com/markus-lassfolk/PSYarbo/issues)
 
-**PSYarbo** is a PowerShell module for local, cloud-free control of [Yarbo](https://www.yarbo.com/) robot mowers via MQTT.
-
-Inspired by the naming conventions of [`PSFalcon`](https://github.com/CrowdStrike/psfalcon), [`PSTeams`](https://github.com/EvotecIT/PSTeams), and [`PSSlack`](https://github.com/RamblingCookieMonster/PSSlack).
+**PSYarbo** is a PowerShell module for local, cloud-free control of [Yarbo](https://www.yarbo.com/) robots via MQTT and optional cloud REST API.
 
 > **Protocol documentation:** [markus-lassfolk/yarbo-reversing](https://github.com/markus-lassfolk/yarbo-reversing)
 
 ---
 
+## Compatibility
+
+| Robot / Head | Local MQTT | Cloud REST | Notes |
+|---|---|---|---|
+| Yarbo G1 + Snow Blower head | ✅ Full | ✅ Full | Primary development target |
+| Yarbo G1 + Mower head | ⚠️ Partial | ✅ Full | Plan start/stop work; snow-specific commands (chute, roller) not applicable |
+| Other Yarbo G1 heads | ❓ Untested | ✅ Expected | Should work if robot publishes on `snowbot/+/device/` topics |
+
+> **Note:** The MQTT topic prefix is `snowbot/` for all Yarbo G1 robots regardless of head type.
+> The `SnowBlower` tag in the module reflects the primary test platform.
+> Mower-specific operations (`cmd_roller`, `cmd_chute_rotate`) are no-ops on mower heads and may return an error from the robot.
+
+---
+
 ## Requirements
 
-- PowerShell 7.2+ (Windows, macOS, or Linux)
-- An MQTT broker reachable on your LAN (EMQX or Mosquitto)
-- Your Yarbo robot connected to the same network
+- PowerShell 7.4+ (Windows, macOS, or Linux)
+- Your Yarbo robot connected to the same LAN as your computer
+- MQTTnet.dll (downloaded automatically by `build/Install-Dependencies.ps1`)
 
 ---
 
@@ -31,7 +43,9 @@ Or manually from this repository:
 
 ```powershell
 git clone https://github.com/markus-lassfolk/PSYarbo.git
-Import-Module ./PSYarbo/PSYarbo.psd1
+cd PSYarbo
+./build/Install-Dependencies.ps1   # downloads MQTTnet.dll
+Import-Module ./src/PSYarbo/PSYarbo.psd1
 ```
 
 ---
@@ -39,41 +53,31 @@ Import-Module ./PSYarbo/PSYarbo.psd1
 ## Quick Start
 
 ```powershell
-# Import the module
-Import-Module PSYarbo
+# Auto-discover robots on the local network
+$robot = Find-Yarbo | Select-Object -First 1
+Write-Host "Found: $($robot.SerialNumber) at $($robot.Broker)"
 
-# Connect to your local MQTT broker
-$broker = Connect-Yarbo -Host "192.168.1.24" -Port 1883
+# Connect (uses the YarboRobot object from Find-Yarbo)
+$conn = $robot | Connect-Yarbo
 
-# Discover all Yarbo robots on the broker
-$robots = Find-YarboRobot -Broker $broker -Timeout 5
-Write-Host "Found $($robots.Count) robot(s)"
+# — OR — connect directly
+$conn = Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
 
-# Select the first robot
-$robot = $robots[0]
-Write-Host "Robot serial: $($robot.Serial)"
+# Check status
+Get-YarboStatus
 
-# Get current status
-$status = Get-YarboStatus -Robot $robot
-Write-Host "Battery:  $($status.BatteryPct)%"
-Write-Host "State:    $($status.State)"         # Mowing / Docked / Charging / Error
-Write-Host "Zone:     $($status.ActiveZone)"
-Write-Host "Position: $($status.GpsLat), $($status.GpsLon)"
+# Check battery
+Get-YarboBattery
 
-# Control the work light
-Set-YarboLight -Robot $robot -On $true    # light on
-Start-Sleep -Seconds 2
-Set-YarboLight -Robot $robot -On $false   # light off
+# Light control
+Set-YarboLight AllOn      # all LEDs on
+Set-YarboLight AllOff     # all LEDs off
 
-# Trigger the buzzer
-Invoke-YarboBuzzer -Robot $robot
+# Stream real-time telemetry for 60 seconds
+Watch-YarboTelemetry -Duration 00:01:00
 
-# Start mowing / return to dock
-# Start-YarboMow -Robot $robot
-# Stop-YarboMow -Robot $robot   # returns to dock
-
-# Disconnect
-Disconnect-Yarbo -Broker $broker
+# Disconnect cleanly
+Disconnect-Yarbo
 ```
 
 ---
@@ -84,65 +88,82 @@ Disconnect-Yarbo -Broker $broker
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Connect-Yarbo` | Connect to your local MQTT broker. Returns a `YarboBroker` object. |
-| `Disconnect-Yarbo` | Disconnect cleanly from the broker. |
+| `Find-Yarbo` | Auto-discover Yarbo robots via MQTT `heart_beat`. Returns `YarboRobot[]`. |
+| `Connect-Yarbo` | Connect to a robot's MQTT broker. Returns `YarboConnection`. |
+| `Disconnect-Yarbo` | Disconnect and dispose resources. |
+| `Test-YarboConnection` | Test if a connection is alive. |
 
-### Discovery
-
-| Cmdlet | Description |
-|--------|-------------|
-| `Find-YarboRobot` | Scan the broker for Yarbo MQTT topics and return `YarboRobot[]` |
-
-### Status & Telemetry
+### Status
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Get-YarboStatus` | Fetch the latest telemetry as a `YarboStatus` object |
-| `Watch-YarboTelemetry` | Stream real-time telemetry to the pipeline (Ctrl+C to stop) |
+| `Get-YarboStatus` | Get full robot status as `YarboRobot`. |
+| `Get-YarboRobot` | Same as `Get-YarboStatus` (alias-style). |
+| `Get-YarboBattery` | Battery capacity and charging status. |
+| `Get-YarboFirmware` | Firmware version info. |
 
 ### Control
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Set-YarboLight` | Turn the work light on or off (`-On $true/$false`) |
-| `Invoke-YarboBuzzer` | Trigger the audible buzzer |
-| `Start-YarboMow` | Start mowing (optionally `-Zone <name>`) |
-| `Stop-YarboMow` | Stop mowing and return to dock |
+| `Set-YarboLight` | Control LED channels (presets: `AllOn`, `AllOff`, `HeadOnly`, `BodyOnly`, `TailOnly`). |
+| `Start-YarboBuzzer` | Trigger the buzzer. |
+| `Stop-YarboBuzzer` | Stop the buzzer. |
+| `Start-YarboPlan` | Start a mowing/snow-clearing plan by ID. |
+| `Stop-YarboPlan` | Stop an active plan. |
+| `Suspend-YarboPlan` | Pause an active plan. |
+| `Resume-YarboPlan` | Resume a paused plan. |
+| `Resume-Yarbo` | Resume the robot from sleep/pause. |
+| `Suspend-Yarbo` | Send the robot to sleep. |
+| `Send-YarboCommand` | Send an arbitrary raw command (advanced). |
 
----
+### Manual Drive *(Snow Blower head only)*
 
-## Status Object Fields
+| Cmdlet | Description |
+|--------|-------------|
+| `Start-YarboManualDrive` | Enter manual drive mode. |
+| `Set-YarboVelocity` | Set linear and angular velocity. |
+| `Set-YarboRoller` | Set roller (auger) speed. |
+| `Set-YarboChute` | Set chute rotation speed/velocity. |
+| `Stop-YarboManualDrive` | Exit manual drive mode. |
 
-```powershell
-$status = Get-YarboStatus -Robot $robot
-$status | Select-Object BatteryPct, State, ActiveZone, GpsLat, GpsLon, ErrorCode
-```
+### Plans & Maps
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `BatteryPct` | `int` | Battery level (0–100) |
-| `State` | `string` | `Mowing`, `Docked`, `Charging`, `Error`, `Returning` |
-| `ActiveZone` | `string` | Active mowing zone name (or `$null`) |
-| `GpsLat` | `double` | GPS latitude (or `$null`) |
-| `GpsLon` | `double` | GPS longitude (or `$null`) |
-| `ErrorCode` | `int` | Error code (0 = no error) |
-| `Raw` | `hashtable` | Full decoded telemetry payload |
+| Cmdlet | Description |
+|--------|-------------|
+| `Get-YarboPlan` | List saved plans. |
+| `New-YarboPlan` | Create a new plan. |
+| `Remove-YarboPlan` | Delete a plan. |
+| `Get-YarboMap` | Get map data. |
+| `Get-YarboSchedule` | Get scheduled plans. |
+| `Set-YarboSchedule` | Update a schedule. |
+
+### Telemetry
+
+| Cmdlet | Description |
+|--------|-------------|
+| `Get-YarboTelemetry` | Get a single telemetry snapshot. |
+| `Watch-YarboTelemetry` | Stream real-time telemetry (Ctrl+C to stop). |
+| `Export-YarboTelemetry` | Export telemetry to CSV/JSON/JSONL. |
+
+### Cloud
+
+| Cmdlet | Description |
+|--------|-------------|
+| `Connect-YarboCloud` | Authenticate with the Yarbo cloud. |
+| `Get-YarboDevice` | List robots bound to your account. |
+| `Get-YarboVideo` | Get video token/URL. |
+| `Get-YarboPlanHistory` | Get plan execution history from cloud. |
 
 ---
 
 ## Protocol
 
-Yarbo robots communicate over MQTT with zlib-compressed JSON payloads:
-
-```
-yarbo/{serial}/heart_beat        ← telemetry (compressed)
-yarbo/{serial}/command/set       ← commands
-yarbo/{serial}/command/response  ← ACKs
-```
-
-Full protocol documentation is in:
+PSYarbo uses the `snowbot/{SN}/...` MQTT topic hierarchy discovered by reverse engineering. Payloads are zlib-compressed UTF-8 JSON. Full documentation:
 
 👉 **[markus-lassfolk/yarbo-reversing](https://github.com/markus-lassfolk/yarbo-reversing)**
+
+See also: `Get-Help about_PSYarbo_MQTT`
 
 ---
 
@@ -151,7 +172,8 @@ Full protocol documentation is in:
 1. Fork the repo
 2. Create a feature branch
 3. Add Pester tests for new cmdlets
-4. Open a PR
+4. `Invoke-Pester` — all tests must pass
+5. Open a PR
 
 ---
 

@@ -1,0 +1,7 @@
+{
+    "mow_speed": 0.4,
+    "cutting_height": 50,
+    "rain_delay": 60,
+    "obstacle_sensitivity": 2,
+    "timestamp": 1771943320.0
+}

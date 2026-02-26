@@ -1,0 +1,17 @@
+{
+    "BatteryMSG": {"capacity": 83, "status": 3, "temp_err": 0, "timestamp": 1771943280.057},
+    "BodyMsg": {"recharge_state": 2},
+    "CombinedOdom": {"phi": -0.359, "x": 1.268, "y": -0.338},
+    "HeadMsg": {"head_type": 1},
+    "HeadSerialMsg": {"head_sn": "243904023M1L1599"},
+    "RTKMSG": {"heading": 339.4576, "heading_status": 1, "status": "4", "heading_dop": 0.6207},
+    "RunningStatusMSG": {"chute_angle": 105, "rain_sensor_data": 0},
+    "StateMSG": {"working_state": 1, "charging_status": 2, "error_code": 0, "machine_controller": 1, "on_going_planning": 0, "planning_paused": 0, "on_going_recharging": 0},
+    "combined_odom_confidence": 0.915,
+    "led": "69666",
+    "route_priority": {"hg0": 10, "wlan0": 600, "wwan0": 50000},
+    "ultrasonic_msg": {"lf_dis": 0, "mt_dis": 0, "rf_dis": 0},
+    "wireless_recharge": {"state": 2, "output_voltage": 4186, "output_current": 1489, "error_code": 0},
+    "rtk_base_data": {"rover": {"gngga": "$GNGGA,142800.10,5920.05710640,N,01829.82358143,E,4,35,0.5,42.3,M,,,*7B"}},
+    "timestamp": 1771943280.0
+}

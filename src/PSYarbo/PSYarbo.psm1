@@ -1,11 +1,11 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 <#
 .SYNOPSIS
-    PSYarbo — PowerShell module for local control of Yarbo robot mowers via MQTT.
+    PSYarbo — PowerShell module for controlling Yarbo robot mowers via local MQTT and cloud REST API.
 
 .DESCRIPTION
     Provides cmdlets to discover, connect to, and control Yarbo robot mowers
-    on a local network using MQTT. No cloud dependency required.
+    on a local network using MQTT, and via cloud REST API for account management.
 
 .NOTES
     Author:  Markus Lassfolk
@@ -16,23 +16,59 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-#region — Auto-load Private functions (not exported)
-$privateDir = Join-Path $PSScriptRoot 'Private'
-if (Test-Path $privateDir) {
-    Get-ChildItem -Path $privateDir -Filter '*.ps1' -Recurse | ForEach-Object {
-        . $_.FullName
-    }
+#region — Load MQTTnet via isolated AssemblyLoadContext
+$libPath = Join-Path $PSScriptRoot 'lib'
+$mqttDllPath = Join-Path $libPath 'MQTTnet.dll'
+
+if (Test-Path $mqttDllPath) {
+    $alcName = 'PSYarboMqttContext'
+    $script:MqttALC = [System.Runtime.Loader.AssemblyLoadContext]::new($alcName, $true)
+    $script:MqttAssembly = $script:MqttALC.LoadFromAssemblyPath((Resolve-Path $mqttDllPath).Path)
+    Write-Verbose "PSYarbo: Loaded MQTTnet via isolated AssemblyLoadContext '$alcName'"
+} else {
+    $script:MqttAssembly = $null
+    Write-Warning "MQTTnet.dll not found at '$mqttDllPath'. MQTT cmdlets will not work. Run build/Install-Dependencies.ps1 to download it."
 }
 #endregion
 
-#region — Auto-load Public functions (exported via manifest)
-$publicDir = Join-Path $PSScriptRoot 'Public'
-if (Test-Path $publicDir) {
-    Get-ChildItem -Path $publicDir -Filter '*.ps1' -Recurse | ForEach-Object {
-        . $_.FullName
-    }
+#region — Load classes (order matters)
+$classFiles = @(
+    'YarboExceptions'
+    'YarboLightState'
+    'YarboCommandResult'
+    'YarboTelemetry'
+    'YarboPlan'
+    'YarboSchedule'
+    'YarboRobot'
+    'YarboConnection'
+    'YarboCloudSession'
+)
+foreach ($class in $classFiles) {
+    . (Join-Path $PSScriptRoot "Classes/$class.ps1")
 }
 #endregion
 
-# Module is a work in progress — public functions will be added under Public/
-Write-Verbose "PSYarbo module loaded. Version: $((Get-Module PSYarbo).Version)"
+#region — Load private functions
+Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private') -Filter '*.ps1' -Recurse | ForEach-Object {
+    . $_.FullName
+}
+#endregion
+
+#region — Auto-init error reporting (opt-out: enabled by default, set YARBO_SENTRY_DSN="" to disable)
+Initialize-YarboErrorReporting
+#endregion
+
+#region — Load public functions
+Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public') -Filter '*.ps1' -Recurse | ForEach-Object {
+    . $_.FullName
+}
+#endregion
+
+#region — Module-scoped state
+$script:YarboConnections = [System.Collections.Generic.Dictionary[string, YarboConnection]]::new()
+$script:YarboCloudSession = $null
+$script:DefaultConnection = $null
+#endregion
+
+$script:ModuleVersion = (Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot 'PSYarbo.psd1')).ModuleVersion
+Write-Verbose "PSYarbo module loaded. Version: $script:ModuleVersion"
