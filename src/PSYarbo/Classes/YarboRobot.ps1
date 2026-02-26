@@ -44,7 +44,7 @@ class YarboRobot {
     hidden [int]$Port
 
     [string] ToString() {
-        $name = if ($this.Name) { $this.Name } else { $this.SerialNumber }
-        return "$name ($($this.SerialNumber)) - Battery: $($this.BatteryCapacity)% - State: $(if($this.WorkingState){'Active'}else{'Idle'})"
+        $displayName = if ($this.Name) { $this.Name } else { $this.SerialNumber }
+        return "$displayName ($($this.SerialNumber)) - Battery: $($this.BatteryCapacity)% - State: $(if($this.WorkingState){'Active'}else{'Idle'})"
     }
 }

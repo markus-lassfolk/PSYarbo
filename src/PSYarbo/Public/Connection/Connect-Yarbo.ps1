@@ -43,13 +43,15 @@ function Connect-Yarbo {
     [CmdletBinding(DefaultParameterSetName = 'Direct')]
     [OutputType([YarboConnection])]
     param(
-        [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 0)]
+        [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 0,
+                   ValueFromPipelineByPropertyName)]
         [string]$Broker,
 
-        [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 1)]
+        [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 1,
+                   ValueFromPipelineByPropertyName)]
         [string]$SerialNumber,
 
-        [Parameter(ParameterSetName = 'Direct')]
+        [Parameter(ParameterSetName = 'Direct', ValueFromPipelineByPropertyName)]
         [Nullable[int]]$Port,
 
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Pipeline')]
@@ -114,7 +116,7 @@ function Connect-Yarbo {
             $conn.State = [MqttConnectionState]::Connected
             $conn.ConnectedAt = [datetime]::UtcNow
 
-            Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connected. Subscribing to snowbot/$SerialNumber/device/#")
+            Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connected to ${Broker}:${Port}. Subscribing to snowbot/$SerialNumber/device/#")
 
             # Subscribe to all device topics
             $subBuilder = $conn.MqttFactory.CreateSubscribeOptionsBuilder()
@@ -127,10 +129,16 @@ function Connect-Yarbo {
                 $topic = $args.ApplicationMessage.Topic
                 $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
 
+                # Guard: skip empty/null payloads
+                if ($null -eq $payload -or $payload.Length -eq 0) {
+                    return [System.Threading.Tasks.Task]::CompletedTask
+                }
+
                 if ($topic -like '*/device/data_feedback') {
                     $decoded = ConvertFrom-ZlibPayload -Data $payload
                     if ($decoded) {
                         $conn.ResponseQueue.Enqueue($decoded)
+                        $conn.ResponseSignal.Release() | Out-Null  # Wake Send-MqttCommand waiter
                     }
                 }
                 elseif ($topic -like '*/device/heart_beat') {

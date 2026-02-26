@@ -19,11 +19,15 @@ function Send-MqttCommand {
         [int]$TimeoutMs = 5000,
 
         [Parameter()]
-        [switch]$NoWait
+        [switch]$NoWait,
+
+        # When set, a timeout throws YarboTimeoutException instead of returning a timed-out marker.
+        [Parameter()]
+        [switch]$ThrowOnTimeout
     )
 
     $topic = "snowbot/$($Connection.SerialNumber)/app/$Command"
-    Write-Verbose (Protect-YarboLogMessage "[Send-MqttCommand] Routing via local MQTT → $topic")
+    Write-Verbose (Protect-YarboLogMessage "[Send-MqttCommand] Routing via local MQTT → $topic @ $($Connection.Broker):$($Connection.Port)")
 
     # Compress payload
     $compressed = ConvertTo-ZlibPayload -Payload $Payload
@@ -35,9 +39,12 @@ function Send-MqttCommand {
     }
 
     try {
-        # Clear any stale responses from queue
+        # Clear any stale responses from queue and drain the signal semaphore
         $stale = $null
         while ($Connection.ResponseQueue.TryDequeue([ref]$stale)) { }
+        while ($Connection.ResponseSignal.CurrentCount -gt 0) {
+            $Connection.ResponseSignal.Wait(0) | Out-Null
+        }
 
         # Build and publish MQTT message
         if ($null -eq $Connection.MqttClient) {
@@ -54,14 +61,22 @@ function Send-MqttCommand {
             Command   = $Command
             Direction = 'Sent'
             Topic     = $topic
+            Broker    = "$($Connection.Broker):$($Connection.Port)"
         }
         $Connection.CommandLog.Add($logEntry)
 
         if ($NoWait) { return $null }
 
-        # Wait for data_feedback with matching topic
+        # Wait for data_feedback with matching topic using semaphore signal (no busy-wait)
         $deadline = [datetime]::UtcNow.AddMilliseconds($TimeoutMs)
-        while ([datetime]::UtcNow -lt $deadline) {
+        while ($true) {
+            $remaining = [int](($deadline - [datetime]::UtcNow).TotalMilliseconds)
+            if ($remaining -le 0) { break }
+
+            # Block until a response is enqueued or timeout expires
+            $signaled = $Connection.ResponseSignal.Wait($remaining)
+            if (-not $signaled) { break }  # Timeout
+
             $response = $null
             if ($Connection.ResponseQueue.TryDequeue([ref]$response)) {
                 if ($response.topic -eq $Command) {
@@ -76,16 +91,21 @@ function Send-MqttCommand {
                     })
                     return $result
                 }
-                # Not our response — could be for a different command, re-enqueue (edge case)
+                # Not our response — could be for a different command, re-enqueue and re-signal
                 Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'")
                 $Connection.ResponseQueue.Enqueue($response)
+                $Connection.ResponseSignal.Release() | Out-Null
             }
-            [System.Threading.Thread]::Sleep(50)
         }
 
         # Timeout
-        Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Timeout waiting for '$Command' after ${TimeoutMs}ms")
-        return $null
+        Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Timeout waiting for '$Command' after ${TimeoutMs}ms on $topic @ $($Connection.Broker):$($Connection.Port)")
+
+        if ($ThrowOnTimeout) {
+            throw [YarboTimeoutException]::new($Command, $TimeoutMs)
+        }
+
+        return [YarboCommandResult]::Timeout($Command, $TimeoutMs)
     }
     finally {
         $Connection.CommandSemaphore.Release() | Out-Null
@@ -110,7 +130,7 @@ function Send-MqttFireAndForget {
     )
 
     $topic = "snowbot/$($Connection.SerialNumber)/app/$Command"
-    Write-Verbose (Protect-YarboLogMessage "[Send-MqttFireAndForget] Routing via local MQTT → $topic")
+    Write-Verbose (Protect-YarboLogMessage "[Send-MqttFireAndForget] Routing via local MQTT → $topic @ $($Connection.Broker):$($Connection.Port)")
 
     $compressed = ConvertTo-ZlibPayload -Payload $Payload
 
@@ -127,5 +147,6 @@ function Send-MqttFireAndForget {
         Command   = $Command
         Direction = 'Sent (fire-and-forget)'
         Topic     = $topic
+        Broker    = "$($Connection.Broker):$($Connection.Port)"
     })
 }

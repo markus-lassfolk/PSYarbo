@@ -31,12 +31,17 @@ function ConvertFrom-ZlibPayload {
     .SYNOPSIS
         Decompresses zlib-compressed bytes to a PSCustomObject.
         Falls back to plain JSON if zlib decompression fails.
+        Returns $null for null or empty input.
     #>
     [OutputType([PSCustomObject])]
     param(
         [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
         [byte[]]$Data
     )
+
+    # Guard: skip null or empty payloads
+    if ($null -eq $Data -or $Data.Length -eq 0) { return $null }
 
     try {
         $ms = [System.IO.MemoryStream]::new($Data)
