@@ -95,7 +95,7 @@ jobs:
 
       - name: Publish test results
         if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
         with:
           check_name: Pester (${{ matrix.os }})
           files: output/test-results/*.xml
