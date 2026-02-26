@@ -83,6 +83,9 @@ function Find-Yarbo {
     # Ensure network address (zero host bits)
     [Array]::Reverse($baseBytes)
     $hostBits  = 32 - $prefixLen
+    $baseVal   = [System.BitConverter]::ToUInt32($baseBytes, 0)
+    $baseVal   = $baseVal -band ([uint32]::MaxValue -shl $hostBits)
+    $baseBytes = [System.BitConverter]::GetBytes($baseVal)
     $hostCount = [math]::Min([math]::Pow(2, $hostBits) - 2, $MaxHosts)
 
     Write-Verbose "[Find-Yarbo] Scanning $Subnet ($hostCount hosts) for MQTT brokers on port $Port"

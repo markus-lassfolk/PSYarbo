@@ -120,6 +120,9 @@ class YarboCloudSession {
         if ($result.success) {
             $this.AccessToken  = ConvertTo-SecureString -String $result.data.accessToken  -AsPlainText -Force
             $this.TokenExpiry  = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
+            if ($result.data.refreshToken) {
+                $this.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
+            }
         } else {
             throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", $result.code)
         }
