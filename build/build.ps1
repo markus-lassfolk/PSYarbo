@@ -91,12 +91,13 @@ New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
 
 $pesterConfig = New-PesterConfiguration
 $pesterConfig.Run.Path = $testsDir
+$pesterConfig.Run.PassThru = $true
 $pesterConfig.Output.Verbosity = 'Detailed'
 $pesterConfig.TestResult.Enabled = $true
 $pesterConfig.TestResult.OutputPath = Join-Path $testResultsDir 'pester-results.xml'
 $pesterConfig.TestResult.OutputFormat = 'NUnitXml'
 
-$result = Invoke-Pester -Configuration $pesterConfig -PassThru
+$result = Invoke-Pester -Configuration $pesterConfig
 
 if ($result.FailedCount -gt 0) {
     throw "Pester: $($result.FailedCount) test(s) failed. See output above."
