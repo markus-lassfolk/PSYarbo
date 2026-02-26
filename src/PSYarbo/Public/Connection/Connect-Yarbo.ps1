@@ -181,12 +181,8 @@ function Connect-Yarbo {
                 } catch {
                     Write-Debug "MQTT cleanup error (non-fatal): $($_.Exception.Message)"
                 }
-                try {
-                    $conn.MqttClient.Dispose()
-                } catch {
-                    Write-Debug "MQTT cleanup error (non-fatal): $($_.Exception.Message)"
-                }
             }
+            $conn.Dispose()
             if ($_.Exception -is [YarboException]) { throw }
             throw [YarboConnectionException]::new(
                 "Failed to connect to MQTT broker at ${Broker}:${Port}: $($_.Exception.Message)",

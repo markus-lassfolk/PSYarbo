@@ -196,14 +196,14 @@ function Find-Yarbo {
             # Wait for heart_beat
             $gotHb = $signal.Wait($mqttTimeoutMs)
 
-            if ($gotHb -and $detectedSN) {
-                Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$detectedSN at ${ip}:${Port}"
+            if ($gotHb -and $snRef.Value) {
+                Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$($snRef.Value) at ${ip}:${Port}"
 
                 # Attempt to parse state from heart_beat payload for richer YarboRobot
                 $r = [YarboRobot]::new()
                 $r.Broker = $ip
                 $r.Port = $Port
-                $r.SerialNumber = $detectedSN
+                $r.SerialNumber = $snRef.Value
                 $r.LastUpdated = [datetime]::UtcNow
                 Write-Output $r
             } else {
