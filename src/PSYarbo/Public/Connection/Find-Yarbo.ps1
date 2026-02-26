@@ -60,6 +60,7 @@ function Find-Yarbo {
         $ip = [System.Net.IPAddress]::new($newBytes).ToString()
 
         # Quick TCP port check
+        $client = $null
         try {
             $client = [System.Net.Sockets.TcpClient]::new()
             $connectTask = $client.ConnectAsync($ip, $Port)
@@ -73,10 +74,14 @@ function Find-Yarbo {
                     $found.Add($robot)
                 }
             }
-            $client.Dispose()
         }
         catch {
             # Connection failed — not a broker
+        }
+        finally {
+            if ($client) {
+                $client.Dispose()
+            }
         }
     }
 

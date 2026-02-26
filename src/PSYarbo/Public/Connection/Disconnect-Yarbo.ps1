@@ -41,7 +41,7 @@ function Disconnect-Yarbo {
         $connections = @()
 
         if ($All) {
-            $connections = $script:YarboConnections.Values
+            $connections = @($script:YarboConnections.Values)
         }
         elseif ($Connection) {
             $connections = @($Connection)

@@ -78,6 +78,7 @@ function Send-MqttCommand {
                 }
                 # Not our response — could be for a different command, re-enqueue (edge case)
                 Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'")
+                $Connection.ResponseQueue.Enqueue($response)
             }
             [System.Threading.Thread]::Sleep(50)
         }

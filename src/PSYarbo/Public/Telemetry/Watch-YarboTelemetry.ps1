@@ -13,9 +13,6 @@ function Watch-YarboTelemetry {
 .PARAMETER ThrottleMs
     Minimum interval between emitted objects in milliseconds. Default: 1000.
 
-.PARAMETER IncludeHeartbeat
-    Also emit heartbeat messages.
-
 .PARAMETER Raw
     Emit raw PSCustomObject instead of YarboTelemetry.
 
@@ -48,9 +45,6 @@ function Watch-YarboTelemetry {
         [int]$ThrottleMs = 1000,
 
         [Parameter()]
-        [switch]$IncludeHeartbeat,
-
-        [Parameter()]
         [switch]$Raw
     )
 
@@ -58,7 +52,6 @@ function Watch-YarboTelemetry {
         $conn = Resolve-YarboConnection -Connection $Connection
         Write-Verbose "[Watch-YarboTelemetry] Streaming telemetry for $Duration (throttle: ${ThrottleMs}ms)"
 
-        $queue = [System.Collections.Concurrent.BlockingCollection[PSCustomObject]]::new(100)
         $lastEmit = [datetime]::MinValue
         $deadline = [datetime]::UtcNow + $Duration
 
@@ -89,9 +82,6 @@ function Watch-YarboTelemetry {
         catch [System.Management.Automation.PipelineStoppedException] {
             # Ctrl+C — graceful exit
             Write-Verbose "[Watch-YarboTelemetry] Stream stopped by user"
-        }
-        finally {
-            $queue.Dispose()
         }
     }
 }

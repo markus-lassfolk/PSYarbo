@@ -56,7 +56,7 @@ function Connect-Yarbo {
         [YarboRobot]$Robot,
 
         [Parameter()]
-        [string]$ClientId = "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))",
+        [string]$ClientId,
 
         [Parameter()]
         [switch]$NoControllerInit,
@@ -79,6 +79,11 @@ function Connect-Yarbo {
         if (-not $Broker -and $env:YARBO_BROKER) { $Broker = $env:YARBO_BROKER }
         if (-not $SerialNumber -and $env:YARBO_SN) { $SerialNumber = $env:YARBO_SN }
         if (-not $Port -and $env:YARBO_PORT) { $Port = [int]$env:YARBO_PORT }
+
+        # Generate unique ClientId per pipeline iteration if not provided
+        if (-not $ClientId) {
+            $ClientId = "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))"
+        }
 
         $conn = [YarboConnection]::new()
         $conn.Broker = $Broker
