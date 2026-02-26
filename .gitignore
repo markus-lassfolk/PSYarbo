@@ -1,0 +1,40 @@
+# PowerShell / .NET
+*.dll
+*.pdb
+*.user
+*.suo
+obj/
+bin/
+
+# PSake / build output
+build/
+dist/
+output/
+release/
+*.nupkg
+
+# Test results
+TestResults/
+*.TestResults.xml
+coverage.xml
+
+# Module packaging
+*.psm1.bak
+
+# Secrets — never commit
+*.credential
+secrets.ps1
+*.pfx
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Windows
+desktop.ini
+ehthumbs.db
