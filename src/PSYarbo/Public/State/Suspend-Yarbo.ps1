@@ -1,5 +1,5 @@
 function Suspend-Yarbo {
-<#
+    <#
 .SYNOPSIS
     Puts the robot to sleep.
 

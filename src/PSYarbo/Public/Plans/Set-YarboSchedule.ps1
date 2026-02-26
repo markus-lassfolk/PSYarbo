@@ -1,5 +1,5 @@
 function Set-YarboSchedule {
-<#
+    <#
 .SYNOPSIS
     Updates a schedule configuration.
 

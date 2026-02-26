@@ -1,5 +1,5 @@
 function Suspend-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Pauses the currently running plan.
 

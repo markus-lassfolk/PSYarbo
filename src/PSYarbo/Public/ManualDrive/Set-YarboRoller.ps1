@@ -1,5 +1,5 @@
 function Set-YarboRoller {
-<#
+    <#
 .SYNOPSIS
     Sets the roller/auger speed during manual drive.
 

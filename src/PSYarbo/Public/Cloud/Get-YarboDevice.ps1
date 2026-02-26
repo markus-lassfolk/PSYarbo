@@ -1,5 +1,5 @@
 function Get-YarboDevice {
-<#
+    <#
 .SYNOPSIS
     Lists robots bound to your Yarbo cloud account.
 
@@ -24,7 +24,7 @@ function Get-YarboDevice {
 
     process {
         $s = if ($Session) { $Session } elseif ($script:YarboCloudSession) { $script:YarboCloudSession }
-             else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
+        else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
 
         $data = Invoke-YarboCloudApi -Session $s -Method 'GET' `
             -Path '/yarbo/robot-service/commonUser/userRobotBind/getUserRobotBindVos' `

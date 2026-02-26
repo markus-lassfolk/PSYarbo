@@ -1,5 +1,5 @@
 function Stop-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Stops the currently running plan.
 

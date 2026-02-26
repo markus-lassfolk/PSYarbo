@@ -1,5 +1,5 @@
 function Export-YarboTelemetry {
-<#
+    <#
 .SYNOPSIS
     Exports telemetry data to a file.
 
@@ -73,8 +73,7 @@ function Export-YarboTelemetry {
             } else {
                 $export | Export-Csv -Path $Path -NoTypeInformation
             }
-        }
-        elseif ($Format -eq 'JSON') {
+        } elseif ($Format -eq 'JSON') {
             $json = $allData | Select-Object * -ExcludeProperty RawMessage | ConvertTo-Json -Depth 5
             if ($Append -and (Test-Path $Path)) {
                 $existing = Get-Content -Path $Path -Raw | ConvertFrom-Json

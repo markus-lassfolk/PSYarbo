@@ -1,5 +1,5 @@
 function Get-YarboStatus {
-<#
+    <#
 .SYNOPSIS
     Returns comprehensive robot status.
 
@@ -34,20 +34,20 @@ function Get-YarboStatus {
 
         if ($result.TimedOut) {
             $PSCmdlet.WriteError((New-YarboError `
-                -Message "Timed out waiting for device message. Verify the robot is powered on and the MQTT broker at $($conn.Broker):$($conn.Port) is reachable." `
-                -ErrorId 'PSYarbo.Timeout.GetDeviceMsg' `
-                -Category 'OperationTimeout' `
-                -TargetObject $conn `
-                -Exception ([YarboTimeoutException]::new('get_device_msg', 5000))))
+                        -Message "Timed out waiting for device message. Verify the robot is powered on and the MQTT broker at $($conn.Broker):$($conn.Port) is reachable." `
+                        -ErrorId 'PSYarbo.Timeout.GetDeviceMsg' `
+                        -Category 'OperationTimeout' `
+                        -TargetObject $conn `
+                        -Exception ([YarboTimeoutException]::new('get_device_msg', 5000))))
             return
         }
 
         if (-not $result.Success) {
             $PSCmdlet.WriteError((New-YarboError `
-                -Message "get_device_msg failed: $($result.Message). Check robot state or reconnect." `
-                -ErrorId 'PSYarbo.CommandFailed.GetDeviceMsg' `
-                -Category 'InvalidResult' `
-                -TargetObject $result))
+                        -Message "get_device_msg failed: $($result.Message). Check robot state or reconnect." `
+                        -ErrorId 'PSYarbo.CommandFailed.GetDeviceMsg' `
+                        -Category 'InvalidResult' `
+                        -TargetObject $result))
             return
         }
 

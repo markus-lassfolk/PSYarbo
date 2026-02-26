@@ -1,5 +1,5 @@
 function Get-YarboFirmware {
-<#
+    <#
 .SYNOPSIS
     Returns the robot's firmware version information.
 
@@ -38,8 +38,8 @@ function Get-YarboFirmware {
         $robot = Get-YarboRobot -Connection $conn -Refresh
 
         $info = [PSCustomObject]@{
-            SerialNumber = $conn.SerialNumber
-            HeadType = $robot.HeadType
+            SerialNumber     = $conn.SerialNumber
+            HeadType         = $robot.HeadType
             HeadSerialNumber = $robot.HeadSerialNumber
         }
 
@@ -49,8 +49,7 @@ function Get-YarboFirmware {
                     -Method 'GET' -Path '/yarbo/commonUser/getLatestPubVersion' `
                     -CmdletName 'Get-YarboFirmware'
                 $info | Add-Member -NotePropertyName 'LatestVersion' -NotePropertyValue $latest
-            }
-            catch {
+            } catch {
                 Write-Warning "Could not fetch latest firmware version from cloud: $($_.Exception.Message)"
             }
         }

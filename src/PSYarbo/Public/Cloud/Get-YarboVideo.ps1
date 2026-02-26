@@ -1,5 +1,5 @@
 function Get-YarboVideo {
-<#
+    <#
 .SYNOPSIS
     Gets an Agora RTC token for live video streaming.
 
@@ -36,7 +36,7 @@ function Get-YarboVideo {
 
     process {
         $s = if ($Session) { $Session } elseif ($script:YarboCloudSession) { $script:YarboCloudSession }
-             else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
+        else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
 
         return Invoke-YarboCloudApi -Session $s -Method 'POST' `
             -Path '/yarbo/robot-service/robot/commonUser/getAgoraToken' `

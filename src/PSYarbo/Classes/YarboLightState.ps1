@@ -1,11 +1,11 @@
 class YarboLightState {
-    [ValidateRange(0,255)] [int]$HeadLight        # led_head
-    [ValidateRange(0,255)] [int]$LeftWhite         # led_left_w
-    [ValidateRange(0,255)] [int]$RightWhite        # led_right_w
-    [ValidateRange(0,255)] [int]$BodyLeftRed       # body_left_r
-    [ValidateRange(0,255)] [int]$BodyRightRed      # body_right_r
-    [ValidateRange(0,255)] [int]$TailLeftRed       # tail_left_r
-    [ValidateRange(0,255)] [int]$TailRightRed      # tail_right_r
+    [ValidateRange(0, 255)] [int]$HeadLight        # led_head
+    [ValidateRange(0, 255)] [int]$LeftWhite         # led_left_w
+    [ValidateRange(0, 255)] [int]$RightWhite        # led_right_w
+    [ValidateRange(0, 255)] [int]$BodyLeftRed       # body_left_r
+    [ValidateRange(0, 255)] [int]$BodyRightRed      # body_right_r
+    [ValidateRange(0, 255)] [int]$TailLeftRed       # tail_left_r
+    [ValidateRange(0, 255)] [int]$TailRightRed      # tail_right_r
 
     [hashtable] ToPayload() {
         return @{

@@ -1,5 +1,5 @@
 function Start-YarboManualDrive {
-<#
+    <#
 .SYNOPSIS
     Enters manual drive mode on the robot.
 

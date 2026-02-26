@@ -1,5 +1,5 @@
 function Watch-YarboTelemetry {
-<#
+    <#
 .SYNOPSIS
     Streams telemetry data to the pipeline in real time.
 
@@ -78,8 +78,7 @@ function Watch-YarboTelemetry {
                 # Sleep for throttle interval
                 [System.Threading.Thread]::Sleep([math]::Max(100, $ThrottleMs - 500))
             }
-        }
-        catch [System.Management.Automation.PipelineStoppedException] {
+        } catch [System.Management.Automation.PipelineStoppedException] {
             # Ctrl+C — graceful exit
             Write-Verbose "[Watch-YarboTelemetry] Stream stopped by user"
         }

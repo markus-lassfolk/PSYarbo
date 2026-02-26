@@ -22,12 +22,12 @@ class YarboCommandResult {
     # Factory: creates a timed-out result marker (no throw required)
     static [YarboCommandResult] Timeout([string]$command, [int]$timeoutMs) {
         $r = [YarboCommandResult]::new()
-        $r.Topic     = $command
-        $r.State     = -1
-        $r.Message   = "Timed out after ${timeoutMs}ms waiting for '$command' response"
+        $r.Topic = $command
+        $r.State = -1
+        $r.Message = "Timed out after ${timeoutMs}ms waiting for '$command' response"
         $r.Timestamp = [datetime]::UtcNow
-        $r.Success   = $false
-        $r.TimedOut  = $true
+        $r.Success = $false
+        $r.TimedOut = $true
         return $r
     }
 

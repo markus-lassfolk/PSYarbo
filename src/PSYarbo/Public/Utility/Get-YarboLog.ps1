@@ -1,5 +1,5 @@
 function Get-YarboLog {
-<#
+    <#
 .SYNOPSIS
     Returns the internal command/response log for a Yarbo connection.
 
@@ -44,9 +44,9 @@ function Get-YarboLog {
         $entries = $conn.CommandLog
 
         switch ($Filter) {
-            'Commands'  { $entries = $entries | Where-Object { $_.Direction -like 'Sent*' } }
+            'Commands' { $entries = $entries | Where-Object { $_.Direction -like 'Sent*' } }
             'Telemetry' { $entries = $entries | Where-Object { $_.Direction -eq 'Received' } }
-            'Errors'    { $entries = $entries | Where-Object { $_.State -and $_.State -ne 0 } }
+            'Errors' { $entries = $entries | Where-Object { $_.State -and $_.State -ne 0 } }
         }
 
         $entries | Select-Object -Last $Last

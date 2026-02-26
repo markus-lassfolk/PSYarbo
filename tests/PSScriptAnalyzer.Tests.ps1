@@ -16,7 +16,9 @@ BeforeAll {
         Where-Object { $_.DirectoryName -notmatch '[/\\]tests[/\\]?' } |
         Where-Object { $_.Name -ne 'PSScriptAnalyzerSettings.psd1' }
 
-    # Run PSSA once against all files
+    # Run PSSA once against all files.
+    # Note: TypeNotFound and other built-in diagnostics report as Information severity but bypass the
+    # -Severity filter in some PSSA versions. Explicitly filter to Error+Warning after collection.
     $script:allFindings = @()
     foreach ($file in $script:sourceFiles) {
         $findings = Invoke-ScriptAnalyzer -Path $file.FullName `
@@ -24,7 +26,7 @@ BeforeAll {
             -Severity @('Error', 'Warning') `
             -ErrorAction SilentlyContinue
         if ($findings) {
-            $script:allFindings += $findings
+            $script:allFindings += $findings | Where-Object { $_.Severity -in 'Error', 'Warning' }
         }
     }
 }
@@ -81,7 +83,8 @@ Describe 'PSScriptAnalyzer — Per-file' {
             $findings = Invoke-ScriptAnalyzer -Path $file.FullName `
                 -Settings $settingsFile `
                 -Severity @('Error', 'Warning') `
-                -ErrorAction SilentlyContinue
+                -ErrorAction SilentlyContinue |
+                Where-Object { $_.Severity -in 'Error', 'Warning' }
             $script:perFileResults[$file.Name] = $findings
         }
     }

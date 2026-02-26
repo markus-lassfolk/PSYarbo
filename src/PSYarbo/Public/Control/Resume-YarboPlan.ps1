@@ -1,5 +1,5 @@
 function Resume-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Resumes a paused plan.
 

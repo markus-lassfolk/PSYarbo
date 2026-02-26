@@ -1,5 +1,5 @@
 function Test-YarboConnection {
-<#
+    <#
 .SYNOPSIS
     Tests whether a Yarbo MQTT connection is active and healthy.
 
@@ -34,16 +34,15 @@ function Test-YarboConnection {
     process {
         try {
             $conn = Resolve-YarboConnection -Connection $Connection
-        }
-        catch {
+        } catch {
             if ($Detailed) {
                 return [PSCustomObject]@{
-                    Connected = $false
-                    Broker = $null
-                    SerialNumber = $null
-                    State = 'Disconnected'
-                    LastHeartbeat = $null
-                    HeartbeatAge = $null
+                    Connected          = $false
+                    Broker             = $null
+                    SerialNumber       = $null
+                    State              = 'Disconnected'
+                    LastHeartbeat      = $null
+                    HeartbeatAge       = $null
                     ControllerAcquired = $false
                 }
             }
@@ -57,15 +56,15 @@ function Test-YarboConnection {
 
         if ($Detailed) {
             return [PSCustomObject]@{
-                Connected = $connected
-                Broker = $conn.Broker
-                SerialNumber = $conn.SerialNumber
-                State = $conn.State.ToString()
-                LastHeartbeat = $conn.LastHeartbeat
-                HeartbeatAge = $heartbeatAge
+                Connected          = $connected
+                Broker             = $conn.Broker
+                SerialNumber       = $conn.SerialNumber
+                State              = $conn.State.ToString()
+                LastHeartbeat      = $conn.LastHeartbeat
+                HeartbeatAge       = $heartbeatAge
                 ControllerAcquired = $conn.ControllerAcquired
-                ClientId = $conn.ClientId
-                ConnectedAt = $conn.ConnectedAt
+                ClientId           = $conn.ClientId
+                ConnectedAt        = $conn.ConnectedAt
             }
         }
 

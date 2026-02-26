@@ -1,5 +1,5 @@
 function Get-YarboMap {
-<#
+    <#
 .SYNOPSIS
     Retrieves the robot's map data.
 

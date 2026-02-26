@@ -1,5 +1,5 @@
 function Get-YarboRobot {
-<#
+    <#
 .SYNOPSIS
     Returns the cached robot state from the connection's last telemetry.
 

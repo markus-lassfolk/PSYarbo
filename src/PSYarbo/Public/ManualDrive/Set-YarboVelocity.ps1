@@ -1,5 +1,5 @@
 function Set-YarboVelocity {
-<#
+    <#
 .SYNOPSIS
     Sets the robot's movement velocity during manual drive.
 

@@ -1,5 +1,5 @@
 function Stop-YarboManualDrive {
-<#
+    <#
 .SYNOPSIS
     Exits manual drive mode and stops the robot.
 

@@ -1,5 +1,5 @@
 function Resume-Yarbo {
-<#
+    <#
 .SYNOPSIS
     Wakes the robot from sleep.
 

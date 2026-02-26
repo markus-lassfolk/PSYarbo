@@ -1,5 +1,5 @@
 function Get-YarboPlanHistory {
-<#
+    <#
 .SYNOPSIS
     Retrieves plan execution history from the cloud.
 
@@ -32,14 +32,13 @@ function Get-YarboPlanHistory {
 
     process {
         $s = if ($Session) { $Session } elseif ($script:YarboCloudSession) { $script:YarboCloudSession }
-             else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
+        else { throw [YarboCloudAuthException]::new("No cloud session. Use Connect-YarboCloud first.", 'NO_SESSION') }
 
         try {
             return Invoke-YarboCloudApi -Session $s -Method 'GET' `
                 -Path "/yarbo/robot-service/commonUser/robot/getPlanHistoryBySn?sn=$SerialNumber" `
                 -CmdletName 'Get-YarboPlanHistory'
-        }
-        catch {
+        } catch {
             Write-Warning "Cloud plan history endpoint may require SigV4 auth. Falling back to MQTT."
             # Try MQTT fallback if connected
             if ($script:YarboConnections.ContainsKey($SerialNumber)) {

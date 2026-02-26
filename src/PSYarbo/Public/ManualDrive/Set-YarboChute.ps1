@@ -1,5 +1,5 @@
 function Set-YarboChute {
-<#
+    <#
 .SYNOPSIS
     Controls the snow chute direction/speed.
 

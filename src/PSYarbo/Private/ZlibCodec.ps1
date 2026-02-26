@@ -60,13 +60,11 @@ function ConvertFrom-ZlibPayload {
         } finally {
             $ms.Dispose()
         }
-    }
-    catch {
+    } catch {
         # Fallback: try parsing as plain JSON (heart_beat may not be compressed)
         try {
             return [System.Text.Encoding]::UTF8.GetString($Data) | ConvertFrom-Json
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to decode payload: $($_.Exception.Message)"
             return $null
         }

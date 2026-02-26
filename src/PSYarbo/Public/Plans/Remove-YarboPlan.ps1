@@ -1,5 +1,5 @@
 function Remove-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Deletes a work plan from the robot.
 

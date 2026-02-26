@@ -1,5 +1,5 @@
 function Send-YarboCommand {
-<#
+    <#
 .SYNOPSIS
     Sends a raw MQTT command to the robot.
 

@@ -25,7 +25,7 @@ class YarboSchedule {
     }
 
     [string] ToString() {
-        $days = if ($this.WeekDay -eq 127) { 'Daily' } else { ($this.GetDays() | ForEach-Object { $_.ToString().Substring(0,3) }) -join ',' }
+        $days = if ($this.WeekDay -eq 127) { 'Daily' } else { ($this.GetDays() | ForEach-Object { $_.ToString().Substring(0, 3) }) -join ',' }
         return "$($this.Name) - $($this.StartTime)-$($this.EndTime) $days $(if($this.Enabled){'✓'}else{'✗'})"
     }
 }

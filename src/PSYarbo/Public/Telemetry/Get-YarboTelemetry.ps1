@@ -1,5 +1,5 @@
 function Get-YarboTelemetry {
-<#
+    <#
 .SYNOPSIS
     Retrieves a single telemetry snapshot.
 

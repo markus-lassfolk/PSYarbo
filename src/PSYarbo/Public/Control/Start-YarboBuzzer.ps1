@@ -1,5 +1,5 @@
 function Start-YarboBuzzer {
-<#
+    <#
 .SYNOPSIS
     Activates the robot's buzzer.
 

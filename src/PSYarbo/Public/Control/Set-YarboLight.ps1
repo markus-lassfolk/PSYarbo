@@ -1,5 +1,5 @@
 function Set-YarboLight {
-<#
+    <#
 .SYNOPSIS
     Controls the LED lights on a Yarbo robot.
 
@@ -98,8 +98,8 @@ function Set-YarboLight {
         $lightState = switch ($PSCmdlet.ParameterSetName) {
             'Preset' {
                 switch ($Preset) {
-                    'AllOn'    { [YarboLightState]::AllOn() }
-                    'AllOff'   { [YarboLightState]::AllOff() }
+                    'AllOn' { [YarboLightState]::AllOn() }
+                    'AllOff' { [YarboLightState]::AllOff() }
                     'HeadOnly' {
                         $s = [YarboLightState]::new(); $s.HeadLight = 255; $s
                     }

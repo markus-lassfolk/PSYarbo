@@ -1,5 +1,5 @@
 function Get-YarboSchedule {
-<#
+    <#
 .SYNOPSIS
     Retrieves scheduled plan executions.
 

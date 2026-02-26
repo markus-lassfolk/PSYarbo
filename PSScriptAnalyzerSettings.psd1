@@ -44,7 +44,10 @@
     # Rules to explicitly exclude
     ExcludeRules = @(
         # Community module — Write-Host is acceptable for user-facing verbose output
-        'PSAvoidUsingWriteHost'
+        'PSAvoidUsingWriteHost',
+        # TypeNotFound fires for MQTTnet and other runtime-loaded types that are not resolvable at
+        # static analysis time. Suppress so CI does not fail on missing-assembly false positives.
+        'TypeNotFound'
     )
 
     Rules        = @{

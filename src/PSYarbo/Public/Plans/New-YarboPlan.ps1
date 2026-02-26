@@ -1,5 +1,5 @@
 function New-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Creates a new work plan on the robot.
 
@@ -45,8 +45,8 @@ function New-YarboPlan {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Create plan '$Name'")) {
             $payload = @{
-                name = $Name
-                areaIds = $AreaIds
+                name              = $Name
+                areaIds           = $AreaIds
                 enable_self_order = [bool]$EnableSelfOrder
             }
             Write-Verbose (Protect-YarboLogMessage "[New-YarboPlan] Routing via local MQTT → save_plan")

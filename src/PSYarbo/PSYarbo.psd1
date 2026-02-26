@@ -1,18 +1,18 @@
 @{
-    RootModule        = 'PSYarbo.psm1'
-    ModuleVersion     = '0.1.0'
+    RootModule           = 'PSYarbo.psm1'
+    ModuleVersion        = '0.1.0'
     CompatiblePSEditions = @('Core')
-    GUID              = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
-    Author            = 'Markus Lassfolk'
-    CompanyName       = 'Community'
-    Copyright         = '(c) Markus Lassfolk. All rights reserved.'
-    Description       = 'PowerShell module for controlling Yarbo robot mowers via local MQTT and cloud REST API'
-    PowerShellVersion = '7.4'
+    GUID                 = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+    Author               = 'Markus Lassfolk'
+    CompanyName          = 'Community'
+    Copyright            = '(c) Markus Lassfolk. All rights reserved.'
+    Description          = 'PowerShell module for controlling Yarbo robot mowers via local MQTT and cloud REST API'
+    PowerShellVersion    = '7.4'
     # MQTTnet loaded via AssemblyLoadContext in PSYarbo.psm1 — not via RequiredAssemblies
     # RequiredAssemblies = @()
-    FormatsToProcess  = @('PSYarbo.Format.ps1xml')
-    TypesToProcess    = @('PSYarbo.Types.ps1xml')
-    FunctionsToExport = @(
+    FormatsToProcess     = @('PSYarbo.Format.ps1xml')
+    TypesToProcess       = @('PSYarbo.Types.ps1xml')
+    FunctionsToExport    = @(
         # Connection
         'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
         # Status
@@ -35,10 +35,10 @@
         # Utility
         'Test-YarboConnection', 'Get-YarboLog'
     )
-    CmdletsToExport   = @()
-    VariablesToExport = @()
-    AliasesToExport   = @()
-    PrivateData       = @{
+    CmdletsToExport      = @()
+    VariablesToExport    = @()
+    AliasesToExport      = @()
+    PrivateData          = @{
         PSData = @{
             Tags         = @('Yarbo', 'Robot', 'Mower', 'MQTT', 'IoT', 'Automation', 'SnowBlower')
             LicenseUri   = 'https://github.com/markus-lassfolk/PSYarbo/blob/main/LICENSE'

@@ -1,5 +1,5 @@
 function Get-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Retrieves work plans from the robot.
 

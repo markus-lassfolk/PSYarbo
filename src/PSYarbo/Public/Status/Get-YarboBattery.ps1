@@ -1,5 +1,5 @@
 function Get-YarboBattery {
-<#
+    <#
 .SYNOPSIS
     Returns the robot's battery capacity (0-100%).
 
