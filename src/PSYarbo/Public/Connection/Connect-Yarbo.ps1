@@ -180,13 +180,15 @@ function Connect-Yarbo {
                                 })
                             $conn.TelemetrySignal.Release() | Out-Null
                             # Keep a bounded telemetry log (last 200 entries)
-                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
                                     Timestamp   = [datetime]::UtcNow
                                     MessageType = 'DeviceMSG'
                                     Direction   = 'Pushed'
                                     Topic       = $topic
                                 })
-                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                            }
                         }
                     } elseif ($topic -like '*/device/plan_feedback') {
                         $decoded = ConvertFrom-ZlibPayload -Data $payload
@@ -198,13 +200,15 @@ function Connect-Yarbo {
                                     Data        = $decoded
                                 })
                             $conn.TelemetrySignal.Release() | Out-Null
-                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
                                     Timestamp   = [datetime]::UtcNow
                                     MessageType = 'PlanFeedback'
                                     Direction   = 'Pushed'
                                     Topic       = $topic
                                 })
-                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                            }
                         }
                     } elseif ($topic -like '*/device/recharge_feedback') {
                         $decoded = ConvertFrom-ZlibPayload -Data $payload
@@ -216,13 +220,15 @@ function Connect-Yarbo {
                                     Data        = $decoded
                                 })
                             $conn.TelemetrySignal.Release() | Out-Null
-                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
                                     Timestamp   = [datetime]::UtcNow
                                     MessageType = 'RechargeFeedback'
                                     Direction   = 'Pushed'
                                     Topic       = $topic
                                 })
-                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                            if ($conn.TelemetryLog.Count -gt 200) { 
+                                $null = $conn.TelemetryLog.TryDequeue([ref]$null) 
+                            }
                         }
                     }
 
