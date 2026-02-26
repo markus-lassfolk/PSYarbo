@@ -64,7 +64,7 @@ LONG DESCRIPTION
         data_feedback message arrives.  Send-MqttCommand blocks on this
         signal until the expected response arrives or the timeout expires.
 
-    ASSEMBLYLLOADCONTEXT ISOLATION
+    ASSEMBLYLOADCONTEXT ISOLATION
         MQTTnet.dll is loaded into a named, collectible AssemblyLoadContext
         (PSYarboMqttContext) to avoid binding conflicts with other modules
         that may load a different version of MQTTnet.  This is intentional

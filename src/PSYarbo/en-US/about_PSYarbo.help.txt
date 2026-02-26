@@ -45,8 +45,7 @@ LONG DESCRIPTION
 
         1. Explicit cmdlet parameters
         2. Environment variables ($env:YARBO_BROKER, etc.)
-        3. Config file (~/.psyarbo/config.json)
-        4. Module defaults
+        3. Module defaults
 
 SEE ALSO
     about_PSYarbo_MQTT

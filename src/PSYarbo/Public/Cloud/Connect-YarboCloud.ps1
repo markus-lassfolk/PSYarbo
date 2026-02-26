@@ -75,8 +75,11 @@ function Connect-YarboCloud {
                     $encrypted = $rsa.Encrypt($passwordBytes, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
                     $encryptedB64 = [Convert]::ToBase64String($encrypted)
                 } finally {
-                    # Clear plain-text password from memory as soon as it is no longer needed
+                    # Clear plain-text password and derived bytes from memory as soon as no longer needed
                     $plainPassword = $null
+                    if ($passwordBytes) {
+                        [Array]::Clear($passwordBytes, 0, $passwordBytes.Length)
+                    }
                 }
             } finally {
                 $rsa.Dispose()

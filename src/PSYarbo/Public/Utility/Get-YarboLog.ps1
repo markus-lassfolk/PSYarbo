@@ -13,7 +13,9 @@ function Get-YarboLog {
     Number of recent entries to return. Default: 50.
 
 .PARAMETER Filter
-    Filter log entries: All, Commands, Telemetry, Errors. Default: All.
+    Filter log entries: All, Commands (sent), Telemetry (received data_feedback),
+    Errors (non-zero state). Default: All. Note: Telemetry shows command responses,
+    not raw DeviceMSG stream.
 
 .EXAMPLE
     Get-YarboLog

@@ -4,8 +4,9 @@ function Watch-YarboTelemetry {
     Streams telemetry data to the pipeline in real time.
 
 .DESCRIPTION
-    Subscribes to DeviceMSG and emits YarboTelemetry objects until the
-    duration expires or Ctrl+C is pressed.
+    Polls for telemetry by sending get_device_msg repeatedly until the
+    duration expires or Ctrl+C is pressed; emits YarboTelemetry (or raw
+    data with -Raw) at the specified throttle interval.
 
 .PARAMETER Duration
     How long to stream. Default: 5 minutes.
@@ -33,7 +34,7 @@ function Watch-YarboTelemetry {
     Export-YarboTelemetry
 #>
     [CmdletBinding()]
-    [OutputType([YarboTelemetry])]
+    [OutputType([YarboTelemetry], [PSCustomObject])]
     param(
         [Parameter(ValueFromPipeline)]
         [YarboConnection]$Connection,
@@ -55,11 +56,9 @@ function Watch-YarboTelemetry {
         $lastEmit = [datetime]::MinValue
         $deadline = [datetime]::UtcNow + $Duration
 
-        # We rely on the connection's existing DeviceMSG subscription
-        # Poll the connection's Robot property for updates
+        # Poll for telemetry by sending get_device_msg each iteration
         try {
             while ([datetime]::UtcNow -lt $deadline) {
-                # Request fresh telemetry
                 $result = Send-MqttCommand -Connection $conn -Command 'get_device_msg' -Payload @{} -TimeoutMs 3000
 
                 if ($result -and $result.Success -and $result.Data) {

@@ -106,7 +106,7 @@ Disconnect-Yarbo
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Set-YarboLight` | Control LED channels (presets: `AllOn`, `AllOff`, `NightMode`, `Driving`, `Working`). |
+| `Set-YarboLight` | Control LED channels (presets: `AllOn`, `AllOff`, `HeadOnly`, `BodyOnly`, `TailOnly`). |
 | `Start-YarboBuzzer` | Trigger the buzzer. |
 | `Stop-YarboBuzzer` | Stop the buzzer. |
 | `Start-YarboPlan` | Start a mowing/snow-clearing plan by ID. |
@@ -124,7 +124,7 @@ Disconnect-Yarbo
 | `Start-YarboManualDrive` | Enter manual drive mode. |
 | `Set-YarboVelocity` | Set linear and angular velocity. |
 | `Set-YarboRoller` | Set roller (auger) speed. |
-| `Set-YarboChute` | Set chute rotation angle. |
+| `Set-YarboChute` | Set chute rotation speed/velocity. |
 | `Stop-YarboManualDrive` | Exit manual drive mode. |
 
 ### Plans & Maps

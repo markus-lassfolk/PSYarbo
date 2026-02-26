@@ -21,12 +21,15 @@ function New-YarboPlan {
 .EXAMPLE
     New-YarboPlan -Name "Front Yard" -AreaIds 1,2,3
 
+.OUTPUTS
+    YarboPlan on success; YarboCommandResult on MQTT failure (caller can check .Success).
+
 .LINK
     Get-YarboPlan
     Remove-YarboPlan
 #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
-    [OutputType([YarboPlan])]
+    [OutputType([YarboPlan], [YarboCommandResult])]
     param(
         [Parameter(ValueFromPipeline)]
         [YarboConnection]$Connection,
