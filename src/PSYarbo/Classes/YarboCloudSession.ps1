@@ -83,8 +83,12 @@ class YarboCloudSession {
                     [System.Threading.Thread]::Sleep($delayMs)
                     # Re-acquire token in case of 401
                     if ($_.Exception.Message -like '*HTTP 401*') {
-                        $this.RefreshAuth()
-                        $bearer = $this.GetBearerToken()
+                        try {
+                            $this.RefreshAuth()
+                            $bearer = $this.GetBearerToken()
+                        } catch {
+                            Write-Warning "[YarboCloudSession] Token refresh failed during retry: $($_.Exception.Message)"
+                        }
                     }
                 }
             }
