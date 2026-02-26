@@ -1,5 +1,5 @@
 function Start-YarboPlan {
-<#
+    <#
 .SYNOPSIS
     Starts execution of a Yarbo work plan.
 
@@ -25,36 +25,38 @@ function Start-YarboPlan {
     Stop-YarboPlan
     Get-YarboPlan
 #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    [CmdletBinding(DefaultParameterSetName = 'ById', SupportsShouldProcess, ConfirmImpact = 'Medium')]
     [OutputType([YarboCommandResult])]
     param(
         [Parameter(ValueFromPipeline)]
         [YarboConnection]$Connection,
 
-        [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName, ParameterSetName = 'ById')]
         [Alias('Id')]
         [int]$PlanId,
 
-        [Parameter()]
+        [Parameter(Mandatory, ParameterSetName = 'ByName')]
         [string]$Name
     )
 
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
 
-        if ($Name) {
+        $resolvedId = if ($PSCmdlet.ParameterSetName -eq 'ByName') {
             $plan = Get-YarboPlan -Connection $conn -Name $Name
             if (-not $plan) {
                 $PSCmdlet.WriteError((New-YarboError -Message "Plan '$Name' not found." -ErrorId 'PSYarbo.NotFound.Plan' -Category 'ObjectNotFound'))
                 return
             }
-            $PlanId = $plan.Id
+            $plan.Id
+        } else {
+            $PlanId
         }
 
-        if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Start plan $PlanId")) {
+        if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Start plan $resolvedId")) {
             Assert-YarboController -Connection $conn
-            Write-Verbose (Protect-YarboLogMessage "[Start-YarboPlan] Routing via local MQTT → start_plan (planId=$PlanId)")
-            $result = Send-MqttCommand -Connection $conn -Command 'start_plan' -Payload @{ planId = $PlanId }
+            Write-Verbose (Protect-YarboLogMessage "[Start-YarboPlan] Routing via local MQTT → start_plan (planId=$resolvedId)")
+            $result = Send-MqttCommand -Connection $conn -Command 'start_plan' -Payload @{ planId = [int]$resolvedId }
             if ($result -and -not $result.Success) {
                 $PSCmdlet.WriteError((New-YarboError -Message "start_plan failed: $($result.Message)" -ErrorId 'PSYarbo.CommandFailed.StartPlan' -Category 'InvalidResult' -TargetObject $result))
             }

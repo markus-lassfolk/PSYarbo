@@ -25,6 +25,12 @@ $repoRoot = Split-Path $PSScriptRoot -Parent
 $libDir = Join-Path $repoRoot 'src' 'PSYarbo' 'lib'
 $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) "mqttnet-$Version"
 
+# SHA256 hashes for known-good NuGet packages.
+# To update: run `Get-FileHash <downloaded.nupkg> -Algorithm SHA256` after downloading from NuGet.
+$knownHashes = @{
+    '4.3.7.1207' = 'D574570FD2B3B538891968CE8CD05678FDBA395DFF8DB0995854ADEC6B79637C'
+}
+
 Write-Host "Downloading MQTTnet $Version..." -ForegroundColor Cyan
 
 # Create lib directory
@@ -36,6 +42,23 @@ $nupkgPath = Join-Path $tempDir "MQTTnet.$Version.nupkg"
 
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 Invoke-WebRequest -Uri $nupkgUrl -OutFile $nupkgPath
+
+# Verify SHA256 hash to guard against supply-chain tampering
+if ($knownHashes.ContainsKey($Version)) {
+    $expectedHash = $knownHashes[$Version]
+    $actualHash = (Get-FileHash -Path $nupkgPath -Algorithm SHA256).Hash
+    if ($actualHash -ne $expectedHash) {
+        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+        throw ("SHA256 mismatch for MQTTnet $Version nupkg!`n" +
+            "  Expected : $expectedHash`n" +
+            "  Actual   : $actualHash`n" +
+            "Download may be corrupted or tampered. Aborting.")
+    }
+    Write-Host "✓ SHA256 hash verified for MQTTnet $Version" -ForegroundColor Green
+} else {
+    Write-Warning ("No pinned SHA256 hash for MQTTnet $Version. " +
+        "Add the expected hash to the `$knownHashes table in Install-Dependencies.ps1 for supply-chain integrity.")
+}
 
 # Extract
 $extractDir = Join-Path $tempDir 'extracted'
