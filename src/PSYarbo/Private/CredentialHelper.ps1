@@ -66,6 +66,9 @@ function Save-YarboCredential {
 
     if (-not (Test-Path $script:YarboCredentialDir)) {
         $null = New-Item -ItemType Directory -Path $script:YarboCredentialDir -Force
+        if (-not $IsWindows) {
+            chmod 700 $script:YarboCredentialDir
+        }
     }
 
     $creds = @{}
@@ -82,6 +85,9 @@ function Save-YarboCredential {
         Saved     = [datetime]::UtcNow.ToString('o')
     }
     $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
+    if (-not $IsWindows) {
+        chmod 600 $script:YarboCredentialFile
+    }
     Write-Verbose "PSYarbo: Saved credential '$Name' to $script:YarboCredentialFile"
 }
 
