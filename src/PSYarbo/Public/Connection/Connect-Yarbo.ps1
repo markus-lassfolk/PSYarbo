@@ -175,6 +175,8 @@ function Connect-Yarbo {
                     Assert-YarboController -Connection $conn
                 } catch [YarboTimeoutException] {
                     Write-Warning "Controller acquisition timed out (robot may be sleeping). Connection established without controller; use Resume-Yarbo to wake the robot."
+                } catch [YarboCommandException] {
+                    Write-Warning "Controller acquisition rejected (state $($_.Exception.State)): $($_.Exception.Message). Connection established without controller; another client may hold the controller."
                 }
             }
         } catch {
