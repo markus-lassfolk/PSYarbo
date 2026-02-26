@@ -1,5 +1,5 @@
 function Connect-Yarbo {
-<#
+    <#
 .SYNOPSIS
     Establishes a local MQTT connection to a Yarbo robot.
 
@@ -44,11 +44,11 @@ function Connect-Yarbo {
     [OutputType([YarboConnection])]
     param(
         [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 0,
-                   ValueFromPipelineByPropertyName)]
+            ValueFromPipelineByPropertyName)]
         [string]$Broker,
 
         [Parameter(Mandatory, ParameterSetName = 'Direct', Position = 1,
-                   ValueFromPipelineByPropertyName)]
+            ValueFromPipelineByPropertyName)]
         [string]$SerialNumber,
 
         [Parameter(ParameterSetName = 'Direct', ValueFromPipelineByPropertyName)]
@@ -125,63 +125,58 @@ function Connect-Yarbo {
 
             # Set up message handler for routing responses
             $conn.MqttClient.ApplicationMessageReceivedAsync.Add({
-                param($args)
-                $topic = $args.ApplicationMessage.Topic
-                $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
+                    param($args)
+                    $topic = $args.ApplicationMessage.Topic
+                    $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
 
-                # Guard: skip empty/null payloads
-                if ($null -eq $payload -or $payload.Length -eq 0) {
-                    return [System.Threading.Tasks.Task]::CompletedTask
-                }
-
-                if ($topic -like '*/device/data_feedback') {
-                    $decoded = ConvertFrom-ZlibPayload -Data $payload
-                    if ($decoded) {
-                        $conn.ResponseQueue.Enqueue($decoded)
-                        $conn.ResponseSignal.Release() | Out-Null  # Wake Send-MqttCommand waiter
+                    # Guard: skip empty/null payloads
+                    if ($null -eq $payload -or $payload.Length -eq 0) {
+                        return [System.Threading.Tasks.Task]::CompletedTask
                     }
-                }
-                elseif ($topic -like '*/device/heart_beat') {
-                    $decoded = ConvertFrom-ZlibPayload -Data $payload
-                    if ($decoded) {
-                        $conn.LastHeartbeat = [datetime]::UtcNow
-                        $conn.LastWorkingState = [int]($decoded.working_state)
-                        # Reset controller on sleep
-                        if ($decoded.working_state -eq 0 -and $conn.ControllerAcquired) {
-                            $conn.ControllerAcquired = $false
-                            $conn.State = [MqttConnectionState]::Connected
+
+                    if ($topic -like '*/device/data_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.ResponseQueue.Enqueue($decoded)
+                            $conn.ResponseSignal.Release() | Out-Null  # Wake Send-MqttCommand waiter
+                        }
+                    } elseif ($topic -like '*/device/heart_beat') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastHeartbeat = [datetime]::UtcNow
+                            $conn.LastWorkingState = [int]($decoded.working_state)
+                            # Reset controller on sleep
+                            if ($decoded.working_state -eq 0 -and $conn.ControllerAcquired) {
+                                $conn.ControllerAcquired = $false
+                                $conn.State = [MqttConnectionState]::Connected
+                            }
+                        }
+                    } elseif ($topic -like '*/device/DeviceMSG') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.Robot = ConvertTo-YarboRobot -DeviceMsg $decoded -SerialNumber $conn.SerialNumber -Broker $conn.Broker -Port $conn.Port
                         }
                     }
-                }
-                elseif ($topic -like '*/device/DeviceMSG') {
-                    $decoded = ConvertFrom-ZlibPayload -Data $payload
-                    if ($decoded) {
-                        $conn.Robot = ConvertTo-YarboRobot -DeviceMsg $decoded -SerialNumber $conn.SerialNumber -Broker $conn.Broker -Port $conn.Port
-                    }
-                }
 
-                return [System.Threading.Tasks.Task]::CompletedTask
-            }.GetNewClosure())
+                    return [System.Threading.Tasks.Task]::CompletedTask
+                }.GetNewClosure())
 
             # Acquire controller unless skipped
             if (-not $NoControllerInit) {
                 Assert-YarboController -Connection $conn
             }
-        }
-        catch {
+        } catch {
             $conn.State = [MqttConnectionState]::Disconnected
             if ($conn.MqttClient) {
                 try {
                     $conn.MqttClient.DisconnectAsync([System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
-                }
-                catch {
-                    # Ignore cleanup errors
+                } catch {
+                    Write-Debug "MQTT cleanup error (non-fatal): $($_.Exception.Message)"
                 }
                 try {
                     $conn.MqttClient.Dispose()
-                }
-                catch {
-                    # Ignore cleanup errors
+                } catch {
+                    Write-Debug "MQTT cleanup error (non-fatal): $($_.Exception.Message)"
                 }
             }
             if ($_.Exception -is [YarboException]) { throw }

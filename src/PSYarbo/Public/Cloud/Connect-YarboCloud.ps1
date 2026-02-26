@@ -1,5 +1,5 @@
 function Connect-YarboCloud {
-<#
+    <#
 .SYNOPSIS
     Authenticates with the Yarbo cloud API.
 
@@ -26,6 +26,9 @@ function Connect-YarboCloud {
     Get-YarboDevice
     Get-YarboVideo
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+        Justification = 'API tokens received from the Yarbo cloud API are wrapped in SecureString for safer in-memory storage')]
     [CmdletBinding(DefaultParameterSetName = 'Credential')]
     [OutputType([YarboCloudSession])]
     param(
@@ -48,13 +51,9 @@ function Connect-YarboCloud {
     if ($PSCmdlet.ParameterSetName -eq 'Token') {
         $session.RefreshToken = $RefreshToken
         $session.RefreshAuth()
-    }
-    else {
-        # RSA-encrypt password
-        $plainPassword = [System.Net.NetworkCredential]::new('', $Password).Password
-
+    } else {
         $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
-                      else { Join-Path $PSScriptRoot '../../assets/rsa_key/rsa_public_key.pem' }
+        else { Join-Path $PSScriptRoot '../../assets/rsa_key/rsa_public_key.pem' }
 
         if (-not (Test-Path $rsaKeyPath)) {
             throw [YarboCloudAuthException]::new(
@@ -65,11 +64,22 @@ function Connect-YarboCloud {
 
         $rsaPem = Get-Content $rsaKeyPath -Raw
         $rsa = [System.Security.Cryptography.RSA]::Create()
-        $rsa.ImportFromPem($rsaPem.ToCharArray())
+        try {
+            $rsa.ImportFromPem($rsaPem.ToCharArray())
 
-        $passwordBytes = [System.Text.Encoding]::UTF8.GetBytes($plainPassword)
-        $encrypted = $rsa.Encrypt($passwordBytes, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
-        $encryptedB64 = [Convert]::ToBase64String($encrypted)
+            # Convert SecureString to plain text only for the encryption step; clear immediately after.
+            $plainPassword = [System.Net.NetworkCredential]::new('', $Password).Password
+            try {
+                $passwordBytes = [System.Text.Encoding]::UTF8.GetBytes($plainPassword)
+                $encrypted = $rsa.Encrypt($passwordBytes, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                $encryptedB64 = [Convert]::ToBase64String($encrypted)
+            } finally {
+                # Clear plain-text password from memory as soon as it is no longer needed
+                $plainPassword = $null
+            }
+        } finally {
+            $rsa.Dispose()
+        }
 
         Write-Verbose (Protect-YarboLogMessage "[Connect-YarboCloud] Routing via cloud REST → POST /yarbo/robot-service/robot/commonUser/login")
 

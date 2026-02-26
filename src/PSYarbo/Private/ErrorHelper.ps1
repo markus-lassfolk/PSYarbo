@@ -3,6 +3,9 @@ function New-YarboError {
     .SYNOPSIS
         Creates a standardized ErrorRecord with PSYarbo.<Category>.<Command> ErrorId format.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'New-YarboError creates and returns an ErrorRecord object; it does not modify any system or module state')]
     param(
         [Parameter(Mandatory)][string]$Message,
         [Parameter(Mandatory)][string]$ErrorId,

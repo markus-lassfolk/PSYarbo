@@ -1,5 +1,5 @@
 function Disconnect-Yarbo {
-<#
+    <#
 .SYNOPSIS
     Disconnects from a Yarbo robot's MQTT broker.
 
@@ -42,17 +42,13 @@ function Disconnect-Yarbo {
 
         if ($All) {
             $connections = @($script:YarboConnections.Values)
-        }
-        elseif ($Connection) {
+        } elseif ($Connection) {
             $connections = @($Connection)
-        }
-        elseif ($SerialNumber -and $script:YarboConnections.ContainsKey($SerialNumber)) {
+        } elseif ($SerialNumber -and $script:YarboConnections.ContainsKey($SerialNumber)) {
             $connections = @($script:YarboConnections[$SerialNumber])
-        }
-        elseif ($script:DefaultConnection) {
+        } elseif ($script:DefaultConnection) {
             $connections = @($script:DefaultConnection)
-        }
-        else {
+        } else {
             Write-Warning "No active Yarbo connection to disconnect."
             return
         }
@@ -68,19 +64,17 @@ function Disconnect-Yarbo {
                             [System.Threading.CancellationToken]::None
                         ).GetAwaiter().GetResult() | Out-Null
                     }
-                }
-                catch {
+                } catch {
                     Write-Warning "Error during disconnect: $($_.Exception.Message)"
-                }
-                finally {
+                } finally {
                     $conn.State = [MqttConnectionState]::Disconnected
                     $conn.ControllerAcquired = $false
 
                     # Dispose managed resources
-                    try { $conn.CancellationSource.Dispose() } catch { }
-                    try { if ($conn.MqttClient -is [System.IDisposable]) { $conn.MqttClient.Dispose() } } catch { }
-                    try { $conn.CommandSemaphore.Dispose() } catch { }
-                    try { $conn.ResponseSignal.Dispose() } catch { }
+                    try { $conn.CancellationSource.Dispose() } catch { $null = $_ }
+                    try { if ($conn.MqttClient -is [System.IDisposable]) { $conn.MqttClient.Dispose() } } catch { $null = $_ }
+                    try { $conn.CommandSemaphore.Dispose() } catch { $null = $_ }
+                    try { $conn.ResponseSignal.Dispose() } catch { $null = $_ }
 
                     $script:YarboConnections.Remove($conn.SerialNumber) | Out-Null
                     if ($script:DefaultConnection -eq $conn) {

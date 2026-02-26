@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+    Justification = 'API tokens received from the network are wrapped in SecureString for safer in-memory storage; no alternative without losing the security benefit')]
 class YarboCloudSession {
     [string]$Email
     [string]$BaseUrl = 'https://4zx17x5q7l.execute-api.us-east-1.amazonaws.com/Stage'
@@ -9,7 +12,7 @@ class YarboCloudSession {
     hidden [System.Net.Http.HttpClient]$HttpClient
 
     # Retry policy constants
-    hidden static [int]$MaxRetries   = 3
+    hidden static [int]$MaxRetries = 3
     hidden static [int[]]$RetryDelay = @(1000, 3000, 9000)  # exponential ms
 
     YarboCloudSession() {
@@ -56,7 +59,9 @@ class YarboCloudSession {
                         $errObj = $responseBody | ConvertFrom-Json -ErrorAction Stop
                         if ($errObj.message) { $errMsg = $errObj.message }
                         elseif ($errObj.error) { $errMsg = $errObj.error }
-                    } catch { }
+                    } catch {
+                        Write-Debug "Could not parse error body as JSON: $($_.Exception.Message)"
+                    }
                     throw [System.Net.Http.HttpRequestException]::new(
                         "HTTP $statusCode from $method $path : $errMsg"
                     )
@@ -70,8 +75,7 @@ class YarboCloudSession {
                         "Non-JSON response from $method $path (HTTP $([int]$response.StatusCode)): $responseBody"
                     )
                 }
-            }
-            catch {
+            } catch {
                 $lastError = $_
                 if ($isIdempotent -and $attempt -lt $maxAttempts) {
                     $delayMs = [YarboCloudSession]::RetryDelay[$attempt - 1]
@@ -118,8 +122,8 @@ class YarboCloudSession {
         }
 
         if ($result.success) {
-            $this.AccessToken  = ConvertTo-SecureString -String $result.data.accessToken  -AsPlainText -Force
-            $this.TokenExpiry  = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
+            $this.AccessToken = ConvertTo-SecureString -String $result.data.accessToken  -AsPlainText -Force
+            $this.TokenExpiry = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
             if ($result.data.refreshToken) {
                 $this.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
             }
@@ -136,4 +140,12 @@ class YarboCloudSession {
     }
 
     [string] ToString() { return "YarboCloud[$($this.Email)]" }
+
+    # Implement IDisposable — dispose HttpClient when session is no longer needed.
+    [void] Dispose() {
+        if ($null -ne $this.HttpClient) {
+            $this.HttpClient.Dispose()
+            $this.HttpClient = $null
+        }
+    }
 }

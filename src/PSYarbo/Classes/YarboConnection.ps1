@@ -28,11 +28,11 @@ class YarboConnection {
     hidden [System.Threading.SemaphoreSlim]$ResponseSignal
 
     YarboConnection() {
-        $this.ResponseQueue     = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
-        $this.CommandLog        = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $this.ResponseQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
+        $this.CommandLog = [System.Collections.Generic.List[PSCustomObject]]::new()
         $this.CancellationSource = [System.Threading.CancellationTokenSource]::new()
-        $this.CommandSemaphore  = [System.Threading.SemaphoreSlim]::new(1, 1)
-        $this.ResponseSignal    = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
+        $this.CommandSemaphore = [System.Threading.SemaphoreSlim]::new(1, 1)
+        $this.ResponseSignal = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
     }
 
     # ── Delegate helpers ────────────────────────────────────────────────────────
@@ -72,4 +72,21 @@ class YarboConnection {
     }
 
     [string] ToString() { return "Yarbo[$($this.SerialNumber)@$($this.Broker):$($this.Port)]" }
+
+    # Implement IDisposable — dispose all owned IDisposable members.
+    # Disconnect-Yarbo calls this indirectly; classes holding a YarboConnection can also call it directly.
+    [void] Dispose() {
+        try { if ($null -ne $this.CancellationSource) { $this.CancellationSource.Dispose() } } catch { $null = $_ }
+        try { if ($null -ne $this.CommandSemaphore) { $this.CommandSemaphore.Dispose() } } catch { $null = $_ }
+        try { if ($null -ne $this.ResponseSignal) { $this.ResponseSignal.Dispose() } } catch { $null = $_ }
+        try {
+            if ($null -ne $this.MqttClient -and $this.MqttClient -is [System.IDisposable]) {
+                $this.MqttClient.Dispose()
+            }
+        } catch { $null = $_ }
+        $this.CancellationSource = $null
+        $this.CommandSemaphore = $null
+        $this.ResponseSignal = $null
+        $this.MqttClient = $null
+    }
 }
