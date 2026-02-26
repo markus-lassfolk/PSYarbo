@@ -88,18 +88,16 @@ function Connect-Yarbo {
         if (-not $Port) { $Port = $cfg['Port'] }
 
         # Generate unique ClientId per pipeline iteration if not provided
-        if (-not $ClientId) {
-            $ClientId = "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))"
-        }
+        $effectiveClientId = if ($ClientId) { $ClientId } else { "PSYarbo-$([guid]::NewGuid().ToString('N').Substring(0,8))" }
 
         $conn = [YarboConnection]::new()
         $conn.Broker = $Broker
         $conn.Port = $Port
         $conn.SerialNumber = $SerialNumber
-        $conn.ClientId = $ClientId
+        $conn.ClientId = $effectiveClientId
         $conn.State = [MqttConnectionState]::Connecting
 
-        Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connecting to ${Broker}:${Port} as $ClientId")
+        Write-Verbose (Protect-YarboLogMessage "[Connect-Yarbo] Connecting to ${Broker}:${Port} as $effectiveClientId")
 
         try {
             # Guard: MQTTnet assembly must be loaded before any connection attempt
@@ -117,7 +115,7 @@ function Connect-Yarbo {
 
             # Build connection options
             $optionsBuilder = $conn.MqttFactory.CreateClientOptionsBuilder()
-            $options = $optionsBuilder.WithTcpServer($Broker, $Port).WithClientId($ClientId).WithTimeout(
+            $options = $optionsBuilder.WithTcpServer($Broker, $Port).WithClientId($effectiveClientId).WithTimeout(
                 [TimeSpan]::FromSeconds($TimeoutSeconds)
             ).Build()
 
