@@ -77,13 +77,15 @@ function Connect-Yarbo {
             $Port = if ($Robot.Port) { $Robot.Port } else { $null }
         }
 
-        # Resolve defaults from environment
-        if (-not $Broker -and $env:YARBO_BROKER) { $Broker = $env:YARBO_BROKER }
-        if (-not $SerialNumber -and $env:YARBO_SN) { $SerialNumber = $env:YARBO_SN }
-        if (-not $Port -and $env:YARBO_PORT) { $Port = [int]$env:YARBO_PORT }
-
-        # Apply final default for Port
-        if (-not $Port) { $Port = 1883 }
+        # Resolve defaults via ConfigManager (env vars + config file + built-in defaults)
+        $cfg = Get-YarboConfig -Overrides @{
+            Broker = $Broker
+            SN     = $SerialNumber
+            Port   = if ($Port) { $Port } else { $null }
+        }
+        if (-not $Broker)       { $Broker       = $cfg['Broker'] }
+        if (-not $SerialNumber) { $SerialNumber  = $cfg['SN'] }
+        if (-not $Port)         { $Port          = $cfg['Port'] }
 
         # Generate unique ClientId per pipeline iteration if not provided
         if (-not $ClientId) {
