@@ -52,18 +52,20 @@ Describe 'YarboPlanFeedback' {
 Describe 'YarboConnection — new telemetry members' {
     It 'TelemetryQueue is initialized and empty' {
         $conn = [YarboConnection]::new()
-        $conn.TelemetryQueue       | Should -Not -BeNull
+        # Use -ne check to avoid PowerShell enumerating the ConcurrentQueue when piping
+        ($null -ne $conn.TelemetryQueue) | Should -BeTrue
         $conn.TelemetryQueue.Count | Should -Be 0
     }
 
     It 'TelemetrySignal is initialized' {
         $conn = [YarboConnection]::new()
-        $conn.TelemetrySignal | Should -Not -BeNull
+        ($null -ne $conn.TelemetrySignal) | Should -BeTrue
     }
 
     It 'TelemetryLog is initialized and empty' {
         $conn = [YarboConnection]::new()
-        $conn.TelemetryLog       | Should -Not -BeNull
+        # Use -ne check to avoid PowerShell enumerating the List when piping
+        ($null -ne $conn.TelemetryLog) | Should -BeTrue
         $conn.TelemetryLog.Count | Should -Be 0
     }
 

@@ -20,7 +20,8 @@ function ConvertTo-ZlibPayload {
         } finally {
             $zlib.Dispose()
         }
-        return $ms.ToArray()
+        # Use comma operator to prevent PowerShell from unrolling the byte[] into individual bytes
+        return ,$ms.ToArray()
     } finally {
         $ms.Dispose()
     }
