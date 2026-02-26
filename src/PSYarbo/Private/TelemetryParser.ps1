@@ -1,3 +1,75 @@
+function ConvertFrom-GnggaSentence {
+    <#
+    .SYNOPSIS
+        Parses a GNGGA NMEA 0183 sentence into a GPS coordinate hashtable.
+
+    .DESCRIPTION
+        Accepts a raw $GNGGA or $GPGGA NMEA sentence and returns a hashtable
+        with Latitude, Longitude, Altitude, and FixQuality fields.
+        Returns a hashtable with null coordinates when fix quality is 0 (invalid)
+        or the sentence is absent.
+
+    .PARAMETER Sentence
+        The raw NMEA sentence string (e.g. "$GNGGA,142800.10,5920.05710640,N,...").
+    #>
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Sentence
+    )
+
+    $result = @{ Latitude = $null; Longitude = $null; Altitude = $null; FixQuality = 0 }
+
+    if (-not ($Sentence.StartsWith('$GNGGA') -or $Sentence.StartsWith('$GPGGA'))) {
+        return $result
+    }
+
+    # Strip NMEA checksum (*XX) if present
+    if ($Sentence.Contains('*')) {
+        $Sentence = $Sentence.Substring(0, $Sentence.IndexOf('*'))
+    }
+
+    $parts = $Sentence -split ','
+    if ($parts.Count -lt 10) { return $result }
+
+    $fixQuality = 0
+    if ($parts[6] -match '^\d+$') { $fixQuality = [int]$parts[6] }
+    $result.FixQuality = $fixQuality
+
+    if ($fixQuality -eq 0) { return $result }
+
+    # Latitude: DDMM.MMMM → decimal degrees
+    if ($parts[2] -and $parts[3]) {
+        try {
+            $rawLat = $parts[2]
+            $latDeg = [double]($rawLat.Substring(0, 2))
+            $latMin = [double]($rawLat.Substring(2))
+            $lat    = $latDeg + $latMin / 60.0
+            if ($parts[3].ToUpper() -eq 'S') { $lat = -$lat }
+            $result.Latitude = $lat
+        } catch { }
+    }
+
+    # Longitude: DDDMM.MMMM → decimal degrees
+    if ($parts[4] -and $parts[5]) {
+        try {
+            $rawLon = $parts[4]
+            $lonDeg = [double]($rawLon.Substring(0, 3))
+            $lonMin = [double]($rawLon.Substring(3))
+            $lon    = $lonDeg + $lonMin / 60.0
+            if ($parts[5].ToUpper() -eq 'W') { $lon = -$lon }
+            $result.Longitude = $lon
+        } catch { }
+    }
+
+    # Altitude (field 9)
+    if ($parts.Count -gt 9 -and $parts[9] -match '^-?\d+(\.\d+)?$') {
+        $result.Altitude = [double]$parts[9]
+    }
+
+    return $result
+}
+
 function ConvertTo-YarboTelemetry {
     <#
     .SYNOPSIS
@@ -72,6 +144,15 @@ function ConvertTo-YarboTelemetry {
         $t.WirelessChargeVoltage = [int]($DeviceMsg.wireless_recharge.output_voltage)
         $t.WirelessChargeCurrent = [int]($DeviceMsg.wireless_recharge.output_current)
         $t.WirelessChargeErrorCode = [int]($DeviceMsg.wireless_recharge.error_code)
+    }
+
+    # GPS — parse GNGGA NMEA sentence from rtk_base_data.rover.gngga
+    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $DeviceMsg.rtk_base_data.rover.gngga) {
+        $gps = ConvertFrom-GnggaSentence -Sentence ([string]$DeviceMsg.rtk_base_data.rover.gngga)
+        $t.FixQuality = $gps.FixQuality
+        $t.Latitude   = $gps.Latitude
+        $t.Longitude  = $gps.Longitude
+        $t.Altitude   = $gps.Altitude
     }
 
     return $t

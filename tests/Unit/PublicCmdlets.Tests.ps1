@@ -213,6 +213,174 @@ InModuleScope PSYarbo {
             { $result | ConvertFrom-Json } | Should -Not -Throw
         }
     }
+
+    Describe 'Remove-YarboSchedule' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Remove-YarboSchedule' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has ShouldProcess support with ConfirmImpact High' {
+            $cmd = Get-Command Remove-YarboSchedule
+            $attr = $cmd.ScriptBlock.Attributes | Where-Object { $_ -is [System.Management.Automation.CmdletBindingAttribute] }
+            $attr.SupportsShouldProcess | Should -BeTrue
+            $attr.ConfirmImpact | Should -Be 'High'
+        }
+
+        It 'Has mandatory ScheduleId parameter' {
+            $cmd = Get-Command Remove-YarboSchedule
+            $paramAttr = $cmd.Parameters['ScheduleId'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory }
+            $paramAttr | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has synopsis and example in help' {
+            $help = Get-Help Remove-YarboSchedule
+            $help.Synopsis | Should -Not -BeNullOrEmpty
+            $help.Synopsis | Should -Not -Be 'Remove-YarboSchedule'
+            $examples = if ($help.PSObject.Properties.Match('examples').Count -gt 0 -and $help.examples) { $help.examples.example } else { @() }
+            $examples.Count | Should -BeGreaterThan 0
+        }
+    }
+
+    Describe 'Set-YarboRobotName' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Set-YarboRobotName' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has mandatory SerialNumber and Name parameters' {
+            $cmd = Get-Command Set-YarboRobotName
+            $snMandatory = $cmd.Parameters['SerialNumber'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory }
+            $nameMandatory = $cmd.Parameters['Name'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory }
+            $snMandatory | Should -Not -BeNullOrEmpty
+            $nameMandatory | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has synopsis and example in help' {
+            $help = Get-Help Set-YarboRobotName
+            $help.Synopsis | Should -Not -BeNullOrEmpty
+            $examples = if ($help.PSObject.Properties.Match('examples').Count -gt 0 -and $help.examples) { $help.examples.example } else { @() }
+            $examples.Count | Should -BeGreaterThan 0
+        }
+    }
+
+    Describe 'Add-YarboRobotBinding' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Add-YarboRobotBinding' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has mandatory SerialNumber parameter' {
+            $cmd = Get-Command Add-YarboRobotBinding
+            $mandatoryAttr = $cmd.Parameters['SerialNumber'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory }
+            $mandatoryAttr | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    Describe 'Remove-YarboRobotBinding' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Remove-YarboRobotBinding' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has ShouldProcess support with ConfirmImpact High' {
+            $cmd = Get-Command Remove-YarboRobotBinding
+            $attr = $cmd.ScriptBlock.Attributes | Where-Object { $_ -is [System.Management.Automation.CmdletBindingAttribute] }
+            $attr.SupportsShouldProcess | Should -BeTrue
+            $attr.ConfirmImpact | Should -Be 'High'
+        }
+
+        It 'Has mandatory SerialNumber parameter accepting arrays' {
+            $cmd = Get-Command Remove-YarboRobotBinding
+            $cmd.Parameters['SerialNumber'].ParameterType | Should -Be ([string[]])
+        }
+    }
+
+    Describe 'Get-YarboNotificationSetting' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Get-YarboNotificationSetting' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has synopsis and example in help' {
+            $help = Get-Help Get-YarboNotificationSetting
+            $help.Synopsis | Should -Not -BeNullOrEmpty
+            $examples = if ($help.PSObject.Properties.Match('examples').Count -gt 0 -and $help.examples) { $help.examples.example } else { @() }
+            $examples.Count | Should -BeGreaterThan 0
+        }
+    }
+
+    Describe 'Get-YarboDeviceMessage' {
+        It 'Is exported from the module' {
+            Get-Command -Name 'Get-YarboDeviceMessage' | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Has optional SerialNumber parameter for filtering' {
+            $cmd = Get-Command Get-YarboDeviceMessage
+            $cmd.Parameters.ContainsKey('SerialNumber') | Should -BeTrue
+            $mandatoryAttr = $cmd.Parameters['SerialNumber'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.Mandatory }
+            $mandatoryAttr | Should -BeNullOrEmpty
+        }
+    }
+
+    Describe 'YarboTelemetry GPS fields' {
+        It 'YarboTelemetry class has Latitude property' {
+            $t = [YarboTelemetry]::new()
+            $t.PSObject.Properties.Match('Latitude').Count | Should -BeGreaterThan 0
+        }
+
+        It 'YarboTelemetry class has Longitude property' {
+            $t = [YarboTelemetry]::new()
+            $t.PSObject.Properties.Match('Longitude').Count | Should -BeGreaterThan 0
+        }
+
+        It 'YarboTelemetry class has Altitude property' {
+            $t = [YarboTelemetry]::new()
+            $t.PSObject.Properties.Match('Altitude').Count | Should -BeGreaterThan 0
+        }
+
+        It 'YarboTelemetry class has FixQuality property' {
+            $t = [YarboTelemetry]::new()
+            $t.PSObject.Properties.Match('FixQuality').Count | Should -BeGreaterThan 0
+        }
+
+        It 'ConvertFrom-GnggaSentence parses a valid GNGGA sentence' {
+            $sentence = '$GNGGA,142800.10,5920.05710640,N,01829.82358143,E,4,35,0.5,42.3,M,,,,'
+            $result = ConvertFrom-GnggaSentence -Sentence $sentence
+            $result.FixQuality | Should -Be 4
+            $result.Latitude  | Should -BeGreaterThan 59
+            $result.Latitude  | Should -BeLessThan 60
+            $result.Longitude | Should -BeGreaterThan 18
+            $result.Longitude | Should -BeLessThan 19
+            $result.Altitude  | Should -Be 42.3
+        }
+
+        It 'ConvertFrom-GnggaSentence returns null coords for fix quality 0' {
+            $sentence = '$GNGGA,142800.10,0000.00000,N,00000.00000,E,0,00,,,,'
+            $result = ConvertFrom-GnggaSentence -Sentence $sentence
+            $result.FixQuality | Should -Be 0
+            $result.Latitude  | Should -BeNullOrEmpty
+            $result.Longitude | Should -BeNullOrEmpty
+        }
+
+        It 'ConvertFrom-GnggaSentence returns default result for non-NMEA input' {
+            $result = ConvertFrom-GnggaSentence -Sentence ''
+            $result.FixQuality | Should -Be 0
+            $result.Latitude  | Should -BeNullOrEmpty
+        }
+
+        It 'Watch-YarboTelemetry populates GPS fields from DeviceMSG with GNGGA' {
+            $conn = New-MockYarboConnection
+            $fixture = Get-Content (Join-Path $script:fixturesDir 'DeviceMSG-sample.json') | ConvertFrom-Json
+            Push-MockTelemetryEvent -Connection $conn -MessageType 'DeviceMSG' -Data $fixture
+
+            $script:DefaultConnection = $conn
+            $result = Watch-YarboTelemetry -Duration ([TimeSpan]::FromSeconds(2)) -Count 1
+            $script:DefaultConnection = $null
+            $conn.Dispose()
+
+            # The fixture has a valid GNGGA sentence in rtk_base_data.rover.gngga
+            $result | Should -Not -BeNullOrEmpty
+            $result.FixQuality | Should -BeGreaterThan 0
+            $result.Latitude   | Should -Not -BeNullOrEmpty
+            $result.Longitude  | Should -Not -BeNullOrEmpty
+        }
+    }
 }
 
 AfterAll {

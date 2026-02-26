@@ -27,13 +27,15 @@
         'Resume-Yarbo', 'Suspend-Yarbo',
         # Manual Drive
         'Start-YarboManualDrive', 'Set-YarboVelocity', 'Set-YarboRoller', 'Set-YarboChute', 'Stop-YarboManualDrive',
-        # Plans/Maps
+        # Plans/Maps/Schedules
         'Get-YarboPlan', 'New-YarboPlan', 'Remove-YarboPlan',
-        'Get-YarboMap', 'Get-YarboSchedule', 'Set-YarboSchedule',
+        'Get-YarboMap', 'Get-YarboSchedule', 'Set-YarboSchedule', 'Remove-YarboSchedule',
         # Telemetry
         'Get-YarboTelemetry', 'Watch-YarboTelemetry', 'Export-YarboTelemetry',
         # Cloud
         'Connect-YarboCloud', 'Get-YarboDevice', 'Get-YarboVideo', 'Get-YarboPlanHistory',
+        'Set-YarboRobotName', 'Add-YarboRobotBinding', 'Remove-YarboRobotBinding',
+        'Get-YarboNotificationSetting', 'Get-YarboDeviceMessage',
         # Utility
         'Test-YarboConnection', 'Get-YarboLog'
     )

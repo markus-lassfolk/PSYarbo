@@ -12,5 +12,6 @@
     "route_priority": {"hg0": 10, "wlan0": 600, "wwan0": 50000},
     "ultrasonic_msg": {"lf_dis": 0, "mt_dis": 0, "rf_dis": 0},
     "wireless_recharge": {"state": 2, "output_voltage": 4186, "output_current": 1489, "error_code": 0},
+    "rtk_base_data": {"rover": {"gngga": "$GNGGA,142800.10,5920.05710640,N,01829.82358143,E,4,35,0.5,42.3,M,,,*7B"}},
     "timestamp": 1771943280.0
 }

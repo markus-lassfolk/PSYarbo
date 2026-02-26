@@ -42,6 +42,12 @@ class YarboTelemetry {
     [int]$WirelessChargeCurrent
     [int]$WirelessChargeErrorCode
 
+    # GPS (parsed from rtk_base_data.rover.gngga NMEA sentence)
+    [nullable[double]]$Latitude
+    [nullable[double]]$Longitude
+    [nullable[double]]$Altitude
+    [int]$FixQuality
+
     # Raw
     hidden [PSCustomObject]$RawMessage
 
