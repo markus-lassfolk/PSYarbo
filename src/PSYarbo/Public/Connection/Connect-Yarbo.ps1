@@ -155,7 +155,9 @@ function Connect-Yarbo {
                             $decoded = ConvertFrom-ZlibPayload -Data $payload
                             if ($decoded) {
                                 $conn.LastHeartbeat = [datetime]::UtcNow
-                                $conn.LastWorkingState = [int]($decoded.working_state)
+                                if ($null -ne $decoded.working_state) {
+                                    $conn.LastWorkingState = [int]($decoded.working_state)
+                                }
                                 # Reset controller on sleep
                                 if ($null -ne $decoded.working_state -and $decoded.working_state -eq 0 -and $conn.ControllerAcquired) {
                                     $conn.ControllerAcquired = $false
