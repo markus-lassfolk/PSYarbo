@@ -16,13 +16,14 @@ function Initialize-YarboErrorReporting {
     )
 
     # Opt-out: enabled by default unless YARBO_SENTRY_DSN is explicitly set to empty string
-    if ($env:YARBO_SENTRY_DSN -eq '') {
+    if ($DSN -eq '') {
         $script:ErrorReportingEnabled = $false
         return
     }
 
     if (-not $DSN) {
-        $DSN = 'http://f8ce85f9b85c4f33a76f1df9881ef897@192.168.1.99:8000/3'
+        $script:ErrorReportingEnabled = $false
+        return
     }
 
     $script:ErrorReportingDSN = $DSN
