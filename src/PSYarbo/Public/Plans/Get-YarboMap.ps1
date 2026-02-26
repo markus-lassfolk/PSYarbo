@@ -36,7 +36,7 @@ function Get-YarboMap {
         Write-Verbose (Protect-YarboLogMessage "[Get-YarboMap] Routing via local MQTT → get_map")
         $result = Send-MqttCommand -Connection $conn -Command 'get_map' -Payload @{} -TimeoutMs 10000
 
-        if ($null -eq $result) {
+        if ($result.TimedOut) {
             $PSCmdlet.WriteError((New-YarboError -Message "get_map timed out." -ErrorId 'PSYarbo.Timeout.GetMap' -Category 'OperationTimeout'))
             return
         }

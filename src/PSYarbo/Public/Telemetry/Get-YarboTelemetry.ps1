@@ -28,7 +28,7 @@ function Get-YarboTelemetry {
         Write-Verbose (Protect-YarboLogMessage "[Get-YarboTelemetry] Routing via local MQTT → get_device_msg")
         $result = Send-MqttCommand -Connection $conn -Command 'get_device_msg' -Payload @{}
 
-        if ($null -eq $result) {
+        if ($result.TimedOut) {
             $PSCmdlet.WriteError((New-YarboError -Message "Timed out waiting for telemetry." -ErrorId 'PSYarbo.Timeout.GetTelemetry' -Category 'OperationTimeout'))
             return
         }

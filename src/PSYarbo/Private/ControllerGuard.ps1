@@ -18,7 +18,7 @@ function Assert-YarboController {
     Write-Verbose (Protect-YarboLogMessage "[Assert-YarboController] Acquiring controller for $($Connection.SerialNumber)...")
     $result = Send-MqttCommand -Connection $Connection -Command 'get_controller' -Payload @{} -TimeoutMs 5000
 
-    if ($null -eq $result) {
+    if ($result.TimedOut) {
         Write-Warning ("get_controller timed out for $($Connection.SerialNumber). " +
             "Assuming controller acquired — commands may fail if another client holds the controller. " +
             "Use -NoControllerInit and Send-YarboCommand -Command get_controller to retry manually.")

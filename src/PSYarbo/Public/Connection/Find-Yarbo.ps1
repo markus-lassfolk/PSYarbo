@@ -103,21 +103,20 @@ function Find-Yarbo {
         $semaphore.Wait() | Out-Null
 
         $task = [System.Threading.Tasks.Task]::Run([scriptblock]{
-            param($ipAddr, $portNum, $tMs, $sem, $bag)
             try {
                 $c = [System.Net.Sockets.TcpClient]::new()
                 try {
-                    if ($c.ConnectAsync($ipAddr, $portNum).Wait($tMs) -and $c.Connected) {
-                        $bag.Add($ipAddr)
+                    if ($c.ConnectAsync($ip, $Port).Wait($tcpTimeoutMs) -and $c.Connected) {
+                        $candidateIps.Add($ip)
                     }
                 } finally {
                     $c.Dispose()
                 }
             } catch { }
             finally {
-                $sem.Release() | Out-Null
+                $semaphore.Release() | Out-Null
             }
-        }.GetNewClosure(), @($ip, $Port, $tcpTimeoutMs, $semaphore, $candidateIps))
+        }.GetNewClosure())
         $tasks.Add($task)
     }
     [System.Threading.Tasks.Task]::WhenAll($tasks.ToArray()).GetAwaiter().GetResult() | Out-Null

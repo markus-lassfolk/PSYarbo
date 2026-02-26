@@ -32,7 +32,7 @@ function Get-YarboStatus {
 
         $result = Send-MqttCommand -Connection $conn -Command 'get_device_msg' -Payload @{} -TimeoutMs 5000
 
-        if ($null -eq $result) {
+        if ($result.TimedOut) {
             $PSCmdlet.WriteError((New-YarboError `
                 -Message "Timed out waiting for device message. Verify the robot is powered on and the MQTT broker at $($conn.Broker):$($conn.Port) is reachable." `
                 -ErrorId 'PSYarbo.Timeout.GetDeviceMsg' `
