@@ -54,6 +54,10 @@ Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private') -Filter '*.ps1' -Recurse
 }
 #endregion
 
+#region — Auto-init error reporting (opt-out: enabled by default, set YARBO_SENTRY_DSN="" to disable)
+Initialize-YarboErrorReporting
+#endregion
+
 #region — Load public functions
 Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public') -Filter '*.ps1' -Recurse | ForEach-Object {
     . $_.FullName
