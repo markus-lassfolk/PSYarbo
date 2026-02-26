@@ -84,6 +84,10 @@ function Save-YarboCredential {
         Protected = $IsWindows
         Saved     = [datetime]::UtcNow.ToString('o')
     }
+    if (-not $IsWindows -and -not (Test-Path $script:YarboCredentialFile)) {
+        $null = New-Item -ItemType File -Path $script:YarboCredentialFile -Force
+        chmod 600 $script:YarboCredentialFile
+    }
     $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
     if (-not $IsWindows) {
         chmod 600 $script:YarboCredentialFile
@@ -194,6 +198,9 @@ function Remove-YarboCredential {
         $existing.PSObject.Properties | ForEach-Object { $creds[$_.Name] = $_.Value }
         $creds.Remove($Name) | Out-Null
         $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
+        if (-not $IsWindows) {
+            chmod 600 $script:YarboCredentialFile
+        }
         Write-Verbose "PSYarbo: Removed credential '$Name' from file store"
     } catch {
         Write-Warning "PSYarbo: Could not remove credential '$Name': $($_.Exception.Message)"
