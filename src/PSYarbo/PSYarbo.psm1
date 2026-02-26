@@ -54,7 +54,7 @@ Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private') -Filter '*.ps1' -Recurse
 }
 #endregion
 
-#region — Auto-init error reporting (opt-out: enabled by default, set YARBO_SENTRY_DSN="" to disable)
+#region — Auto-init error reporting (opt-in: disabled by default, set YARBO_SENTRY_DSN to enable)
 Initialize-YarboErrorReporting
 #endregion
 

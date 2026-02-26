@@ -3,7 +3,7 @@
     GlitchTip/Sentry error reporting for PSYarbo.
 .DESCRIPTION
     Sends unhandled exceptions to GlitchTip using the Sentry store API.
-    Opt-in: disabled by default. Enable by setting $env:YARBO_SENTRY_DSN to your DSN.
+    Disabled by default (opt-in). Enable by setting $env:YARBO_SENTRY_DSN to your Sentry DSN.
 #>
 
 $script:ErrorReportingDSN = $null
@@ -15,7 +15,7 @@ function Initialize-YarboErrorReporting {
         [string]$DSN = $env:YARBO_SENTRY_DSN
     )
 
-    # Opt-in: only enable if YARBO_SENTRY_DSN is explicitly provided
+    # Opt-in: disabled by default unless YARBO_SENTRY_DSN is explicitly set
     if (-not $DSN) {
         $script:ErrorReportingEnabled = $false
         return
