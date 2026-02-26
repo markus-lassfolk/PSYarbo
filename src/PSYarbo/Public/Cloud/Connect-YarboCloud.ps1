@@ -119,6 +119,11 @@ function Connect-YarboCloud {
             $session.BoundSerialNumbers = @($result.data.snList)
         }
 
+        # Dispose any existing cloud session before overwriting
+        if ($script:YarboCloudSession) {
+            $script:YarboCloudSession.Dispose()
+        }
+
         $script:YarboCloudSession = $session
     } catch {
         $session.Dispose()
