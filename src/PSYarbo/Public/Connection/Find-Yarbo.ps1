@@ -214,7 +214,10 @@ function Find-Yarbo {
         } finally {
             if ($client) {
                 try {
-                    $client.DisconnectAsync([System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
+                    $client.DisconnectAsync(
+                        $factory.CreateClientDisconnectOptionsBuilder().Build(),
+                        [System.Threading.CancellationToken]::None
+                    ).GetAwaiter().GetResult() | Out-Null
                 } catch {
                     Write-Debug "[Find-Yarbo] MQTT disconnect error (non-fatal): $($_.Exception.Message)"
                 }
