@@ -17,10 +17,12 @@
         'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
         # Status
         'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
+        'Get-YarboGlobalParams',
         # Control
         'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
         'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
-        'Send-YarboCommand',
+        'Send-YarboCommand', 'Send-YarboReturnToDock',
+        'Set-YarboGlobalParams',
         # State
         'Resume-Yarbo', 'Suspend-Yarbo',
         # Manual Drive
@@ -37,7 +39,7 @@
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()
-    AliasesToExport      = @()
+    AliasesToExport      = @('Return-YarboToDock')
     PrivateData          = @{
         PSData = @{
             Tags         = @('Yarbo', 'Robot', 'Mower', 'MQTT', 'IoT', 'Automation', 'SnowBlower')
