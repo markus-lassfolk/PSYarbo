@@ -94,11 +94,10 @@ jobs:
 
       - name: Publish test results
         if: always()
-        uses: dorny/test-reporter@v2
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          name: Pester (${{ matrix.os }})
-          path: output/test-results/*.xml
-          reporter: java-junit
+          check_name: Pester (${{ matrix.os }})
+          files: output/test-results/*.xml
 
   analyze:
     name: Code Scanning (SARIF)
