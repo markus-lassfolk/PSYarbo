@@ -158,11 +158,69 @@ function Connect-Yarbo {
                                 $conn.ControllerAcquired = $false
                                 $conn.State = [MqttConnectionState]::Connected
                             }
+                            # Enqueue to telemetry event stream
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                MessageType = 'HeartBeat'
+                                Timestamp   = [datetime]::UtcNow
+                                Data        = $decoded
+                            })
+                            $conn.TelemetrySignal.Release() | Out-Null
                         }
                     } elseif ($topic -like '*/device/DeviceMSG') {
                         $decoded = ConvertFrom-ZlibPayload -Data $payload
                         if ($decoded) {
                             $conn.Robot = ConvertTo-YarboRobot -DeviceMsg $decoded -SerialNumber $conn.SerialNumber -Broker $conn.Broker -Port $conn.Port
+                            # Enqueue to event-driven telemetry stream
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                MessageType = 'DeviceMSG'
+                                Timestamp   = [datetime]::UtcNow
+                                Data        = $decoded
+                            })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            # Keep a bounded telemetry log (last 200 entries)
+                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                                Timestamp   = [datetime]::UtcNow
+                                MessageType = 'DeviceMSG'
+                                Direction   = 'Pushed'
+                                Topic       = $topic
+                            })
+                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                        }
+                    } elseif ($topic -like '*/device/plan_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastPlanFeedback = $decoded
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                MessageType = 'PlanFeedback'
+                                Timestamp   = [datetime]::UtcNow
+                                Data        = $decoded
+                            })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                                Timestamp   = [datetime]::UtcNow
+                                MessageType = 'PlanFeedback'
+                                Direction   = 'Pushed'
+                                Topic       = $topic
+                            })
+                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
+                        }
+                    } elseif ($topic -like '*/device/recharge_feedback') {
+                        $decoded = ConvertFrom-ZlibPayload -Data $payload
+                        if ($decoded) {
+                            $conn.LastRechargeFeedback = $decoded
+                            $conn.TelemetryQueue.Enqueue([PSCustomObject]@{
+                                MessageType = 'RechargeFeedback'
+                                Timestamp   = [datetime]::UtcNow
+                                Data        = $decoded
+                            })
+                            $conn.TelemetrySignal.Release() | Out-Null
+                            $conn.TelemetryLog.Add([PSCustomObject]@{
+                                Timestamp   = [datetime]::UtcNow
+                                MessageType = 'RechargeFeedback'
+                                Direction   = 'Pushed'
+                                Topic       = $topic
+                            })
+                            if ($conn.TelemetryLog.Count -gt 200) { $conn.TelemetryLog.RemoveAt(0) }
                         }
                     }
 

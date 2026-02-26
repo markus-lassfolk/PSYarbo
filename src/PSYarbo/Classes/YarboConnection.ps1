@@ -17,6 +17,10 @@ class YarboConnection {
     [YarboRobot]$Robot
     [bool]$ControllerAcquired
 
+    # Push-message feedback (populated by Connect-Yarbo message handler)
+    [PSCustomObject]$LastPlanFeedback
+    [PSCustomObject]$LastRechargeFeedback
+
     # Internal (hidden from default display)
     hidden [object]$MqttClient
     hidden [object]$MqttFactory
@@ -26,6 +30,12 @@ class YarboConnection {
     hidden [System.Threading.SemaphoreSlim]$CommandSemaphore
     # Signal released each time a response is enqueued; eliminates busy-wait
     hidden [System.Threading.SemaphoreSlim]$ResponseSignal
+    # Event-driven telemetry queue for Watch-YarboTelemetry (tagged PSCustomObjects)
+    hidden [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryQueue
+    # Signal released whenever an event is added to TelemetryQueue
+    hidden [System.Threading.SemaphoreSlim]$TelemetrySignal
+    # Bounded log of recent push-telemetry events (DeviceMSG, heartbeat, feedback)
+    hidden [System.Collections.Generic.List[PSCustomObject]]$TelemetryLog
 
     YarboConnection() {
         $this.ResponseQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
@@ -33,6 +43,9 @@ class YarboConnection {
         $this.CancellationSource = [System.Threading.CancellationTokenSource]::new()
         $this.CommandSemaphore = [System.Threading.SemaphoreSlim]::new(1, 1)
         $this.ResponseSignal = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
+        $this.TelemetryQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
+        $this.TelemetrySignal = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
+        $this.TelemetryLog = [System.Collections.Generic.List[PSCustomObject]]::new()
     }
 
     # ── Delegate helpers ────────────────────────────────────────────────────────
@@ -79,6 +92,7 @@ class YarboConnection {
         try { if ($null -ne $this.CancellationSource) { $this.CancellationSource.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.CommandSemaphore) { $this.CommandSemaphore.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.ResponseSignal) { $this.ResponseSignal.Dispose() } } catch { $null = $_ }
+        try { if ($null -ne $this.TelemetrySignal) { $this.TelemetrySignal.Dispose() } } catch { $null = $_ }
         try {
             if ($null -ne $this.MqttClient -and $this.MqttClient -is [System.IDisposable]) {
                 $this.MqttClient.Dispose()
@@ -87,6 +101,7 @@ class YarboConnection {
         $this.CancellationSource = $null
         $this.CommandSemaphore = $null
         $this.ResponseSignal = $null
+        $this.TelemetrySignal = $null
         $this.MqttClient = $null
     }
 }
