@@ -1,0 +1,9 @@
+{
+    "topic": "read_all_plan",
+    "state": 0,
+    "msg": "success",
+    "data": [
+        {"id": 1, "name": "Uteplats", "areaIds": [29], "enable_self_order": true},
+        {"id": 2, "name": "Garage och Uppfart", "areaIds": [14], "enable_self_order": true}
+    ]
+}
