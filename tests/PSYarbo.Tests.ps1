@@ -52,9 +52,11 @@ Describe 'Module Manifest' {
         $expected = @(
             'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
             'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
+            'Get-YarboGlobalParams',
             'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
             'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
-            'Send-YarboCommand',
+            'Send-YarboCommand', 'Send-YarboReturnToDock',
+            'Set-YarboGlobalParams',
             'Resume-Yarbo', 'Suspend-Yarbo',
             'Start-YarboManualDrive', 'Set-YarboVelocity', 'Set-YarboRoller', 'Set-YarboChute', 'Stop-YarboManualDrive',
             'Get-YarboPlan', 'New-YarboPlan', 'Remove-YarboPlan',

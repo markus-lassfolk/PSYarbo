@@ -59,6 +59,9 @@ function Get-YarboConfig {
     return $config
 }
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseShouldProcessForStateChangingFunctions', '',
+    Justification = 'Private helper — state-change gate is in the calling public cmdlet')]
 function Set-YarboConfig {
     <#
     .SYNOPSIS

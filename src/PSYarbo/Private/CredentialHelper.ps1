@@ -10,12 +10,15 @@
 $script:YarboCredentialDir  = Join-Path $HOME '.psyarbo'
 $script:YarboCredentialFile = Join-Path $script:YarboCredentialDir 'credentials.json'
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseShouldProcessForStateChangingFunctions', '',
+    Justification = 'Private credential helper — called only from Connect-YarboCloud which gates ShouldProcess')]
 function Save-YarboCredential {
     <#
     .SYNOPSIS
         Saves a named Yarbo credential (SecureString) for future sessions.
     .PARAMETER Name
-        Logical name for the credential (e.g., 'CloudRefreshToken', 'CloudEmail').
+        Logical name for the credential (e.g., 'CloudRefreshToken').
     .PARAMETER Value
         The credential value as a SecureString.
     .PARAMETER VaultName
@@ -47,7 +50,6 @@ function Save-YarboCredential {
     $plain = [System.Net.NetworkCredential]::new('', $Value).Password
     try {
         $stored = if ($IsWindows) {
-            # DPAPI encryption on Windows
             [Convert]::ToBase64String(
                 [System.Security.Cryptography.ProtectedData]::Protect(
                     [System.Text.Encoding]::UTF8.GetBytes($plain),
@@ -56,7 +58,6 @@ function Save-YarboCredential {
                 )
             )
         } else {
-            # Plain base64 on non-Windows (no DPAPI)
             [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($plain))
         }
     } finally {
@@ -72,7 +73,7 @@ function Save-YarboCredential {
         try {
             $existing = Get-Content $script:YarboCredentialFile -Raw | ConvertFrom-Json
             $existing.PSObject.Properties | ForEach-Object { $creds[$_.Name] = $_.Value }
-        } catch { }
+        } catch { $null = $_ }
     }
 
     $creds[$Name] = @{
@@ -84,6 +85,9 @@ function Save-YarboCredential {
     Write-Verbose "PSYarbo: Saved credential '$Name' to $script:YarboCredentialFile"
 }
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+    Justification = 'Credential retrieved from encrypted file storage must be re-wrapped in SecureString')]
 function Get-YarboCredential {
     <#
     .SYNOPSIS
@@ -144,6 +148,9 @@ function Get-YarboCredential {
     }
 }
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseShouldProcessForStateChangingFunctions', '',
+    Justification = 'Private credential helper — state-change gate is in the calling public cmdlet')]
 function Remove-YarboCredential {
     <#
     .SYNOPSIS

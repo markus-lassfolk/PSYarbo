@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseSingularNouns', '',
+    Justification = '"Params" is an established abbreviation for Parameters; renaming would break the documented API')]
 function Set-YarboGlobalParams {
     <#
 .SYNOPSIS
