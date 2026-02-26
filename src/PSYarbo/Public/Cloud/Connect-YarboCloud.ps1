@@ -53,7 +53,7 @@ function Connect-YarboCloud {
         $session.RefreshAuth()
     } else {
         $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
-        else { Join-Path $PSScriptRoot '../../assets/rsa_key/rsa_public_key.pem' }
+        else { Join-Path $PSScriptRoot '../../../../assets/rsa_key/rsa_public_key.pem' }
 
         if (-not (Test-Path $rsaKeyPath)) {
             throw [YarboCloudAuthException]::new(
