@@ -6,8 +6,7 @@
 obj/
 bin/
 
-# PSake / build output
-build/
+# Build output (not the build/ source directory)
 dist/
 output/
 release/
