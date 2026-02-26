@@ -125,7 +125,7 @@ function Connect-Yarbo {
             $conn.MqttClient.ApplicationMessageReceivedAsync.Add({
                 param($args)
                 $topic = $args.ApplicationMessage.Topic
-                $payload = $args.ApplicationMessage.PayloadSegment.Array
+                $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
 
                 if ($topic -like '*/device/data_feedback') {
                     $decoded = ConvertFrom-ZlibPayload -Data $payload

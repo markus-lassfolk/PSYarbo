@@ -70,7 +70,7 @@ function Find-Yarbo {
                     $robot = [YarboRobot]::new()
                     $robot.Broker = $ip
                     $robot.Port = $Port
-                    $robot.SerialNumber = "UNKNOWN"
+                    $robot.SerialNumber = $null
                     $found.Add($robot)
                 }
             }

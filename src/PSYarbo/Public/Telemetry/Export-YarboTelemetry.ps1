@@ -75,8 +75,14 @@ function Export-YarboTelemetry {
             }
         }
         elseif ($Format -eq 'JSON') {
-            $allData | Select-Object * -ExcludeProperty RawMessage | ConvertTo-Json -Depth 5 |
-                Set-Content -Path $Path -Encoding UTF8
+            $json = $allData | Select-Object * -ExcludeProperty RawMessage | ConvertTo-Json -Depth 5
+            if ($Append -and (Test-Path $Path)) {
+                $existing = Get-Content -Path $Path -Raw | ConvertFrom-Json
+                $combined = @($existing) + @($allData | Select-Object * -ExcludeProperty RawMessage)
+                $combined | ConvertTo-Json -Depth 5 | Set-Content -Path $Path -Encoding UTF8
+            } else {
+                $json | Set-Content -Path $Path -Encoding UTF8
+            }
         }
         # JSONL already written incrementally
 

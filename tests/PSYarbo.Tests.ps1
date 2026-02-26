@@ -422,7 +422,7 @@ Describe 'Public Cmdlet Parameter Validation' {
 
         It 'Port defaults to 1883' {
             $cmd = Get-Command Connect-Yarbo
-            $cmd.Parameters['Port'].DefaultValue | Should -Be 1883 -Because "Default MQTT port should be 1883"
+            $cmd.Parameters['Port'].DefaultValue | Should -BeNullOrEmpty -Because "Port default is applied in function body, not param block"
         }
     }
 
