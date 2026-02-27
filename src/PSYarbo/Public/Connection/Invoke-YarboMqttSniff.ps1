@@ -102,12 +102,12 @@ function Invoke-YarboMqttSniff {
 
         if ($RecordPath) {
             $record = [PSCustomObject]@{
-                RecordedAt       = $captureStart.ToString('o')
-                Broker           = $Broker
-                Port             = $Port
-                DurationSeconds  = $DurationSeconds
-                MessageCount     = $recordMessages.Count
-                Messages         = @($recordMessages)
+                RecordedAt      = $captureStart.ToString('o')
+                Broker          = $Broker
+                Port            = $Port
+                DurationSeconds = $DurationSeconds
+                MessageCount    = $recordMessages.Count
+                Messages        = @($recordMessages)
             }
             $dir = Split-Path -Parent $RecordPath
             if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }

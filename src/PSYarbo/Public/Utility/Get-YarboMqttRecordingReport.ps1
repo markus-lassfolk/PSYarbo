@@ -31,11 +31,11 @@ function Get-YarboMqttRecordingReport {
 
     if (-not (Test-Path -LiteralPath $RecordingPath)) {
         $PSCmdlet.WriteError([System.Management.Automation.ErrorRecord]::new(
-            [System.IO.FileNotFoundException]::new("Recording not found.", $RecordingPath),
-            'PSYarbo.RecordingNotFound',
-            [System.Management.Automation.ErrorCategory]::ObjectNotFound,
-            $RecordingPath
-        ))
+                [System.IO.FileNotFoundException]::new("Recording not found.", $RecordingPath),
+                'PSYarbo.RecordingNotFound',
+                [System.Management.Automation.ErrorCategory]::ObjectNotFound,
+                $RecordingPath
+            ))
         return
     }
 
@@ -48,10 +48,10 @@ function Get-YarboMqttRecordingReport {
 
     # Topic suffix (e.g. device/DeviceMSG) -> cmdlets that expose this data
     $topicToCmdlets = @{
-        'device/DeviceMSG'       = @('Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboTelemetry', 'Watch-YarboTelemetry')
-        'device/heart_beat'      = @('Watch-YarboTelemetry -IncludeHeartbeat', 'Connection.LastHeartbeat / LastWorkingState')
-        'device/data_feedback'   = @('(command responses) Get-YarboPlan', 'Get-YarboStatus', 'Get-YarboGlobalParams', 'Get-YarboSchedule', 'etc.')
-        'device/plan_feedback'   = @('Watch-YarboTelemetry -IncludePlanFeedback', 'Connection.LastPlanFeedback')
+        'device/DeviceMSG'         = @('Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboTelemetry', 'Watch-YarboTelemetry')
+        'device/heart_beat'        = @('Watch-YarboTelemetry -IncludeHeartbeat', 'Connection.LastHeartbeat / LastWorkingState')
+        'device/data_feedback'     = @('(command responses) Get-YarboPlan', 'Get-YarboStatus', 'Get-YarboGlobalParams', 'Get-YarboSchedule', 'etc.')
+        'device/plan_feedback'     = @('Watch-YarboTelemetry -IncludePlanFeedback', 'Connection.LastPlanFeedback')
         'device/recharge_feedback' = @('Watch-YarboTelemetry', 'Connection.LastRechargeFeedback')
     }
 
