@@ -21,7 +21,7 @@ InModuleScope PSYarbo {
                 $status = Get-YarboStatus -Connection $conn
                 $status | Should -Not -BeNullOrEmpty
                 $status.SerialNumber | Should -Be 'MOCK-SN'
-                $status.Battery | Should -Be 83
+                $status.Battery | Should -Be '83%'
             } finally {
                 $script:DefaultConnection = $null
             }

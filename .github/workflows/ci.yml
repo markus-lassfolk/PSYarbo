@@ -83,7 +83,7 @@ jobs:
           New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
           $unitConfig = New-PesterConfiguration
           $unitConfig.Run.Path              = './tests/Unit'
-          $unitConfig.Run.Exit              = $false
+          $unitConfig.Run.Exit              = $true
           $unitConfig.Run.ExitCode          = 'None'
           $unitConfig.Output.Verbosity      = 'Detailed'
           $unitConfig.Filter.ExcludeTag    = 'Integration'
@@ -98,7 +98,7 @@ jobs:
           Import-Module Pester -MinimumVersion 5.0.0 -Force
           $intConfig = New-PesterConfiguration
           $intConfig.Run.Path              = './tests/Integration'
-          $intConfig.Run.Exit              = $false
+          $intConfig.Run.Exit              = $true
           $intConfig.Run.ExitCode          = 'None'
           $intConfig.Filter.ExcludeTag     = 'Integration'
           $intConfig.Output.Verbosity      = 'Detailed'
