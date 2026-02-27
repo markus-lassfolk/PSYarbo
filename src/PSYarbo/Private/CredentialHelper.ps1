@@ -67,6 +67,13 @@ function Save-YarboCredential {
     if (-not (Test-Path $script:YarboCredentialDir)) {
         $null = New-Item -ItemType Directory -Path $script:YarboCredentialDir -Force
     }
+    if (-not $IsWindows) {
+        try {
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialDir, 'UserRead, UserWrite, UserExecute')
+        } catch {
+            Write-Warning "PSYarbo: Could not set directory permissions: $($_.Exception.Message)"
+        }
+    }
 
     $creds = @{}
     if (Test-Path $script:YarboCredentialFile) {
@@ -81,7 +88,22 @@ function Save-YarboCredential {
         Protected = $IsWindows
         Saved     = [datetime]::UtcNow.ToString('o')
     }
+    if (-not $IsWindows -and -not (Test-Path $script:YarboCredentialFile)) {
+        try {
+            $null = New-Item -ItemType File -Path $script:YarboCredentialFile -Force
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+        } catch {
+            Write-Warning "PSYarbo: Could not create file with secure permissions: $($_.Exception.Message)"
+        }
+    }
     $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
+    if (-not $IsWindows) {
+        try {
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+        } catch {
+            Write-Warning "PSYarbo: Could not set file permissions: $($_.Exception.Message)"
+        }
+    }
     Write-Verbose "PSYarbo: Saved credential '$Name' to $script:YarboCredentialFile"
 }
 
@@ -188,6 +210,13 @@ function Remove-YarboCredential {
         $existing.PSObject.Properties | ForEach-Object { $creds[$_.Name] = $_.Value }
         $creds.Remove($Name) | Out-Null
         $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
+        if (-not $IsWindows) {
+            try {
+                [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+            } catch {
+                Write-Warning "PSYarbo: Could not set file permissions: $($_.Exception.Message)"
+            }
+        }
         Write-Verbose "PSYarbo: Removed credential '$Name' from file store"
     } catch {
         Write-Warning "PSYarbo: Could not remove credential '$Name': $($_.Exception.Message)"

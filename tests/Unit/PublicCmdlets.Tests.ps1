@@ -139,7 +139,7 @@ InModuleScope PSYarbo {
         It 'Filter Telemetry returns TelemetryLog entries from mock connection' {
             $conn = New-MockYarboConnection
             $fixture = Get-Content (Join-Path $script:fixturesDir 'DeviceMSG-sample.json') | ConvertFrom-Json
-            $conn.TelemetryLog.Add([PSCustomObject]@{
+            $conn.TelemetryLog.Enqueue([PSCustomObject]@{
                 Timestamp   = [datetime]::UtcNow
                 MessageType = 'DeviceMSG'
                 Direction   = 'Pushed'

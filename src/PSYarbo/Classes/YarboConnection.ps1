@@ -25,7 +25,7 @@ class YarboConnection {
     hidden [object]$MqttClient
     hidden [object]$MqttFactory
     hidden [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$ResponseQueue
-    hidden [System.Collections.Generic.List[PSCustomObject]]$CommandLog
+    hidden [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$CommandLog
     hidden [System.Threading.CancellationTokenSource]$CancellationSource
     hidden [System.Threading.SemaphoreSlim]$CommandSemaphore
     # Signal released each time a response is enqueued; eliminates busy-wait
@@ -35,17 +35,17 @@ class YarboConnection {
     # Signal released whenever an event is added to TelemetryQueue
     hidden [System.Threading.SemaphoreSlim]$TelemetrySignal
     # Bounded log of recent push-telemetry events (DeviceMSG, heartbeat, feedback)
-    [System.Collections.Generic.List[PSCustomObject]]$TelemetryLog
+    [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]$TelemetryLog
 
     YarboConnection() {
         $this.ResponseQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
-        $this.CommandLog = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $this.CommandLog = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
         $this.CancellationSource = [System.Threading.CancellationTokenSource]::new()
         $this.CommandSemaphore = [System.Threading.SemaphoreSlim]::new(1, 1)
         $this.ResponseSignal = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
         $this.TelemetryQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
         $this.TelemetrySignal = [System.Threading.SemaphoreSlim]::new(0, [int]::MaxValue)
-        $this.TelemetryLog = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $this.TelemetryLog = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObject]]::new()
     }
 
     # ── Delegate helpers ────────────────────────────────────────────────────────

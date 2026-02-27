@@ -1,0 +1,5 @@
+[allowlist]
+  description = "Allow fake test tokens"
+  paths = [
+    '''tests/.*\.Tests\.ps1''',
+  ]

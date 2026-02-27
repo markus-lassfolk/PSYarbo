@@ -54,7 +54,7 @@ function Connect-YarboCloud {
         } else {
             $session.Email = $Email
             $rsaKeyPath = if ($RsaPublicKeyPath) { $RsaPublicKeyPath }
-            else { Join-Path $MyInvocation.MyCommand.Module.ModuleBase '../../assets/rsa_key/rsa_public_key.pem' }
+            else { Join-Path $PSScriptRoot '../../../../assets/rsa_key/rsa_public_key.pem' }
 
             if (-not (Test-Path $rsaKeyPath)) {
                 throw [YarboCloudAuthException]::new(
@@ -99,7 +99,7 @@ function Connect-YarboCloud {
             if (-not $response.IsSuccessStatusCode) {
                 throw [YarboCloudAuthException]::new(
                     "Login failed with HTTP $([int]$response.StatusCode): $responseBody",
-                    [int]$response.StatusCode
+                    ([int]$response.StatusCode).ToString()
                 )
             }
 
@@ -108,12 +108,13 @@ function Connect-YarboCloud {
             } catch {
                 throw [YarboCloudAuthException]::new(
                     "Login returned non-JSON response: $responseBody",
-                    0
+                    'INVALID_JSON'
                 )
             }
 
             if (-not $result.success) {
-                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", [string]$result.code)
+                $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
+                throw [YarboCloudAuthException]::new("Login failed: $($result.message)", $codeStr)
             }
 
             $session.AccessToken = ConvertTo-SecureString -String $result.data.accessToken -AsPlainText -Force

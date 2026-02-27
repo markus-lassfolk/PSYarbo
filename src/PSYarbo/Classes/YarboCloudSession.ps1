@@ -83,8 +83,12 @@ class YarboCloudSession {
                     [System.Threading.Thread]::Sleep($delayMs)
                     # Re-acquire token in case of 401
                     if ($_.Exception.Message -like '*HTTP 401*') {
-                        $this.RefreshAuth()
-                        $bearer = $this.GetBearerToken()
+                        try {
+                            $this.RefreshAuth()
+                            $bearer = $this.GetBearerToken()
+                        } catch {
+                            Write-Warning "[YarboCloudSession] Token refresh failed during retry: $($_.Exception.Message)"
+                        }
                     }
                 }
             }
@@ -108,7 +112,7 @@ class YarboCloudSession {
         if (-not $response.IsSuccessStatusCode) {
             throw [YarboCloudAuthException]::new(
                 "Token refresh failed with HTTP $([int]$response.StatusCode): $responseBody",
-                [int]$response.StatusCode
+                ([int]$response.StatusCode).ToString()
             )
         }
 
@@ -117,7 +121,7 @@ class YarboCloudSession {
         } catch {
             throw [YarboCloudAuthException]::new(
                 "Token refresh returned non-JSON response: $responseBody",
-                0
+                'INVALID_JSON'
             )
         }
 
@@ -128,7 +132,8 @@ class YarboCloudSession {
                 $this.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
             }
         } else {
-            throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", [string]$result.code)
+            $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
+            throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", $codeStr)
         }
     }
 
