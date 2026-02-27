@@ -61,7 +61,7 @@ Write-Host "Found: $($robot.SerialNumber) at $($robot.Broker)"
 $conn = $robot | Connect-Yarbo
 
 # — OR — connect directly
-$conn = Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
+$conn = Connect-Yarbo -Broker <rover-ip> -SerialNumber <serial-number>
 
 # Check status
 Get-YarboStatus
@@ -88,7 +88,7 @@ Disconnect-Yarbo
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Find-Yarbo` | Auto-discover Yarbo robots via MQTT `heart_beat`. Returns `YarboRobot[]`. |
+| `Find-Yarbo` | Auto-discover Yarbo robots via MQTT (DeviceMSG, data_feedback, heart_beat; aligned with [python-yarbo](https://github.com/markus-lassfolk/python-yarbo)). Returns `YarboRobot[]`. |
 | `Connect-Yarbo` | Connect to a robot's MQTT broker. Returns `YarboConnection`. |
 | `Disconnect-Yarbo` | Disconnect and dispose resources. |
 | `Test-YarboConnection` | Test if a connection is alive. |
@@ -164,6 +164,8 @@ PSYarbo uses the `snowbot/{SN}/...` MQTT topic hierarchy discovered by reverse e
 👉 **[markus-lassfolk/yarbo-reversing](https://github.com/markus-lassfolk/yarbo-reversing)**
 
 See also: `Get-Help about_PSYarbo_MQTT`
+
+**Discovery:** Find-Yarbo and Find-YarboDevice use the same strategy as [python-yarbo](https://github.com/markus-lassfolk/python-yarbo): anonymous MQTT client, subscribe to `snowbot/+/device/DeviceMSG`, `snowbot/+/device/data_feedback`, and `snowbot/+/device/heart_beat`, and derive the robot serial number from the first message received. Default is 192.168.1.0/24 (typical home LAN); pass `-Subnet` if your network uses a different range so discovery can scan it. If discovery finds no robots, run from a host on the same LAN as the Yarbo and ensure the robot is powered and connected.
 
 ---
 

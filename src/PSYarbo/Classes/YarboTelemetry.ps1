@@ -2,28 +2,33 @@ class YarboTelemetry {
     [datetime]$Timestamp
     [string]$SerialNumber
 
-    # Battery
+    # Battery (BatteryMSG)
     [int]$BatteryCapacity
     [int]$BatteryStatus
     [bool]$BatteryTempError
+    [double]$BatteryTimestamp
 
-    # Position
+    # Body (BodyMsg)
+    [int]$RechargeState
+
+    # Position (CombinedOdom, RTKMSG, combined_odom_confidence)
     [double]$X
     [double]$Y
     [double]$Phi
     [double]$Heading
+    [int]$RtkHeadingStatus
     [string]$RtkStatus
     [double]$RtkDop
     [double]$OdomConfidence
 
-    # Running status
+    # Running status (RunningStatusMSG)
     [int]$ChuteAngle
     [int]$ChuteSteeringEngineInfo
     [double]$HeadGyroPitch
     [double]$HeadGyroRoll
     [int]$RainSensorData
 
-    # State flags
+    # State (StateMSG)
     [int]$WorkingState
     [int]$ChargingStatus
     [int]$ErrorCode
@@ -31,22 +36,29 @@ class YarboTelemetry {
     [bool]$IsPaused
     [bool]$IsRecharging
 
-    # Sensors
+    # Sensors (ultrasonic_msg)
     [int]$UltrasonicLeftFront
     [int]$UltrasonicMiddle
     [int]$UltrasonicRightFront
 
-    # Wireless charging
+    # Wireless charging (wireless_recharge)
     [int]$WirelessChargeState
     [int]$WirelessChargeVoltage
     [int]$WirelessChargeCurrent
     [int]$WirelessChargeErrorCode
 
-    # GPS (parsed from rtk_base_data.rover.gngga NMEA sentence)
+    # LED (led)
+    [string]$LedRegister
+
+    # GPS (parsed from rtk_base_data.rover.gngga + raw)
     [nullable[double]]$Latitude
     [nullable[double]]$Longitude
     [nullable[double]]$Altitude
     [int]$FixQuality
+    [string]$GnggaRaw
+
+    # Device message timestamp (root timestamp)
+    [double]$DeviceTimestamp
 
     # Raw
     hidden [PSCustomObject]$RawMessage

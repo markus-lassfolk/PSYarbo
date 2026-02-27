@@ -94,11 +94,17 @@ function ConvertTo-YarboTelemetry {
     $t.SerialNumber = $SerialNumber
     $t.RawMessage = $DeviceMsg
 
-    # Battery
+    # Battery (BatteryMSG)
     if ($DeviceMsg.BatteryMSG) {
         $t.BatteryCapacity = [int]($DeviceMsg.BatteryMSG.capacity)
         $t.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
         $t.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
+        if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $t.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
+    }
+
+    # Body (BodyMsg)
+    if ($DeviceMsg.BodyMsg -and $null -ne $DeviceMsg.BodyMsg.recharge_state) {
+        $t.RechargeState = [int]($DeviceMsg.BodyMsg.recharge_state)
     }
 
     # Position
@@ -110,10 +116,9 @@ function ConvertTo-YarboTelemetry {
 
     if ($DeviceMsg.RTKMSG) {
         $t.Heading = [double]($DeviceMsg.RTKMSG.heading)
+        if ($null -ne $DeviceMsg.RTKMSG.heading_status) { $t.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $t.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
-        if ($null -ne $DeviceMsg.RTKMSG.heading_dop) {
-            $t.RtkDop = [double]($DeviceMsg.RTKMSG.heading_dop)
-        }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_dop) { $t.RtkDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
     }
 
     if ($null -ne $DeviceMsg.combined_odom_confidence) {
@@ -151,9 +156,17 @@ function ConvertTo-YarboTelemetry {
         $t.WirelessChargeErrorCode = [int]($DeviceMsg.wireless_recharge.error_code)
     }
 
+    # LED (led)
+    if ($null -ne $DeviceMsg.led) { $t.LedRegister = [string]($DeviceMsg.led) }
+
+    # Device message timestamp (root)
+    if ($null -ne $DeviceMsg.timestamp) { $t.DeviceTimestamp = [double]($DeviceMsg.timestamp) }
+
     # GPS — parse GNGGA NMEA sentence from rtk_base_data.rover.gngga
     if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $DeviceMsg.rtk_base_data.rover.gngga) {
-        $gps = ConvertFrom-GnggaSentence -Sentence ([string]$DeviceMsg.rtk_base_data.rover.gngga)
+        $gnggaRaw = [string]$DeviceMsg.rtk_base_data.rover.gngga
+        $t.GnggaRaw = $gnggaRaw
+        $gps = ConvertFrom-GnggaSentence -Sentence $gnggaRaw
         $t.FixQuality = $gps.FixQuality
         $t.Latitude = $gps.Latitude
         $t.Longitude = $gps.Longitude
@@ -188,18 +201,26 @@ function ConvertTo-YarboRobot {
     $r.Broker = $Broker
     $r.Port = $Port
     $r.LastUpdated = [datetime]::UtcNow
+    $r.RawMessage = $DeviceMsg
 
-    # Head
+    # Head (HeadMsg, HeadSerialMsg)
     if ($DeviceMsg.HeadMsg) { $r.HeadType = [int]($DeviceMsg.HeadMsg.head_type) }
     if ($DeviceMsg.HeadSerialMsg) { $r.HeadSerialNumber = $DeviceMsg.HeadSerialMsg.head_sn }
 
-    # Battery
+    # Battery (BatteryMSG)
     if ($DeviceMsg.BatteryMSG) {
         $r.BatteryCapacity = [int]($DeviceMsg.BatteryMSG.capacity)
         $r.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
+        $r.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
+        if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $r.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
     }
 
-    # State
+    # Body (BodyMsg)
+    if ($DeviceMsg.BodyMsg -and $null -ne $DeviceMsg.BodyMsg.recharge_state) {
+        $r.RechargeState = [int]($DeviceMsg.BodyMsg.recharge_state)
+    }
+
+    # State (StateMSG)
     if ($DeviceMsg.StateMSG) {
         $r.WorkingState = [int]($DeviceMsg.StateMSG.working_state)
         $r.ChargingStatus = [int]($DeviceMsg.StateMSG.charging_status)
@@ -218,21 +239,38 @@ function ConvertTo-YarboRobot {
     }
     if ($DeviceMsg.RTKMSG) {
         $r.Heading = [double]($DeviceMsg.RTKMSG.heading)
+        if ($null -ne $DeviceMsg.RTKMSG.heading_status) { $r.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $r.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
+        if ($null -ne $DeviceMsg.RTKMSG.heading_dop) { $r.RtkHeadingDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
     }
     if ($null -ne $DeviceMsg.combined_odom_confidence) {
         $r.OdomConfidence = [double]($DeviceMsg.combined_odom_confidence)
     }
 
-    # Hardware
-    if ($DeviceMsg.RunningStatusMSG) { $r.ChuteAngle = [int]($DeviceMsg.RunningStatusMSG.chute_angle) }
+    # Hardware (RunningStatusMSG, led, wireless_recharge)
+    if ($DeviceMsg.RunningStatusMSG) {
+        $r.ChuteAngle = [int]($DeviceMsg.RunningStatusMSG.chute_angle)
+        if ($null -ne $DeviceMsg.RunningStatusMSG.rain_sensor_data) { $r.RainSensorData = [int]($DeviceMsg.RunningStatusMSG.rain_sensor_data) }
+    }
     if ($null -ne $DeviceMsg.led) { $r.LedRegister = [string]($DeviceMsg.led) }
     if ($DeviceMsg.wireless_recharge) {
+        $r.WirelessChargeState = [int]($DeviceMsg.wireless_recharge.state)
         $r.WirelessChargeVoltage = [double]($DeviceMsg.wireless_recharge.output_voltage)
         $r.WirelessChargeCurrent = [double]($DeviceMsg.wireless_recharge.output_current)
+        $r.WirelessChargeErrorCode = [int]($DeviceMsg.wireless_recharge.error_code)
     }
 
-    # Network
+    # Ultrasonic (ultrasonic_msg)
+    if ($DeviceMsg.ultrasonic_msg) {
+        $r.UltrasonicLeftFront = [int]($DeviceMsg.ultrasonic_msg.lf_dis)
+        $r.UltrasonicMiddle = [int]($DeviceMsg.ultrasonic_msg.mt_dis)
+        $r.UltrasonicRightFront = [int]($DeviceMsg.ultrasonic_msg.rf_dis)
+    }
+
+    # Device message timestamp (root)
+    if ($null -ne $DeviceMsg.timestamp) { $r.DeviceTimestamp = [double]($DeviceMsg.timestamp) }
+
+    # Network (route_priority)
     if ($DeviceMsg.route_priority) {
         $r.RoutePriority = @{}
         $DeviceMsg.route_priority.PSObject.Properties | ForEach-Object { $r.RoutePriority[$_.Name] = $_.Value }

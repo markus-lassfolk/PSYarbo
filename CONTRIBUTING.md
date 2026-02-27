@@ -114,17 +114,21 @@ function Connect-Yarbo {
         Brief one-line description.
     .DESCRIPTION
         Longer description.
-    .PARAMETER MqttServer
-        MQTT broker hostname or IP.
+    .PARAMETER Broker
+        MQTT broker hostname or IP (use Find-YarboDevice to discover).
+    .PARAMETER SerialNumber
+        Robot serial number.
     .EXAMPLE
-        Connect-Yarbo -MqttServer '192.168.1.100'
+        Connect-Yarbo -Broker '<rover-ip>' -SerialNumber '<serial-number>'
     .NOTES
         Author: Your Name
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $MqttServer
+        [string] $Broker,
+        [Parameter(Mandatory)]
+        [string] $SerialNumber
     )
     # ...
 }

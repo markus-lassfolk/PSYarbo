@@ -18,7 +18,7 @@ LONG DESCRIPTION
     QUICK START
 
         # Connect to your robot
-        Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
+        Connect-Yarbo -Broker <rover-ip> -SerialNumber <serial-number>
 
         # Check status
         Get-YarboStatus

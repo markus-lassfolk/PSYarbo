@@ -50,7 +50,7 @@ Describe 'Module Manifest' {
 
         # Core cmdlets that must be present
         $expected = @(
-            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
+            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice',
             'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
             'Get-YarboGlobalParams',
             'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
@@ -101,7 +101,7 @@ Describe 'Module Structure' {
 
     It 'Classes directory exists' {
         Join-Path $moduleRoot 'Classes' | Should -Exist
-        (Get-ChildItem -Path (Join-Path $moduleRoot 'Classes') -Filter '*.ps1').Count | Should -Be 9
+        (Get-ChildItem -Path (Join-Path $moduleRoot 'Classes') -Filter '*.ps1').Count | Should -Be 11
     }
 
     It 'Format file exists' {
@@ -231,10 +231,10 @@ Describe 'Classes' {
 
         It 'ToString formats correctly' {
             $conn = [YarboConnection]::new()
-            $conn.Broker = '192.168.1.24'
+            $conn.Broker = '192.168.0.1'
             $conn.Port = 1883
             $conn.SerialNumber = 'TEST123'
-            $conn.ToString() | Should -Be 'Yarbo[TEST123@192.168.1.24:1883]'
+            $conn.ToString() | Should -Be 'Yarbo[TEST123@192.168.0.1:1883]'
         }
     }
 
@@ -247,9 +247,9 @@ Describe 'Classes' {
         }
 
         It 'YarboConnectionException includes broker info' {
-            $ex = [YarboConnectionException]::new('Connection failed', '192.168.1.24')
-            $ex.Broker | Should -Be '192.168.1.24'
-            $ex.Remediation | Should -BeLike '*192.168.1.24*'
+            $ex = [YarboConnectionException]::new('Connection failed', '192.168.0.1')
+            $ex.Broker | Should -Be '192.168.0.1'
+            $ex.Remediation | Should -BeLike '*192.168.0.1*'
         }
 
         It 'YarboCommandException wraps result' {
@@ -370,7 +370,7 @@ Describe 'Private Functions' {
         }
 
         It 'Parses into YarboRobot' {
-            $r = ConvertTo-YarboRobot -DeviceMsg $fixture -SerialNumber 'TEST-SN' -Broker '192.168.1.24' -Port 1883
+            $r = ConvertTo-YarboRobot -DeviceMsg $fixture -SerialNumber 'TEST-SN' -Broker '192.168.0.1' -Port 1883
             $r.SerialNumber | Should -Be 'TEST-SN'
             $r.BatteryCapacity | Should -Be 83
             $r.HeadType | Should -Be 1
@@ -402,7 +402,7 @@ Describe 'Private Functions' {
         }
 
         It 'Passes through non-sensitive messages unchanged' {
-            $msg = "Connecting to 192.168.1.24:1883"
+            $msg = "Connecting to 192.168.0.1:1883"
             $redacted = Protect-YarboLogMessage -Message $msg
             $redacted | Should -Be $msg
         }

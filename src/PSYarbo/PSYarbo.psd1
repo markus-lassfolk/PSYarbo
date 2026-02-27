@@ -10,11 +10,26 @@
     PowerShellVersion    = '7.4'
     # MQTTnet loaded via AssemblyLoadContext in PSYarbo.psm1 — not via RequiredAssemblies
     # RequiredAssemblies = @()
+    # Load class definitions before root module so [YarboRobot], [YarboConnection], etc. are visible to OutputType/attributes
+    ScriptsToProcess     = @(
+        'Classes/YarboExceptions.ps1'
+        'Classes/YarboLightState.ps1'
+        'Classes/YarboCommandResult.ps1'
+        'Classes/YarboTelemetry.ps1'
+        'Classes/YarboPlan.ps1'
+        'Classes/YarboSchedule.ps1'
+        'Classes/YarboRobot.ps1'
+        'Classes/YarboGlobalParams.ps1'
+        'Classes/YarboEndpoint.ps1'
+        'Classes/YarboConnection.ps1'
+        'Classes/YarboCloudSession.ps1'
+    )
     FormatsToProcess     = @('PSYarbo.Format.ps1xml')
-    TypesToProcess       = @('PSYarbo.Types.ps1xml')
+    # Types loaded in .psm1 with Update-TypeData -Force to avoid "already present" on re-import
+    # TypesToProcess       = @('PSYarbo.Types.ps1xml')
     FunctionsToExport    = @(
         # Connection
-        'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
+        'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice', 'Invoke-YarboMqttSniff',
         # Status
         'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
         'Get-YarboGlobalParams',

@@ -5,11 +5,16 @@ class YarboRobot {
     [string]$Name
     [int]$HeadType
 
-    # Battery
+    # Battery (BatteryMSG)
     [int]$BatteryCapacity
     [int]$BatteryStatus
+    [bool]$BatteryTempError
+    [double]$BatteryTimestamp
 
-    # State
+    # Body (BodyMsg)
+    [int]$RechargeState
+
+    # State (StateMSG)
     [int]$WorkingState
     [int]$ChargingStatus
     [int]$ErrorCode
@@ -24,24 +29,38 @@ class YarboRobot {
     [double]$OdometryY
     [double]$OdometryPhi
     [double]$Heading
+    [int]$RtkHeadingStatus
     [string]$RtkStatus
+    [double]$RtkHeadingDop
     [double]$OdomConfidence
 
-    # Hardware
+    # Hardware (RunningStatusMSG, led, wireless_recharge)
     [int]$ChuteAngle
+    [int]$RainSensorData
     [string]$LedRegister
+    [int]$WirelessChargeState
     [double]$WirelessChargeVoltage
     [double]$WirelessChargeCurrent
+    [int]$WirelessChargeErrorCode
 
-    # Network
+    # Ultrasonic (ultrasonic_msg)
+    [int]$UltrasonicLeftFront
+    [int]$UltrasonicMiddle
+    [int]$UltrasonicRightFront
+
+    # Network (route_priority)
     [hashtable]$RoutePriority
 
-    # Timestamps
+    # Timestamps (device timestamp + our LastUpdated)
+    [double]$DeviceTimestamp
     [datetime]$LastUpdated
 
     # Connection reference (hidden)
     hidden [string]$Broker
     hidden [int]$Port
+
+    # Full DeviceMSG payload (all MQTT keys available)
+    hidden [PSCustomObject]$RawMessage
 
     [string] ToString() {
         $displayName = if ($this.Name) { $this.Name } else { $this.SerialNumber }
