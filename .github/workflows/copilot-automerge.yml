@@ -40,7 +40,7 @@ jobs:
               'bugfix/', 'fix/', 'hotfix/',
             ];
 
-            const { data: pulls } = await github.rest.pulls.list({
+            const { data: pulls } = await github.pulls.list({
               owner, repo, state: 'open', per_page: 50
             });
 
@@ -60,7 +60,7 @@ jobs:
             for (const pr of eligible) {
               console.log(`Checking PR #${pr.number}: ${pr.title} (${pr.head.ref}) by ${pr.user.login}`);
 
-              const { data: checks } = await github.rest.checks.listForRef({
+              const { data: checks } = await github.checks.listForRef({
                 owner, repo, ref: pr.head.sha
               });
 
@@ -88,7 +88,7 @@ jobs:
 
               if (failed.length > 0) {
                 console.log(`  ${failed.length} checks failed: ${failed.map(c => c.name).join(', ')}`);
-                await github.rest.issues.createComment({
+                await github.issues.createComment({
                   owner, repo, issue_number: pr.number,
                   body: `⚠️ Auto-merge skipped — ${failed.length} check(s) failed: ${failed.map(c => '`' + c.name + '`').join(', ')}.\n\nPlease fix manually or close this PR.`
                 });
@@ -97,7 +97,7 @@ jobs:
 
               console.log(`  All ${allChecks.length} checks passed, squash-merging...`);
               try {
-                await github.rest.pulls.merge({
+                await github.pulls.merge({
                   owner, repo, pull_number: pr.number,
                   merge_method: 'squash',
                   commit_title: `${pr.title} (#${pr.number})`,
