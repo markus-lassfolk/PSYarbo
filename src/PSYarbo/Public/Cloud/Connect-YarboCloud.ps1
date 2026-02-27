@@ -63,16 +63,18 @@ function Connect-YarboCloud {
             # When -Email without -Password, try stored credentials (issue #10)
             if (-not $Password) {
                 $stored = Get-YarboCloudCredential -Email $Email
-                if ($stored.RefreshToken) {
-                    $session.Email = $Email
-                    $session.RefreshToken = $stored.RefreshToken
-                    $session.RefreshAuth()
-                    if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
-                    $script:YarboCloudSession = $session
-                    return $session
+                if ($stored) {
+                    if ($stored.RefreshToken) {
+                        $session.Email = $Email
+                        $session.RefreshToken = $stored.RefreshToken
+                        $session.RefreshAuth()
+                        if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
+                        $script:YarboCloudSession = $session
+                        return $session
+                    }
+                    if ($stored.Password) { $Password = $stored.Password }
                 }
-                if ($stored.Password) { $Password = $stored.Password }
-                else {
+                if (-not $Password) {
                     throw [YarboCloudAuthException]::new(
                         'Password is required. Provide -Password or save credentials with Connect-YarboCloud -Email -Password first.',
                         'PASSWORD_REQUIRED'

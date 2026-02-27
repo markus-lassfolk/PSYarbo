@@ -98,7 +98,7 @@ function Find-YarboDevice {
     if ([string]::IsNullOrWhiteSpace($Subnet)) {
         $subnetsToScan = @(Get-PSYarboLocalSubnets)
         if ($subnetsToScan.Count -eq 0) {
-            $subnetsToScan = @('192.0.2.0/24')
+            $subnetsToScan = @('192.168.1.0/24')
             Write-Verbose "[Find-YarboDevice] No local subnets detected; using fallback $($subnetsToScan[0])"
         } else {
             Write-Verbose "[Find-YarboDevice] Using local subnets: $($subnetsToScan -join ', ')"

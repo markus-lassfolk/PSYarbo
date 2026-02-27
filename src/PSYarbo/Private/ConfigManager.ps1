@@ -30,10 +30,10 @@ function Get-YarboConfig {
 
     $configPath = if ($Path) { $Path } else { $script:YarboConfigFile }
 
-    # Start with defaults
+    # Start with defaults (Port is set later if not overridden)
     $config = @{
         Broker = $null
-        Port   = 1883
+        Port   = $null
         SN     = $null
         Email  = $null
     }
@@ -59,6 +59,11 @@ function Get-YarboConfig {
         }
     }
 
+    # Apply built-in default for Port if not set by config file
+    if ($null -eq $config['Port']) {
+        $config['Port'] = 1883
+    }
+
     # Layer 2: environment variables
     if ($env:YARBO_BROKER) { $config['Broker'] = $env:YARBO_BROKER }
     if ($env:YARBO_SN) { $config['SN'] = $env:YARBO_SN }
@@ -72,78 +77,6 @@ function Get-YarboConfig {
     }
 
     return $config
-}
-
-function Save-YarboConfig {
-    <#
-    .SYNOPSIS
-        Writes the given config object to ~/.psyarbo/config.json (or -Path).
-    .PARAMETER Config
-        Hashtable or PSCustomObject with keys Broker, Port, SN, Email (and optionally defaults, etc.).
-    .PARAMETER Path
-        Optional path. Defaults to ~/.psyarbo/config.json.
-    #>
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
-        'PSUseShouldProcessForStateChangingFunctions', '',
-        Justification = 'Private helper')]
-    param(
-        [Parameter(Mandatory)]
-        [object]$Config,
-
-        [Parameter()]
-        [string]$Path
-    )
-
-    $configPath = if ($Path) { $Path } else { $script:YarboConfigFile }
-    $configDir = Split-Path -Parent $configPath
-    if (-not (Test-Path $configDir)) {
-        $null = New-Item -ItemType Directory -Path $configDir -Force
-    }
-    $obj = if ($Config -is [hashtable]) {
-        $Config
-    } else {
-        $h = @{}
-        $Config.PSObject.Properties | ForEach-Object { $h[$_.Name] = $_.Value }
-        $h
-    }
-    $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $configPath -Encoding UTF8
-    Write-Verbose "PSYarbo: Saved config to $configPath"
-}
-
-function Merge-YarboConfig {
-    <#
-    .SYNOPSIS
-        Merges config hierarchy: defaults &lt; file &lt; env &lt; explicit (highest wins).
-    .PARAMETER Explicit
-        Caller-supplied values (highest priority).
-    .PARAMETER Env
-        Values from environment (e.g. from Get-YarboConfig with no overrides, env-only).
-    .PARAMETER File
-        Values from config file.
-    .PARAMETER Defaults
-        Built-in defaults.
-    #>
-    [OutputType([hashtable])]
-    param(
-        [Parameter()]
-        [hashtable]$Explicit = @{},
-        [Parameter()]
-        [hashtable]$Env = @{},
-        [Parameter()]
-        [hashtable]$File = @{},
-        [Parameter()]
-        [hashtable]$Defaults = @{ Port = 1883 }
-    )
-
-    $result = @{}
-    foreach ($h in @($Defaults, $File, $Env, $Explicit)) {
-        if (-not $h) { continue }
-        foreach ($key in $h.Keys) {
-            $val = $h[$key]
-            if ($null -ne $val -and "$val" -ne '') { $result[$key] = $val }
-        }
-    }
-    return $result
 }
 
 function Set-YarboConfig {
