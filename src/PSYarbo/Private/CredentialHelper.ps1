@@ -170,6 +170,66 @@ function Get-YarboCredential {
     }
 }
 
+function Get-YarboCloudCredential {
+    <#
+    .SYNOPSIS
+        Retrieves stored cloud credentials for an email (password and/or refresh token).
+    .DESCRIPTION
+        Returns a hashtable with Password and RefreshToken (SecureString or $null) for the given email.
+        Used by Connect-YarboCloud when -Email is provided without -Password.
+    .PARAMETER Email
+        The account email used as the credential key.
+    .OUTPUTS
+        [hashtable] @{ Password = [SecureString]; RefreshToken = [SecureString] } or $null if neither found.
+    #>
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Email
+    )
+
+    $safeKey = $Email -replace '[^a-zA-Z0-9._@-]', '_'
+    $passwordName = "$safeKey-Password"
+    $tokenName = "$safeKey-RefreshToken"
+
+    $password = Get-YarboCredential -Name $passwordName
+    $refreshToken = Get-YarboCredential -Name $tokenName
+    if (-not $password -and -not $refreshToken) { return $null }
+    return @{ Password = $password; RefreshToken = $refreshToken }
+}
+
+function Save-YarboCloudCredential {
+    <#
+    .SYNOPSIS
+        Saves cloud password and optional refresh token keyed by email (SecretManagement or file fallback).
+    .PARAMETER Email
+        The account email (used as the credential key).
+    .PARAMETER Password
+        The account password (SecureString).
+    .PARAMETER RefreshToken
+        Optional refresh token to store for future sessions.
+    #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Private credential helper')]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Email,
+
+        [Parameter(Mandatory)]
+        [SecureString]$Password,
+
+        [Parameter()]
+        [SecureString]$RefreshToken
+    )
+
+    $safeKey = $Email -replace '[^a-zA-Z0-9._@-]', '_'
+    Save-YarboCredential -Name "$safeKey-Password" -Value $Password
+    if ($RefreshToken) {
+        Save-YarboCredential -Name "$safeKey-RefreshToken" -Value $RefreshToken
+    }
+}
+
 function Remove-YarboCredential {
     <#
     .SYNOPSIS

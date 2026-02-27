@@ -35,7 +35,7 @@ function Connect-YarboCloud {
         [Parameter(ParameterSetName = 'Credential')]
         [string]$Email,
 
-        [Parameter(Mandatory, ParameterSetName = 'Credential')]
+        [Parameter(ParameterSetName = 'Credential')]
         [SecureString]$Password,
 
         [Parameter(Mandatory, ParameterSetName = 'Token')]
@@ -59,6 +59,25 @@ function Connect-YarboCloud {
                     'Email is required. Provide -Email, set $env:YARBO_EMAIL, or add Email to ~/.psyarbo/config.json.',
                     'EMAIL_REQUIRED'
                 )
+            }
+            # When -Email without -Password, try stored credentials (issue #10)
+            if (-not $Password) {
+                $stored = Get-YarboCloudCredential -Email $Email
+                if ($stored.RefreshToken) {
+                    $session.Email = $Email
+                    $session.RefreshToken = $stored.RefreshToken
+                    $session.RefreshAuth()
+                    if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
+                    $script:YarboCloudSession = $session
+                    return $session
+                }
+                if ($stored.Password) { $Password = $stored.Password }
+                else {
+                    throw [YarboCloudAuthException]::new(
+                        'Password is required. Provide -Password or save credentials with Connect-YarboCloud -Email -Password first.',
+                        'PASSWORD_REQUIRED'
+                    )
+                }
             }
         }
 
@@ -136,10 +155,12 @@ function Connect-YarboCloud {
             $session.TokenExpiry = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
             $session.BoundSerialNumbers = @($result.data.snList)
 
-            # Persist refresh token for future sessions (allows auto-login via:
-            #   Connect-YarboCloud -RefreshToken (Get-YarboCredential -Name 'CloudRefreshToken'))
+            # Persist refresh token for future sessions (issue #10: SecretManagement + email-keyed storage)
             try {
                 Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                if ($session.Email) {
+                    Save-YarboCloudCredential -Email $session.Email -Password $Password -RefreshToken $session.RefreshToken
+                }
                 Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
             } catch {
                 Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
