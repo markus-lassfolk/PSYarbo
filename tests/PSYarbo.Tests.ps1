@@ -50,7 +50,7 @@ Describe 'Module Manifest' {
 
         # Core cmdlets that must be present
         $expected = @(
-            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice',
+            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice', 'Invoke-YarboMqttSniff',
             'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
             'Get-YarboGlobalParams',
             'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',

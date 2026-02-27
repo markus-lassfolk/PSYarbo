@@ -84,7 +84,6 @@ jobs:
           $unitConfig = New-PesterConfiguration
           $unitConfig.Run.Path              = './tests/Unit'
           $unitConfig.Run.Exit              = $true
-          $unitConfig.Run.ExitCode          = 'None'
           $unitConfig.Output.Verbosity      = 'Detailed'
           $unitConfig.Filter.ExcludeTag    = 'Integration'
           $unitConfig.TestResult.Enabled   = $true
@@ -99,7 +98,6 @@ jobs:
           $intConfig = New-PesterConfiguration
           $intConfig.Run.Path              = './tests/Integration'
           $intConfig.Run.Exit              = $true
-          $intConfig.Run.ExitCode          = 'None'
           $intConfig.Filter.ExcludeTag     = 'Integration'
           $intConfig.Output.Verbosity      = 'Detailed'
           $intConfig.TestResult.Enabled    = $true

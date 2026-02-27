@@ -44,8 +44,9 @@ function Get-MacForIp {
                 Write-Debug "Get-NetNeighbor failed, trying arp: $($_.Exception.Message)"
             }
             $arpOut = arp -a 2>$null
-            if ($arpOut -match [regex]::Escape($IPAddress)) {
-                $line = $arpOut | Where-Object { $_ -match [regex]::Escape($IPAddress) } | Select-Object -First 1
+            $esc = [regex]::Escape($IPAddress)
+            if ($arpOut -match "\b$esc\b") {
+                $line = $arpOut | Where-Object { $_ -match "\b$esc\b" } | Select-Object -First 1
                 if ($line -match '([0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2})') {
                     return Format-MacAddress $matches[1]
                 }
@@ -68,7 +69,8 @@ function Get-MacForIp {
         $arpOut = arp -n 2>$null
         if (-not $arpOut) { $arpOut = arp -a 2>$null }
         if ($arpOut) {
-            $line = $arpOut | Where-Object { $_ -match [regex]::Escape($IPAddress) } | Select-Object -First 1
+            $esc = [regex]::Escape($IPAddress)
+            $line = $arpOut | Where-Object { $_ -match "\b$esc\b" } | Select-Object -First 1
             if ($line -match '([0-9a-fA-F]{1,2}[:-][0-9a-fA-F]{1,2}[:-][0-9a-fA-F]{1,2}[:-][0-9a-fA-F]{1,2}[:-][0-9a-fA-F]{1,2}[:-][0-9a-fA-F]{1,2})') {
                 return Format-MacAddress $matches[1]
             }
