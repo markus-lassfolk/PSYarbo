@@ -58,10 +58,6 @@ jobs:
               return;
             }
 
-            // Get default branch to target
-            const { data: repoInfo } = await github.rest.repos.get({ owner, repo });
-            const defaultBranch = repoInfo.default_branch;
-            
             // Format title from branch name (e.g. bugfix/autofix-test -> Bugfix/autofix test)
             let title = branch.split('/').pop().replace(/-/g, ' ');
             title = title.charAt(0).toUpperCase() + title.slice(1);
