@@ -1,25 +1,28 @@
 <#
 .SYNOPSIS
-    Sniff all MQTT messages from a broker for troubleshooting (topic + payload size).
+    Sniff MQTT messages from a broker (topic + size; optional full recording).
 .DESCRIPTION
-    Connects to the given broker, subscribes to # (all topics), and logs every
-    message received for the specified duration. Use to verify that the broker
-    sends Yarbo traffic and to see actual topic names (snowbot/ vs yarbo/ etc.).
+    Connects to the broker, subscribes to snowbot/# (Yarbo traffic), and logs
+    each message. Use -RecordPath to save full payloads for Get-YarboMqttRecordingReport.
 .PARAMETER Broker
     Broker IP or hostname (use Find-YarboDevice or Find-Yarbo to discover).
 .PARAMETER Port
     MQTT port. Default 1883.
 .PARAMETER DurationSeconds
-    How long to capture. Default 15.
+    How long to capture. Default 15. Use 60 for a one-minute recording.
+.PARAMETER RecordPath
+    If set, save a JSON recording of all messages for coverage report.
 .EXAMPLE
-    .\tools\MqttSniff.ps1 -Broker <rover-ip> -DurationSeconds 20
+    .\tools\MqttSniff.ps1 -Broker <rover-ip> -DurationSeconds 60 -RecordPath ./recording.json
+    Get-YarboMqttRecordingReport -RecordingPath ./recording.json
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string]$Broker,
     [int]$Port = 1883,
-    [int]$DurationSeconds = 15
+    [int]$DurationSeconds = 15,
+    [string]$RecordPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,6 +32,7 @@ Import-Module (Join-Path $scriptRoot 'src' 'PSYarbo') -Force -WarningAction Sile
 $logFile = Join-Path ([System.IO.Path]::GetTempPath()) "PSYarbo-MqttSniff-$(Get-Date -Format 'yyyyMMddHHmmss').log"
 Write-Host "LogPath: $logFile"
 
-Write-Host "=== PowerShell adapter sniffer (adapter debug log shows if handler is invoked) ==="
-Invoke-YarboMqttSniff -Broker $Broker -Port $Port -DurationSeconds $DurationSeconds -SelfTest -LogPath $logFile
+$params = @{ Broker = $Broker; Port = $Port; DurationSeconds = $DurationSeconds; SelfTest = $true; LogPath = $logFile }
+if ($RecordPath) { $params['RecordPath'] = $RecordPath }
+Invoke-YarboMqttSniff @params
 $fi = Get-Item $logFile -ErrorAction SilentlyContinue; Write-Host "Log file size: $(if ($fi) { $fi.Length } else { 0 }) bytes"

@@ -100,6 +100,8 @@ function ConvertTo-YarboTelemetry {
         $t.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
         $t.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
         if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $t.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
+        if ($null -ne $DeviceMsg.BatteryMSG.current) { $t.BatteryCurrent = [double]($DeviceMsg.BatteryMSG.current) }
+        if ($null -ne $DeviceMsg.BatteryMSG.voltage) { $t.BatteryVoltage = [double]($DeviceMsg.BatteryMSG.voltage) }
     }
 
     # Body (BodyMsg)
@@ -119,16 +121,37 @@ function ConvertTo-YarboTelemetry {
         if ($null -ne $DeviceMsg.RTKMSG.heading_status) { $t.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $t.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
         if ($null -ne $DeviceMsg.RTKMSG.heading_dop) { $t.RtkDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
+        if ($null -ne $DeviceMsg.RTKMSG.gga_atn_dis) { $t.RtkGgaAtnDis = [double]($DeviceMsg.RTKMSG.gga_atn_dis) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_atn_dis) { $t.RtkHeadingAtnDis = [double]($DeviceMsg.RTKMSG.heading_atn_dis) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_multi) { $t.RtkHeadingMulti = [int]($DeviceMsg.RTKMSG.heading_multi) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_obs) { $t.RtkHeadingObs = [int]($DeviceMsg.RTKMSG.heading_obs) }
+        if ($null -ne $DeviceMsg.RTKMSG.pre4_timestamp) { $t.RtkPre4Timestamp = [double]($DeviceMsg.RTKMSG.pre4_timestamp) }
+        if ($null -ne $DeviceMsg.RTKMSG.rtk_version) { $t.RtkVersion = [string]($DeviceMsg.RTKMSG.rtk_version) }
+        if ($null -ne $DeviceMsg.RTKMSG.sat_num) { $t.RtkSatNum = [int]($DeviceMsg.RTKMSG.sat_num) }
+        if ($null -ne $DeviceMsg.RTKMSG.timestamp) { $t.RtkTimestamp = [double]($DeviceMsg.RTKMSG.timestamp) }
     }
-
     if ($null -ne $DeviceMsg.combined_odom_confidence) {
         $t.OdomConfidence = [double]($DeviceMsg.combined_odom_confidence)
     }
+    if ($null -ne $DeviceMsg.rtcm_age) { $t.RtcmAge = [double]($DeviceMsg.rtcm_age) }
+    if ($null -ne $DeviceMsg.rtcm_info) { $t.RtcmInfo = $DeviceMsg.rtcm_info }
+    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $null -ne $DeviceMsg.rtk_base_data.rover.heading) { $t.RoverHeading = [string]($DeviceMsg.rtk_base_data.rover.heading) }
+    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.base -and $null -ne $DeviceMsg.rtk_base_data.base.gngga) { $t.BaseGngga = [string]($DeviceMsg.rtk_base_data.base.gngga) }
 
     # Running status
     if ($DeviceMsg.RunningStatusMSG) {
         $t.ChuteAngle = [int]($DeviceMsg.RunningStatusMSG.chute_angle)
         $t.RainSensorData = [int]($DeviceMsg.RunningStatusMSG.rain_sensor_data)
+        if ($null -ne $DeviceMsg.RunningStatusMSG.chute_steering_engine_info) { $t.ChuteSteeringEngineInfo = [int]($DeviceMsg.RunningStatusMSG.chute_steering_engine_info) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.chute_steering_run_status) { $t.ChuteSteeringRunStatus = [int]($DeviceMsg.RunningStatusMSG.chute_steering_run_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.head_gyro_pitch) { $t.HeadGyroPitch = [double]($DeviceMsg.RunningStatusMSG.head_gyro_pitch) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.head_gyro_roll) { $t.HeadGyroRoll = [double]($DeviceMsg.RunningStatusMSG.head_gyro_roll) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.push_pod_status) { $t.PushPodStatus = [int]($DeviceMsg.RunningStatusMSG.push_pod_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.push_rod_place) { $t.PushRodPlace = [int]($DeviceMsg.RunningStatusMSG.push_rod_place) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.snow_pipe_run_status) { $t.SnowPipeRunStatus = [int]($DeviceMsg.RunningStatusMSG.snow_pipe_run_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.snow_roller_motor) { $t.SnowRollerMotor = [int]($DeviceMsg.RunningStatusMSG.snow_roller_motor) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.elec_navigation_front_right_sensor) { $t.ElecNavigationFrontRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_front_right_sensor) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.elec_navigation_rear_right_sensor) { $t.ElecNavigationRearRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_rear_right_sensor) }
     }
 
     # State
@@ -139,6 +162,15 @@ function ConvertTo-YarboTelemetry {
         $t.IsPlanning = ([int]($DeviceMsg.StateMSG.on_going_planning) -gt 0)
         $t.IsPaused = ([int]($DeviceMsg.StateMSG.planning_paused) -gt 0)
         $t.IsRecharging = ([int]($DeviceMsg.StateMSG.on_going_recharging) -gt 0)
+        if ($null -ne $DeviceMsg.StateMSG.adjustangle_status) { $t.AdjustAngleStatus = [int]($DeviceMsg.StateMSG.adjustangle_status) }
+        if ($null -ne $DeviceMsg.StateMSG.auto_draw_waiting_state) { $t.AutoDrawWaitingState = [int]($DeviceMsg.StateMSG.auto_draw_waiting_state) }
+        if ($null -ne $DeviceMsg.StateMSG.en_state_led) { $t.EnStateLed = [int]($DeviceMsg.StateMSG.en_state_led) }
+        if ($null -ne $DeviceMsg.StateMSG.en_warn_led) { $t.EnWarnLed = [int]($DeviceMsg.StateMSG.en_warn_led) }
+        if ($null -ne $DeviceMsg.StateMSG.on_going_to_start_point) { $t.OnGoingToStartPoint = ([int]($DeviceMsg.StateMSG.on_going_to_start_point) -gt 0) }
+        if ($null -ne $DeviceMsg.StateMSG.on_mul_points) { $t.OnMulPoints = ([int]($DeviceMsg.StateMSG.on_mul_points) -gt 0) }
+        if ($null -ne $DeviceMsg.StateMSG.robot_follow_state) { $t.RobotFollowState = [int]($DeviceMsg.StateMSG.robot_follow_state) }
+        if ($null -ne $DeviceMsg.StateMSG.schedule_cancel) { $t.ScheduleCancel = [int]($DeviceMsg.StateMSG.schedule_cancel) }
+        if ($null -ne $DeviceMsg.StateMSG.vision_auto_draw_state) { $t.VisionAutoDrawState = [int]($DeviceMsg.StateMSG.vision_auto_draw_state) }
     }
 
     # Ultrasonic sensors
@@ -156,8 +188,24 @@ function ConvertTo-YarboTelemetry {
         $t.WirelessChargeErrorCode = [int]($DeviceMsg.wireless_recharge.error_code)
     }
 
-    # LED (led)
+    # LED (led, LedInfoMSG, HeadMsg.head_led_brightness)
     if ($null -ne $DeviceMsg.led) { $t.LedRegister = [string]($DeviceMsg.led) }
+    if ($null -ne $DeviceMsg.LedInfoMSG) { $t.LedInfo = $DeviceMsg.LedInfoMSG }
+    if ($DeviceMsg.HeadMsg -and $null -ne $DeviceMsg.HeadMsg.head_led_brightness) { $t.HeadLedBrightness = [int]($DeviceMsg.HeadMsg.head_led_brightness) }
+
+    # Electric (EletricMSG)
+    if ($null -ne $DeviceMsg.EletricMSG) {
+        if ($null -ne $DeviceMsg.EletricMSG.brushless_motor_current) { $t.BrushlessMotorCurrent = [double]($DeviceMsg.EletricMSG.brushless_motor_current) }
+        if ($null -ne $DeviceMsg.EletricMSG.ntc_temperature) { $t.NtcTemperature = [double]($DeviceMsg.EletricMSG.ntc_temperature) }
+        if ($null -ne $DeviceMsg.EletricMSG.push_pod_current) { $t.PushPodCurrent = [double]($DeviceMsg.EletricMSG.push_pod_current) }
+    }
+
+    # Misc (base_status, switches, system_info, DebugMsg)
+    if ($null -ne $DeviceMsg.base_status) { $t.BaseStatus = $DeviceMsg.base_status }
+    if ($null -ne $DeviceMsg.green_grass_update_switch) { $t.GreenGrassUpdateSwitch = [int]($DeviceMsg.green_grass_update_switch) }
+    if ($null -ne $DeviceMsg.ipcamera_ota_switch) { $t.IpcameraOtaSwitch = [int]($DeviceMsg.ipcamera_ota_switch) }
+    if ($null -ne $DeviceMsg.system_info) { $t.SystemInfo = $DeviceMsg.system_info }
+    if ($null -ne $DeviceMsg.DebugMsg) { $t.DebugMsg = $DeviceMsg.DebugMsg }
 
     # Device message timestamp (root)
     if ($null -ne $DeviceMsg.timestamp) { $t.DeviceTimestamp = [double]($DeviceMsg.timestamp) }
@@ -213,6 +261,8 @@ function ConvertTo-YarboRobot {
         $r.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
         $r.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
         if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $r.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
+        if ($null -ne $DeviceMsg.BatteryMSG.current) { $r.BatteryCurrent = [double]($DeviceMsg.BatteryMSG.current) }
+        if ($null -ne $DeviceMsg.BatteryMSG.voltage) { $r.BatteryVoltage = [double]($DeviceMsg.BatteryMSG.voltage) }
     }
 
     # Body (BodyMsg)
@@ -229,6 +279,16 @@ function ConvertTo-YarboRobot {
         $r.IsPlanning = ([int]($DeviceMsg.StateMSG.on_going_planning) -gt 0)
         $r.IsPaused = ([int]($DeviceMsg.StateMSG.planning_paused) -gt 0)
         $r.IsRecharging = ([int]($DeviceMsg.StateMSG.on_going_recharging) -gt 0)
+        if ($null -ne $DeviceMsg.StateMSG.adjustangle_status) { $r.AdjustAngleStatus = [int]($DeviceMsg.StateMSG.adjustangle_status) }
+        if ($null -ne $DeviceMsg.StateMSG.auto_draw_waiting_state) { $r.AutoDrawWaitingState = [int]($DeviceMsg.StateMSG.auto_draw_waiting_state) }
+        if ($null -ne $DeviceMsg.StateMSG.car_controller) { $r.CarController = [bool]($DeviceMsg.StateMSG.car_controller) }
+        if ($null -ne $DeviceMsg.StateMSG.en_state_led) { $r.EnStateLed = [int]($DeviceMsg.StateMSG.en_state_led) }
+        if ($null -ne $DeviceMsg.StateMSG.en_warn_led) { $r.EnWarnLed = [int]($DeviceMsg.StateMSG.en_warn_led) }
+        if ($null -ne $DeviceMsg.StateMSG.on_going_to_start_point) { $r.OnGoingToStartPoint = ([int]($DeviceMsg.StateMSG.on_going_to_start_point) -gt 0) }
+        if ($null -ne $DeviceMsg.StateMSG.on_mul_points) { $r.OnMulPoints = ([int]($DeviceMsg.StateMSG.on_mul_points) -gt 0) }
+        if ($null -ne $DeviceMsg.StateMSG.robot_follow_state) { $r.RobotFollowState = [int]($DeviceMsg.StateMSG.robot_follow_state) }
+        if ($null -ne $DeviceMsg.StateMSG.schedule_cancel) { $r.ScheduleCancel = [int]($DeviceMsg.StateMSG.schedule_cancel) }
+        if ($null -ne $DeviceMsg.StateMSG.vision_auto_draw_state) { $r.VisionAutoDrawState = [int]($DeviceMsg.StateMSG.vision_auto_draw_state) }
     }
 
     # Position
@@ -242,17 +302,41 @@ function ConvertTo-YarboRobot {
         if ($null -ne $DeviceMsg.RTKMSG.heading_status) { $r.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $r.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
         if ($null -ne $DeviceMsg.RTKMSG.heading_dop) { $r.RtkHeadingDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
+        if ($null -ne $DeviceMsg.RTKMSG.gga_atn_dis) { $r.RtkGgaAtnDis = [double]($DeviceMsg.RTKMSG.gga_atn_dis) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_atn_dis) { $r.RtkHeadingAtnDis = [double]($DeviceMsg.RTKMSG.heading_atn_dis) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_multi) { $r.RtkHeadingMulti = [int]($DeviceMsg.RTKMSG.heading_multi) }
+        if ($null -ne $DeviceMsg.RTKMSG.heading_obs) { $r.RtkHeadingObs = [int]($DeviceMsg.RTKMSG.heading_obs) }
+        if ($null -ne $DeviceMsg.RTKMSG.pre4_timestamp) { $r.RtkPre4Timestamp = [double]($DeviceMsg.RTKMSG.pre4_timestamp) }
+        if ($null -ne $DeviceMsg.RTKMSG.rtk_version) { $r.RtkVersion = [string]($DeviceMsg.RTKMSG.rtk_version) }
+        if ($null -ne $DeviceMsg.RTKMSG.sat_num) { $r.RtkSatNum = [int]($DeviceMsg.RTKMSG.sat_num) }
+        if ($null -ne $DeviceMsg.RTKMSG.timestamp) { $r.RtkTimestamp = [double]($DeviceMsg.RTKMSG.timestamp) }
     }
     if ($null -ne $DeviceMsg.combined_odom_confidence) {
         $r.OdomConfidence = [double]($DeviceMsg.combined_odom_confidence)
     }
+    if ($null -ne $DeviceMsg.rtcm_age) { $r.RtcmAge = [double]($DeviceMsg.rtcm_age) }
+    if ($null -ne $DeviceMsg.rtcm_info) { $r.RtcmInfo = $DeviceMsg.rtcm_info }
+    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $null -ne $DeviceMsg.rtk_base_data.rover.heading) { $r.RoverHeading = [string]($DeviceMsg.rtk_base_data.rover.heading) }
+    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.base -and $null -ne $DeviceMsg.rtk_base_data.base.gngga) { $r.BaseGngga = [string]($DeviceMsg.rtk_base_data.base.gngga) }
 
     # Hardware (RunningStatusMSG, led, wireless_recharge)
     if ($DeviceMsg.RunningStatusMSG) {
         $r.ChuteAngle = [int]($DeviceMsg.RunningStatusMSG.chute_angle)
         if ($null -ne $DeviceMsg.RunningStatusMSG.rain_sensor_data) { $r.RainSensorData = [int]($DeviceMsg.RunningStatusMSG.rain_sensor_data) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.chute_steering_engine_info) { $r.ChuteSteeringEngineInfo = [int]($DeviceMsg.RunningStatusMSG.chute_steering_engine_info) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.chute_steering_run_status) { $r.ChuteSteeringRunStatus = [int]($DeviceMsg.RunningStatusMSG.chute_steering_run_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.head_gyro_pitch) { $r.HeadGyroPitch = [double]($DeviceMsg.RunningStatusMSG.head_gyro_pitch) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.head_gyro_roll) { $r.HeadGyroRoll = [double]($DeviceMsg.RunningStatusMSG.head_gyro_roll) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.push_pod_status) { $r.PushPodStatus = [int]($DeviceMsg.RunningStatusMSG.push_pod_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.push_rod_place) { $r.PushRodPlace = [int]($DeviceMsg.RunningStatusMSG.push_rod_place) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.snow_pipe_run_status) { $r.SnowPipeRunStatus = [int]($DeviceMsg.RunningStatusMSG.snow_pipe_run_status) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.snow_roller_motor) { $r.SnowRollerMotor = [int]($DeviceMsg.RunningStatusMSG.snow_roller_motor) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.elec_navigation_front_right_sensor) { $r.ElecNavigationFrontRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_front_right_sensor) }
+        if ($null -ne $DeviceMsg.RunningStatusMSG.elec_navigation_rear_right_sensor) { $r.ElecNavigationRearRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_rear_right_sensor) }
     }
     if ($null -ne $DeviceMsg.led) { $r.LedRegister = [string]($DeviceMsg.led) }
+    if ($null -ne $DeviceMsg.LedInfoMSG) { $r.LedInfo = $DeviceMsg.LedInfoMSG }
+    if ($DeviceMsg.HeadMsg -and $null -ne $DeviceMsg.HeadMsg.head_led_brightness) { $r.HeadLedBrightness = [int]($DeviceMsg.HeadMsg.head_led_brightness) }
     if ($DeviceMsg.wireless_recharge) {
         $r.WirelessChargeState = [int]($DeviceMsg.wireless_recharge.state)
         $r.WirelessChargeVoltage = [double]($DeviceMsg.wireless_recharge.output_voltage)
@@ -274,6 +358,24 @@ function ConvertTo-YarboRobot {
     if ($DeviceMsg.route_priority) {
         $r.RoutePriority = @{}
         $DeviceMsg.route_priority.PSObject.Properties | ForEach-Object { $r.RoutePriority[$_.Name] = $_.Value }
+    }
+
+    # Misc / switches / system / debug
+    if ($null -ne $DeviceMsg.base_status) { $r.BaseStatus = $DeviceMsg.base_status }
+    if ($null -ne $DeviceMsg.bds) { $r.Bds = $DeviceMsg.bds }
+    if ($null -ne $DeviceMsg.bs) { $r.Bs = $DeviceMsg.bs }
+    if ($null -ne $DeviceMsg.green_grass_update_switch) { $r.GreenGrassUpdateSwitch = [int]($DeviceMsg.green_grass_update_switch) }
+    if ($null -ne $DeviceMsg.ipcamera_ota_switch) { $r.IpcameraOtaSwitch = [int]($DeviceMsg.ipcamera_ota_switch) }
+    if ($null -ne $DeviceMsg.ms) { $r.Ms = $DeviceMsg.ms }
+    if ($null -ne $DeviceMsg.s) { $r.S = $DeviceMsg.s }
+    if ($null -ne $DeviceMsg.sbs) { $r.Sbs = $DeviceMsg.sbs }
+    if ($null -ne $DeviceMsg.tms) { $r.Tms = $DeviceMsg.tms }
+    if ($null -ne $DeviceMsg.system_info) { $r.SystemInfo = $DeviceMsg.system_info }
+    if ($null -ne $DeviceMsg.DebugMsg) { $r.DebugMsg = $DeviceMsg.DebugMsg }
+    if ($null -ne $DeviceMsg.EletricMSG) {
+        if ($null -ne $DeviceMsg.EletricMSG.brushless_motor_current) { $r.BrushlessMotorCurrent = [double]($DeviceMsg.EletricMSG.brushless_motor_current) }
+        if ($null -ne $DeviceMsg.EletricMSG.ntc_temperature) { $r.NtcTemperature = [double]($DeviceMsg.EletricMSG.ntc_temperature) }
+        if ($null -ne $DeviceMsg.EletricMSG.push_pod_current) { $r.PushPodCurrent = [double]($DeviceMsg.EletricMSG.push_pod_current) }
     }
 
     return $r
