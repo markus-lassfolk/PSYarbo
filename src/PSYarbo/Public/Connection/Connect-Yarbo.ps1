@@ -114,7 +114,7 @@ function Connect-Yarbo {
             $conn.MqttClient = $conn.MqttFactory.CreateMqttClient()
 
             # Attach message handler before connecting (MQTTnet requirement)
-            [PSYarbo.Mqtt.MessageReceivedAdapter]::Callback = [Func[object, System.Threading.Tasks.Task]] {
+            $callback = [Func[object, System.Threading.Tasks.Task]] {
                 param($args)
                 $topic = $args.ApplicationMessage.Topic
                 $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
@@ -212,8 +212,9 @@ function Connect-Yarbo {
 
                 return [System.Threading.Tasks.Task]::CompletedTask
             }.GetNewClosure()
+            [PSYarbo.Mqtt.MessageReceivedAdapter]::RegisterCallback($conn.MqttClient, $callback)
             $argsType = $script:MqttAssembly.GetType('MQTTnet.Client.MqttApplicationMessageReceivedEventArgs')
-            $funcType = [Func`2].MakeGenericType(@($argsType, [System.Threading.Tasks.Task]))
+            $funcType = [Func`3].MakeGenericType(@([object], $argsType, [System.Threading.Tasks.Task]))
             $handlerMethod = [PSYarbo.Mqtt.MessageReceivedAdapter].GetMethod('Handler')
             $handlerDelegate = [System.Delegate]::CreateDelegate($funcType, $null, $handlerMethod)
             $conn.MqttClient.GetType().GetMethod('add_ApplicationMessageReceivedAsync').Invoke($conn.MqttClient, @($handlerDelegate)) | Out-Null

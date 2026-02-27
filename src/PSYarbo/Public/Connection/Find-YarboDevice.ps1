@@ -246,7 +246,9 @@ function Find-YarboDevice {
         $rovers = @($group | Where-Object { $_.Path -eq 'Rover' })
         if ($dcs.Count -gt 0) {
             $dcs[0].Recommended = $true
-            foreach ($i in 1..($dcs.Count - 1)) { $dcs[$i].Recommended = $false }
+            if ($dcs.Count -gt 1) {
+                foreach ($i in 1..($dcs.Count - 1)) { $dcs[$i].Recommended = $false }
+            }
             foreach ($r in $rovers) { $r.Recommended = $false }
         } else {
             # No DC: recommend exactly one Rover (prefer hostname YARBO, else first)

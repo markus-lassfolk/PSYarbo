@@ -12,15 +12,16 @@ function Set-YarboGlobalParams {
     behaviour. Use -WhatIf or -Confirm to preview changes before applying.
 
 .PARAMETER Parameters
-    Hashtable of parameter key-value pairs to save. Obtain current values via
-    Get-YarboGlobalParams and modify as needed.
+    Hashtable of parameter key-value pairs to save, or a YarboGlobalParams object
+    from Get-YarboGlobalParams. When passing a YarboGlobalParams object, the RawData
+    property is used to send all parameters back to the device.
 
 .PARAMETER Connection
     The connection to use. Defaults to the current default.
 
 .EXAMPLE
     $params = Get-YarboGlobalParams
-    $params.mow_speed = 0.5
+    $params.RawData.mow_speed = 0.5
     Set-YarboGlobalParams -Parameters $params
 
 .EXAMPLE
@@ -36,7 +37,7 @@ function Set-YarboGlobalParams {
     [OutputType([YarboCommandResult])]
     param(
         [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
-        [hashtable]$Parameters,
+        [object]$Parameters,
 
         [Parameter()]
         [YarboConnection]$Connection
@@ -45,10 +46,26 @@ function Set-YarboGlobalParams {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
 
-        if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Save global params: $($Parameters.Keys -join ', ')")) {
+        $payload = if ($Parameters -is [YarboGlobalParams]) {
+            if ($Parameters.RawData) {
+                $ht = @{}
+                foreach ($prop in $Parameters.RawData.PSObject.Properties) {
+                    $ht[$prop.Name] = $prop.Value
+                }
+                $ht
+            } else {
+                throw "YarboGlobalParams object has no RawData. Use Get-YarboGlobalParams to retrieve current parameters first."
+            }
+        } elseif ($Parameters -is [hashtable]) {
+            $Parameters
+        } else {
+            throw "Parameters must be a hashtable or YarboGlobalParams object."
+        }
+
+        if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Save global params: $($payload.Keys -join ', ')")) {
             Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboGlobalParams] Routing via local MQTT → cmd_save_para")
-            $result = Send-MqttCommand -Connection $conn -Command 'cmd_save_para' -Payload $Parameters
+            $result = Send-MqttCommand -Connection $conn -Command 'cmd_save_para' -Payload $payload
 
             if ($result -and -not $result.Success) {
                 $PSCmdlet.WriteError((New-YarboError `

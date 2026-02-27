@@ -35,7 +35,7 @@ namespace PSYarbo.Mqtt {
     public sealed class YarboMqttListener : IDisposable {
         private readonly MQTTnet.MqttFactory _factory;
         private MQTTnet.Client.IMqttClient _client;
-        private readonly ArrayList _messages = new ArrayList();
+        private readonly ArrayList _messages = ArrayList.Synchronized(new ArrayList());
         private readonly TaskCompletionSource<ReceivedMessage> _firstMessage = new TaskCompletionSource<ReceivedMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public YarboMqttListener() {
@@ -134,12 +134,27 @@ namespace PSYarbo.Mqtt {
     }
     # Legacy adapter (kept for Connect-Yarbo / Send-MqttCommand response path if still used)
     $adapterCode = @'
+using System.Collections.Generic;
 using System.Threading.Tasks;
 namespace PSYarbo.Mqtt {
     public static class MessageReceivedAdapter {
-        public static System.Func<object, Task> Callback;
-        public static Task Handler(MQTTnet.Client.MqttApplicationMessageReceivedEventArgs ea) {
-            if (Callback != null) return Callback(ea);
+        private static readonly Dictionary<object, System.Func<object, Task>> _callbacks = new Dictionary<object, System.Func<object, Task>>();
+        public static void RegisterCallback(object client, System.Func<object, Task> callback) {
+            lock (_callbacks) {
+                _callbacks[client] = callback;
+            }
+        }
+        public static void UnregisterCallback(object client) {
+            lock (_callbacks) {
+                _callbacks.Remove(client);
+            }
+        }
+        public static Task Handler(object sender, MQTTnet.Client.MqttApplicationMessageReceivedEventArgs ea) {
+            System.Func<object, Task> callback = null;
+            lock (_callbacks) {
+                _callbacks.TryGetValue(sender, out callback);
+            }
+            if (callback != null) return callback(ea);
             return Task.CompletedTask;
         }
     }
@@ -161,7 +176,7 @@ namespace PSYarbo.Mqtt {
 $classFiles = @(
     'YarboExceptions', 'YarboLightState', 'YarboCommandResult',
     'YarboTelemetry', 'YarboPlan', 'YarboSchedule', 'YarboRobot',
-    'YarboEndpoint', 'YarboConnection', 'YarboCloudSession'
+    'YarboGlobalParams', 'YarboEndpoint', 'YarboConnection', 'YarboCloudSession'
 )
 if (-not ('YarboConnection' -as [type])) {
     foreach ($class in $classFiles) {

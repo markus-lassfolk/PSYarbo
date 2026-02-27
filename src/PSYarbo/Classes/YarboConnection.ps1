@@ -89,6 +89,11 @@ class YarboConnection {
     # Implement IDisposable — dispose all owned IDisposable members.
     # Disconnect-Yarbo calls this indirectly; classes holding a YarboConnection can also call it directly.
     [void] Dispose() {
+        try {
+            if ($null -ne $this.MqttClient -and [PSYarbo.Mqtt.MessageReceivedAdapter]) {
+                [PSYarbo.Mqtt.MessageReceivedAdapter]::UnregisterCallback($this.MqttClient)
+            }
+        } catch { $null = $_ }
         try { if ($null -ne $this.CancellationSource) { $this.CancellationSource.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.CommandSemaphore) { $this.CommandSemaphore.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.ResponseSignal) { $this.ResponseSignal.Dispose() } } catch { $null = $_ }

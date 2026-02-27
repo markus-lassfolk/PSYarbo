@@ -51,6 +51,9 @@ function Invoke-YarboMqttSniff {
 
     # Only subscribe to Yarbo topics so we only see Yarbo MQTT packages (unless -AllTopics)
     $topicFilters = if ($AllTopics) { @('#') } else { @('snowbot/#') }
+    if ($SelfTest -and -not $AllTopics) {
+        $topicFilters += 'PSYarbo/selftest'
+    }
     $filterDesc = if ($AllTopics) { 'all topics (#)' } else { 'Yarbo only (snowbot/#)' }
 
     $listener = $null
