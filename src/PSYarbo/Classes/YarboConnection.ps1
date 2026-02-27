@@ -91,6 +91,10 @@ class YarboConnection {
     [void] Dispose() {
         try {
             if ($null -ne $this.MqttClient -and [PSYarbo.Mqtt.MessageReceivedAdapter]) {
+                $handlerDelegate = [PSYarbo.Mqtt.MessageReceivedAdapter]::GetHandler($this.MqttClient)
+                if ($null -ne $handlerDelegate) {
+                    $this.MqttClient.GetType().GetMethod('remove_ApplicationMessageReceivedAsync').Invoke($this.MqttClient, @($handlerDelegate)) | Out-Null
+                }
                 [PSYarbo.Mqtt.MessageReceivedAdapter]::UnregisterCallback($this.MqttClient)
             }
         } catch { $null = $_ }
