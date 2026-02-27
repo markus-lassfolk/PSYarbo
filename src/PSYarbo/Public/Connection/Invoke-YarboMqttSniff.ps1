@@ -44,7 +44,7 @@ function Invoke-YarboMqttSniff {
         throw "MQTTnet not loaded. Run build/Install-Dependencies.ps1 first."
     }
 
-    $listenerType = [PSYarbo.Mqtt.YarboMqttListener]
+    $listenerType = 'PSYarbo.Mqtt.YarboMqttListener' -as [type]
     if (-not $listenerType) {
         throw "YarboMqttListener not available. Ensure PSYarbo module loaded correctly."
     }
