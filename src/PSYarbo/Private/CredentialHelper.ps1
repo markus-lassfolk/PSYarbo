@@ -66,8 +66,12 @@ function Save-YarboCredential {
 
     if (-not (Test-Path $script:YarboCredentialDir)) {
         $null = New-Item -ItemType Directory -Path $script:YarboCredentialDir -Force
-        if (-not $IsWindows) {
-            chmod 700 $script:YarboCredentialDir
+    }
+    if (-not $IsWindows) {
+        try {
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialDir, 'UserRead, UserWrite, UserExecute')
+        } catch {
+            Write-Warning "PSYarbo: Could not set directory permissions: $($_.Exception.Message)"
         }
     }
 
@@ -85,12 +89,20 @@ function Save-YarboCredential {
         Saved     = [datetime]::UtcNow.ToString('o')
     }
     if (-not $IsWindows -and -not (Test-Path $script:YarboCredentialFile)) {
-        $null = New-Item -ItemType File -Path $script:YarboCredentialFile -Force
-        chmod 600 $script:YarboCredentialFile
+        try {
+            $null = New-Item -ItemType File -Path $script:YarboCredentialFile -Force
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+        } catch {
+            Write-Warning "PSYarbo: Could not create file with secure permissions: $($_.Exception.Message)"
+        }
     }
     $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
     if (-not $IsWindows) {
-        chmod 600 $script:YarboCredentialFile
+        try {
+            [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+        } catch {
+            Write-Warning "PSYarbo: Could not set file permissions: $($_.Exception.Message)"
+        }
     }
     Write-Verbose "PSYarbo: Saved credential '$Name' to $script:YarboCredentialFile"
 }
@@ -199,7 +211,11 @@ function Remove-YarboCredential {
         $creds.Remove($Name) | Out-Null
         $creds | ConvertTo-Json -Depth 5 | Set-Content -Path $script:YarboCredentialFile -Encoding UTF8
         if (-not $IsWindows) {
-            chmod 600 $script:YarboCredentialFile
+            try {
+                [System.IO.File]::SetUnixFileMode($script:YarboCredentialFile, 'UserRead, UserWrite')
+            } catch {
+                Write-Warning "PSYarbo: Could not set file permissions: $($_.Exception.Message)"
+            }
         }
         Write-Verbose "PSYarbo: Removed credential '$Name' from file store"
     } catch {

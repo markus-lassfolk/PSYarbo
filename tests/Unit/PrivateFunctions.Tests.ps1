@@ -101,6 +101,27 @@ Describe 'CredentialHelper' {
         $result = Get-YarboCredential -Name 'TempToken'
         $result | Should -BeNull
     }
+
+    It 'Save-YarboCredential sets restrictive permissions on non-Windows' -Skip:$IsWindows {
+        $secret = ConvertTo-SecureString -String 'permission-test' -AsPlainText -Force
+        Save-YarboCredential -Name 'PermTest' -Value $secret
+        
+        $dirMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialDir)
+        $dirMode | Should -Be 'UserRead, UserWrite, UserExecute'
+        
+        $fileMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialFile)
+        $fileMode | Should -Be 'UserRead, UserWrite'
+    }
+
+    It 'Remove-YarboCredential maintains restrictive permissions on non-Windows' -Skip:$IsWindows {
+        $secret = ConvertTo-SecureString -String 'permission-test-2' -AsPlainText -Force
+        Save-YarboCredential -Name 'PermTest2' -Value $secret
+        Save-YarboCredential -Name 'PermTest3' -Value $secret
+        Remove-YarboCredential -Name 'PermTest2'
+        
+        $fileMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialFile)
+        $fileMode | Should -Be 'UserRead, UserWrite'
+    }
 }
 }
 
