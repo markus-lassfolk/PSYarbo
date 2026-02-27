@@ -136,36 +136,37 @@ namespace PSYarbo.Mqtt {
     }
     # Legacy adapter (kept for Connect-Yarbo / Send-MqttCommand response path if still used)
     $adapterCode = @'
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 namespace PSYarbo.Mqtt {
     public static class MessageReceivedAdapter {
-        private static readonly Dictionary<object, System.Func<object, Task>> _callbacks = new Dictionary<object, System.Func<object, Task>>();
-        private static readonly Dictionary<object, System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task>> _handlers = new Dictionary<object, System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task>>();
+        private static readonly ConditionalWeakTable<object, CallbackEntry> _callbacks = new ConditionalWeakTable<object, CallbackEntry>();
         public static void RegisterCallback(object client, System.Func<object, Task> callback) {
-            lock (_callbacks) {
-                _callbacks[client] = callback;
-                _handlers[client] = ea => {
-                    System.Func<object, Task> cb = null;
-                    lock (_callbacks) {
-                        _callbacks.TryGetValue(client, out cb);
-                    }
-                    if (cb != null) return cb(ea);
-                    return Task.CompletedTask;
-                };
-            }
+            var entry = new CallbackEntry(callback);
+            _callbacks.AddOrUpdate(client, entry);
         }
         public static void UnregisterCallback(object client) {
-            lock (_callbacks) {
-                _callbacks.Remove(client);
-                _handlers.Remove(client);
-            }
+            _callbacks.Remove(client);
         }
         public static System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task> GetHandler(object client) {
-            lock (_callbacks) {
-                System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task> handler = null;
-                _handlers.TryGetValue(client, out handler);
-                return handler;
+            CallbackEntry entry;
+            if (_callbacks.TryGetValue(client, out entry)) {
+                return entry.Handler;
+            }
+            return null;
+        }
+        private sealed class CallbackEntry {
+            public System.Func<object, Task> Callback { get; }
+            public System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task> Handler { get; }
+            public CallbackEntry(System.Func<object, Task> callback) {
+                Callback = callback;
+                Handler = ea => {
+                    if (Callback != null) return Callback(ea);
+                    return Task.CompletedTask;
+                };
             }
         }
     }

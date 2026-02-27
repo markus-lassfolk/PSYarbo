@@ -103,6 +103,7 @@ jobs:
           $intConfig.TestResult.Enabled    = $true
           $intConfig.TestResult.OutputPath = 'output/test-results/pester-integration-${{ matrix.os }}.xml'
           $intConfig.TestResult.OutputFormat = 'NUnitXml'
+          $intConfig.Should.ErrorOnNoTests = $true
           $intResult = Invoke-Pester -Configuration $intConfig
 
       - name: Run root tests (PSYarbo.Tests, PSScriptAnalyzer) and exit on failure

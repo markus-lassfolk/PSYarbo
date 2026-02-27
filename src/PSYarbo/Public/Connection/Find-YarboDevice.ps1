@@ -81,6 +81,8 @@ function Find-YarboDevice {
         [int]$ThrottleLimit = 64
     )
 
+    $InformationPreference = 'Continue'
+
     # ── DNS fast-path: try hostname YARBO (DC may register via DHCP) ─────────
     $dnsFirst = [System.Collections.Generic.List[string]]::new()
     try {
@@ -237,30 +239,30 @@ function Find-YarboDevice {
     $bothPresent = $hasRover -and $hasDC
 
     # ── Console output (table + recommendation text) ────────────────────────
-    Write-Host ""
-    Write-Host "Yarbo MQTT Endpoints Found:"
-    Write-Host ""
+    Write-Information ""
+    Write-Information "Yarbo MQTT Endpoints Found:"
+    Write-Information ""
     $i = 1
     foreach ($ep in $endpoints) {
         $rec = if ($ep.Recommended) { '  ⭐ Recommended' } else { '' }
         $mac = if ($ep.MacAddress) { $ep.MacAddress } else { '(unknown – Rover/DC unclear)' }
-        Write-Host ("  {0,2}  {1,-15}  {2,-5}  {3,-17}  {4,-10}{5}" -f $i, $ep.IPAddress, $ep.Path, $mac, $ep.Status, $rec)
+        Write-Information ("  {0,2}  {1,-15}  {2,-5}  {3,-17}  {4,-10}{5}" -f $i, $ep.IPAddress, $ep.Path, $mac, $ep.Status, $rec)
         $i++
     }
     if ($bothPresent) {
-        Write-Host ""
-        Write-Host "Both endpoints reach the same MQTT broker on the Rover."
-        Write-Host "The DC path is recommended — it stays connected via HaLow"
-        Write-Host "when the rover is outside WiFi range."
+        Write-Information ""
+        Write-Information "Both endpoints reach the same MQTT broker on the Rover."
+        Write-Information "The DC path is recommended — it stays connected via HaLow"
+        Write-Information "when the rover is outside WiFi range."
     } elseif ($endpoints.Count -eq 1) {
-        Write-Host ""
-        Write-Host "Single endpoint found; use this address to connect."
+        Write-Information ""
+        Write-Information "Single endpoint found; use this address to connect."
     } elseif ($endpoints.Count -gt 1) {
-        Write-Host ""
-        Write-Host "For failover (e.g. Home Assistant), use the recommended address first;"
-        Write-Host "if unreachable, try the other(s). Output order is try-order."
+        Write-Information ""
+        Write-Information "For failover (e.g. Home Assistant), use the recommended address first;"
+        Write-Information "if unreachable, try the other(s). Output order is try-order."
     }
-    Write-Host ""
+    Write-Information ""
 
     # Output in try-order: recommended first, then others (primary/secondary failover).
     $tryOrder = @($endpoints | Sort-Object { -not $_.Recommended })
