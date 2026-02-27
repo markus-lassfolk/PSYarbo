@@ -107,10 +107,12 @@ Describe 'CredentialHelper' {
         Save-YarboCredential -Name 'PermTest' -Value $secret
         
         $dirMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialDir)
-        $dirMode | Should -Be 'UserRead, UserWrite, UserExecute'
+        $expected = [System.IO.UnixFileMode]::UserRead -bor [System.IO.UnixFileMode]::UserWrite -bor [System.IO.UnixFileMode]::UserExecute
+        $dirMode | Should -Be $expected
         
         $fileMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialFile)
-        $fileMode | Should -Be 'UserRead, UserWrite'
+        $expected = [System.IO.UnixFileMode]::UserRead -bor [System.IO.UnixFileMode]::UserWrite
+        $fileMode | Should -Be $expected
     }
 
     It 'Remove-YarboCredential maintains restrictive permissions on non-Windows' -Skip:$IsWindows {
@@ -120,7 +122,8 @@ Describe 'CredentialHelper' {
         Remove-YarboCredential -Name 'PermTest2'
         
         $fileMode = [System.IO.File]::GetUnixFileMode($script:YarboCredentialFile)
-        $fileMode | Should -Be 'UserRead, UserWrite'
+        $expected = [System.IO.UnixFileMode]::UserRead -bor [System.IO.UnixFileMode]::UserWrite
+        $fileMode | Should -Be $expected
     }
 }
 }
