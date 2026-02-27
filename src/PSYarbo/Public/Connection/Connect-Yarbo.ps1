@@ -213,10 +213,7 @@ function Connect-Yarbo {
                 return [System.Threading.Tasks.Task]::CompletedTask
             }.GetNewClosure()
             [PSYarbo.Mqtt.MessageReceivedAdapter]::RegisterCallback($conn.MqttClient, $callback)
-            $argsType = $script:MqttAssembly.GetType('MQTTnet.Client.MqttApplicationMessageReceivedEventArgs')
-            $funcType = [Func`3].MakeGenericType(@([object], $argsType, [System.Threading.Tasks.Task]))
-            $handlerMethod = [PSYarbo.Mqtt.MessageReceivedAdapter].GetMethod('Handler')
-            $handlerDelegate = [System.Delegate]::CreateDelegate($funcType, $null, $handlerMethod)
+            $handlerDelegate = [PSYarbo.Mqtt.MessageReceivedAdapter]::GetHandler($conn.MqttClient)
             $conn.MqttClient.GetType().GetMethod('add_ApplicationMessageReceivedAsync').Invoke($conn.MqttClient, @($handlerDelegate)) | Out-Null
 
             # Build connection options and connect

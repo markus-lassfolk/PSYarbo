@@ -139,23 +139,32 @@ using System.Threading.Tasks;
 namespace PSYarbo.Mqtt {
     public static class MessageReceivedAdapter {
         private static readonly Dictionary<object, System.Func<object, Task>> _callbacks = new Dictionary<object, System.Func<object, Task>>();
+        private static readonly Dictionary<object, System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task>> _handlers = new Dictionary<object, System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task>>();
         public static void RegisterCallback(object client, System.Func<object, Task> callback) {
             lock (_callbacks) {
                 _callbacks[client] = callback;
+                _handlers[client] = ea => {
+                    System.Func<object, Task> cb = null;
+                    lock (_callbacks) {
+                        _callbacks.TryGetValue(client, out cb);
+                    }
+                    if (cb != null) return cb(ea);
+                    return Task.CompletedTask;
+                };
             }
         }
         public static void UnregisterCallback(object client) {
             lock (_callbacks) {
                 _callbacks.Remove(client);
+                _handlers.Remove(client);
             }
         }
-        public static Task Handler(object sender, MQTTnet.Client.MqttApplicationMessageReceivedEventArgs ea) {
-            System.Func<object, Task> callback = null;
+        public static System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task> GetHandler(object client) {
             lock (_callbacks) {
-                _callbacks.TryGetValue(sender, out callback);
+                System.Func<MQTTnet.Client.MqttApplicationMessageReceivedEventArgs, Task> handler = null;
+                _handlers.TryGetValue(client, out handler);
+                return handler;
             }
-            if (callback != null) return callback(ea);
-            return Task.CompletedTask;
         }
     }
 }
