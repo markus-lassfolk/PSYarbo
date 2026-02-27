@@ -27,7 +27,7 @@ if (Test-Path $mqttDllPath) {
     # ApplicationMessageReceivedAsync event is attached with += and always fires.
     $listenerCode = @'
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,7 +35,8 @@ namespace PSYarbo.Mqtt {
     public sealed class YarboMqttListener : IDisposable {
         private readonly MQTTnet.MqttFactory _factory;
         private MQTTnet.Client.IMqttClient _client;
-        private readonly ArrayList _messages = ArrayList.Synchronized(new ArrayList());
+        private readonly object _msgLock = new object();
+        private readonly List<ReceivedMessage> _messages = new List<ReceivedMessage>();
         private readonly TaskCompletionSource<ReceivedMessage> _firstMessage = new TaskCompletionSource<ReceivedMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public YarboMqttListener() {
@@ -48,7 +49,7 @@ namespace PSYarbo.Mqtt {
                 if (len > 0 && seg.Array != null)
                     Buffer.BlockCopy(seg.Array, seg.Offset, copy, 0, len);
                 var msg = new ReceivedMessage(e.ApplicationMessage.Topic ?? "", copy);
-                _messages.Add(msg);
+                lock (_msgLock) { _messages.Add(msg); }
                 if (!_firstMessage.Task.IsCompleted)
                     _firstMessage.TrySetResult(msg);
                 return Task.CompletedTask;
@@ -90,10 +91,11 @@ namespace PSYarbo.Mqtt {
         }
 
         public ReceivedMessage[] GetReceivedMessages() {
-            var arr = new ReceivedMessage[_messages.Count];
-            _messages.CopyTo(arr);
-            _messages.Clear();
-            return arr;
+            lock (_msgLock) {
+                var arr = _messages.ToArray();
+                _messages.Clear();
+                return arr;
+            }
         }
 
         public void Disconnect() {

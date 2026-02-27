@@ -54,7 +54,7 @@ function Get-PSYarboSubnetIpList {
     return $ipList.ToArray()
 }
 
-function Get-PSYarboLocalSubnets {
+function Get-PSYarboLocalSubnet {
     [CmdletBinding()]
     [OutputType([string[]])]
     param()
@@ -87,6 +87,6 @@ function Get-PSYarboLocalSubnets {
             }
         }
     } catch {
-        Write-Debug "Get-PSYarboLocalSubnets: $($_.Exception.Message)"
+        Write-Debug "Get-PSYarboLocalSubnet: $($_.Exception.Message)"
     }
 }

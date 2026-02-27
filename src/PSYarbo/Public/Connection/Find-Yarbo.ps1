@@ -49,9 +49,9 @@ function Find-Yarbo {
         [Parameter()]
         [AllowEmptyString()]
         [ValidateScript({
-            if ([string]::IsNullOrEmpty($_)) { return $true }
-            $_ -match '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
-        })]
+                if ([string]::IsNullOrEmpty($_)) { return $true }
+                $_ -match '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+            })]
         [string]$Subnet = '',
 
         [Parameter()]
@@ -72,7 +72,7 @@ function Find-Yarbo {
 
     # ── 1. Resolve subnets to scan (local interfaces or -Subnet) ───────────────
     if ([string]::IsNullOrWhiteSpace($Subnet)) {
-        $subnetsToScan = @(Get-PSYarboLocalSubnets)
+        $subnetsToScan = @(Get-PSYarboLocalSubnet)
         if ($subnetsToScan.Count -eq 0) {
             $subnetsToScan = @('192.168.1.0/24')
             Write-Verbose "[Find-Yarbo] No local subnets detected; using fallback $($subnetsToScan[0])"
@@ -87,7 +87,7 @@ function Find-Yarbo {
     $hostCount = $ipList.Count
     Write-Verbose "[Find-Yarbo] Scanning $($subnetsToScan.Count) subnet(s), $hostCount hosts for MQTT brokers on port $Port"
     if ($hostCount -gt 512) {
-        Write-Warning "Find-Yarbo: Scanning $hostCount hosts; this may be slow. Use -MaxHosts to scan more (will take longer), or reduce -MaxHosts for a quicker scan."
+        Write-Warning "Find-Yarbo: Scanning $hostCount hosts; this may be slow. Consider using a more specific -Subnet or reducing -MaxHosts to speed up the scan."
     }
 
     # ── 2. Parallel TCP probe — collect candidates ────────────────────────────
