@@ -56,7 +56,7 @@
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()
-    AliasesToExport      = @('Return-YarboToDock')
+    AliasesToExport      = @('Return-YarboToDock', 'Start-YarboRecharge')
     PrivateData          = @{
         PSData = @{
             Tags         = @('Yarbo', 'Robot', 'Mower', 'MQTT', 'IoT', 'Automation', 'SnowBlower')

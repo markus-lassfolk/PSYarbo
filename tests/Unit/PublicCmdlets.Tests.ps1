@@ -38,6 +38,10 @@ InModuleScope PSYarbo {
             Get-Alias -Name 'Return-YarboToDock' -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
         }
 
+        It 'Has alias Start-YarboRecharge' {
+            Get-Alias -Name 'Start-YarboRecharge' -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+        }
+
         It 'Has Medium ConfirmImpact' {
             $cmd = Get-Command Send-YarboReturnToDock
             $attr = $cmd.ScriptBlock.Attributes | Where-Object { $_ -is [System.Management.Automation.CmdletBindingAttribute] }
