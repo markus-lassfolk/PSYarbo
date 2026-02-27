@@ -107,31 +107,7 @@ function Find-YarboDevice {
         $subnetsToScan = @($Subnet.Trim())
     }
 
-    $ipList = [System.Collections.Generic.List[string]]::new()
-    $remaining = $MaxHosts
-    foreach ($oneSubnet in $subnetsToScan) {
-        if ($remaining -le 0) { break }
-        $parts = $oneSubnet -split '/'
-        if ($parts.Count -lt 2) { continue }
-        $prefixLen = [int]$parts[1]
-        if ($prefixLen -lt 16 -or $prefixLen -gt 30) { continue }
-        $baseIp = [System.Net.IPAddress]::Parse($parts[0].Trim())
-        $baseBytes = $baseIp.GetAddressBytes()
-        [Array]::Reverse($baseBytes)
-        $hostBits = 32 - $prefixLen
-        $baseVal = [System.BitConverter]::ToUInt32($baseBytes, 0)
-        $baseVal = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
-        $baseBytes = [System.BitConverter]::GetBytes($baseVal)
-        $maxInSubnet = [math]::Pow(2, $hostBits) - 2
-        $take = [math]::Min([int]$maxInSubnet, $remaining)
-        for ($i = 1; $i -le $take; $i++) {
-            $ipVal = ([System.BitConverter]::ToUInt32($baseBytes, 0)) + $i
-            $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
-            [Array]::Reverse($newBytes)
-            $ipList.Add([System.Net.IPAddress]::new($newBytes).ToString())
-        }
-        $remaining -= $take
-    }
+    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts)
     $hostCount = $ipList.Count
     Write-Verbose "[Find-YarboDevice] Scanning $($subnetsToScan.Count) subnet(s), $hostCount hosts"
     if ($hostCount -gt 512) {
@@ -166,7 +142,8 @@ function Find-YarboDevice {
     $yarboTopicFilters = @('snowbot/+/device/DeviceMSG', 'snowbot/+/device/data_feedback', 'snowbot/+/device/heart_beat')
     $mqttTimeoutMs = [int](($TimeoutSeconds * 1000) * 0.6)
 
-    if ($null -eq $script:MqttAssembly -or -not ([PSYarbo.Mqtt.YarboMqttListener])) {
+    $listenerType = 'PSYarbo.Mqtt.YarboMqttListener' -as [type]
+    if ($null -eq $script:MqttAssembly -or -not $listenerType) {
         Write-Warning "[Find-YarboDevice] MQTTnet/YarboMqttListener not available. Cannot verify Yarbo brokers."
         return
     }

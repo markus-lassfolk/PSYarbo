@@ -151,8 +151,8 @@ function ConvertTo-YarboTelemetry {
     # Wireless charging
     if ($DeviceMsg.wireless_recharge) {
         $t.WirelessChargeState = [int]($DeviceMsg.wireless_recharge.state)
-        $t.WirelessChargeVoltage = [int]($DeviceMsg.wireless_recharge.output_voltage)
-        $t.WirelessChargeCurrent = [int]($DeviceMsg.wireless_recharge.output_current)
+        $t.WirelessChargeVoltage = [double]($DeviceMsg.wireless_recharge.output_voltage)
+        $t.WirelessChargeCurrent = [double]($DeviceMsg.wireless_recharge.output_current)
         $t.WirelessChargeErrorCode = [int]($DeviceMsg.wireless_recharge.error_code)
     }
 

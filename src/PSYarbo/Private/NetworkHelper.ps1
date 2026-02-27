@@ -1,5 +1,59 @@
 # Returns CIDR subnets for all local IPv4 addresses (LAN, Wi‑Fi, etc.) so discovery can scan "my networks" by default.
 
+function Get-PSYarboSubnetIpList {
+    <#
+    .SYNOPSIS
+        Generates a list of host IPs from CIDR subnets for network scanning.
+    
+    .PARAMETER Subnets
+        Array of CIDR subnet strings (e.g., '192.168.1.0/24').
+    
+    .PARAMETER MaxHosts
+        Maximum number of host IPs to generate across all subnets.
+    
+    .OUTPUTS
+        [string[]] Array of IP addresses to scan.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$Subnets,
+        
+        [Parameter(Mandatory)]
+        [int]$MaxHosts
+    )
+    
+    $ipList = [System.Collections.Generic.List[string]]::new()
+    $remaining = $MaxHosts
+    
+    foreach ($oneSubnet in $Subnets) {
+        if ($remaining -le 0) { break }
+        $parts = $oneSubnet -split '/'
+        if ($parts.Count -lt 2) { continue }
+        $prefixLen = [int]$parts[1]
+        if ($prefixLen -lt 16 -or $prefixLen -gt 30) { continue }
+        $baseIp = [System.Net.IPAddress]::Parse($parts[0].Trim())
+        $baseBytes = $baseIp.GetAddressBytes()
+        [Array]::Reverse($baseBytes)
+        $hostBits = 32 - $prefixLen
+        $baseVal = [System.BitConverter]::ToUInt32($baseBytes, 0)
+        $baseVal = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
+        $baseBytes = [System.BitConverter]::GetBytes($baseVal)
+        $maxInSubnet = [math]::Pow(2, $hostBits) - 2
+        $take = [math]::Min([int]$maxInSubnet, $remaining)
+        for ($i = 1; $i -le $take; $i++) {
+            $ipVal = ([System.BitConverter]::ToUInt32($baseBytes, 0)) + $i
+            $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
+            [Array]::Reverse($newBytes)
+            $ipList.Add([System.Net.IPAddress]::new($newBytes).ToString())
+        }
+        $remaining -= $take
+    }
+    
+    return $ipList.ToArray()
+}
+
 function Get-PSYarboLocalSubnets {
     [CmdletBinding()]
     [OutputType([string[]])]

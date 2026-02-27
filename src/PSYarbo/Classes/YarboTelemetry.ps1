@@ -43,8 +43,8 @@ class YarboTelemetry {
 
     # Wireless charging (wireless_recharge)
     [int]$WirelessChargeState
-    [int]$WirelessChargeVoltage
-    [int]$WirelessChargeCurrent
+    [double]$WirelessChargeVoltage
+    [double]$WirelessChargeCurrent
     [int]$WirelessChargeErrorCode
 
     # LED (led)
