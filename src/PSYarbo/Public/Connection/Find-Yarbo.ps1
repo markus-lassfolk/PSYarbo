@@ -15,7 +15,7 @@ function Find-Yarbo {
     TimeoutSeconds are silently skipped.
 
 .PARAMETER Subnet
-    Network subnet(s) to scan in CIDR notation (e.g. 192.168.1.0/24). When not specified, scans all networks this machine has an IP on (LAN, Wi‑Fi, etc.). Prefix must be /16–/30.
+    Network subnet(s) to scan in CIDR notation (e.g. 192.0.2.0/24). When not specified, scans all networks this machine has an IP on (LAN, Wi‑Fi, etc.). Prefix must be /16–/30.
 
 .PARAMETER TimeoutSeconds
     How long to wait for each broker to produce a heart_beat. Default: 5.
@@ -34,10 +34,10 @@ function Find-Yarbo {
     Scans all local networks (auto-detected).
 
 .EXAMPLE
-    Find-Yarbo -Subnet 192.168.1.0/24 -TimeoutSeconds 10
+    Find-Yarbo -Subnet 192.0.2.0/24 -TimeoutSeconds 10
 
 .EXAMPLE
-    Find-Yarbo -Subnet 192.168.0.0/22 -MaxHosts 1024
+    Find-Yarbo -Subnet 192.0.2.0/22 -MaxHosts 1024
 
 .LINK
     Connect-Yarbo
@@ -74,7 +74,7 @@ function Find-Yarbo {
     if ([string]::IsNullOrWhiteSpace($Subnet)) {
         $subnetsToScan = @(Get-PSYarboLocalSubnets)
         if ($subnetsToScan.Count -eq 0) {
-            $subnetsToScan = @('192.168.0.0/23')
+            $subnetsToScan = @('192.0.2.0/24')
             Write-Verbose "[Find-Yarbo] No local subnets detected; using fallback $($subnetsToScan[0])"
         } else {
             Write-Verbose "[Find-Yarbo] Using local subnets: $($subnetsToScan -join ', ')"

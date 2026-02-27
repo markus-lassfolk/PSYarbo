@@ -6,7 +6,7 @@ function Get-PSYarboSubnetIpList {
         Generates a list of host IPs from CIDR subnets for network scanning.
     
     .PARAMETER Subnets
-        Array of CIDR subnet strings (e.g., '192.168.1.0/24').
+        Array of CIDR subnet strings (e.g., '192.0.2.0/24').
     
     .PARAMETER MaxHosts
         Maximum number of host IPs to generate across all subnets.

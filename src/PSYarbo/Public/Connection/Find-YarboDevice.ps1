@@ -39,7 +39,7 @@ function Find-YarboDevice {
     Find-YarboDevice
 
 .EXAMPLE
-    Find-YarboDevice -Subnet 192.168.1.0/24 -TimeoutSeconds 10
+    Find-YarboDevice -Subnet 192.0.2.0/24 -TimeoutSeconds 10
 
 .EXAMPLE
     # Primary/secondary for failover (e.g. Home Assistant): try first, then second if unreachable.
@@ -98,7 +98,7 @@ function Find-YarboDevice {
     if ([string]::IsNullOrWhiteSpace($Subnet)) {
         $subnetsToScan = @(Get-PSYarboLocalSubnets)
         if ($subnetsToScan.Count -eq 0) {
-            $subnetsToScan = @('192.168.0.0/23')
+            $subnetsToScan = @('192.0.2.0/24')
             Write-Verbose "[Find-YarboDevice] No local subnets detected; using fallback $($subnetsToScan[0])"
         } else {
             Write-Verbose "[Find-YarboDevice] Using local subnets: $($subnetsToScan -join ', ')"

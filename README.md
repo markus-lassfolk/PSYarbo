@@ -165,7 +165,7 @@ PSYarbo uses the `snowbot/{SN}/...` MQTT topic hierarchy discovered by reverse e
 
 See also: `Get-Help about_PSYarbo_MQTT`
 
-**Discovery:** Find-Yarbo and Find-YarboDevice use the same strategy as [python-yarbo](https://github.com/markus-lassfolk/python-yarbo): anonymous MQTT client, subscribe to `snowbot/+/device/DeviceMSG`, `snowbot/+/device/data_feedback`, and `snowbot/+/device/heart_beat`, and derive the robot serial number from the first message received. Default is 192.168.1.0/24 (typical home LAN); pass `-Subnet` if your network uses a different range so discovery can scan it. If discovery finds no robots, run from a host on the same LAN as the Yarbo and ensure the robot is powered and connected.
+**Discovery:** Find-Yarbo and Find-YarboDevice use the same strategy as [python-yarbo](https://github.com/markus-lassfolk/python-yarbo): anonymous MQTT client, subscribe to `snowbot/+/device/DeviceMSG`, `snowbot/+/device/data_feedback`, and `snowbot/+/device/heart_beat`, and derive the robot serial number from the first message received. By default, discovery scans all networks this machine has an IP on; pass `-Subnet` (e.g. `192.0.2.0/24`) if you want to limit the scan. If discovery finds no robots, run from a host on the same LAN as the Yarbo and ensure the robot is powered and connected.
 
 ---
 

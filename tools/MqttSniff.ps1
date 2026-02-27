@@ -12,7 +12,7 @@
 .PARAMETER DurationSeconds
     How long to capture. Default 15.
 .EXAMPLE
-    .\tools\MqttSniff.ps1 -Broker 192.168.0.1 -DurationSeconds 20
+    .\tools\MqttSniff.ps1 -Broker <rover-ip> -DurationSeconds 20
 #>
 [CmdletBinding()]
 param(

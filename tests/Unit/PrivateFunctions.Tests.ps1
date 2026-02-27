@@ -39,16 +39,16 @@ Describe 'ConfigManager' {
     }
 
     It 'Get-YarboConfig resolves Broker from env var' {
-        $env:YARBO_BROKER = '192.168.0.1'
+        $env:YARBO_BROKER = '192.0.2.1'
         $cfg = Get-YarboConfig
-        $cfg['Broker'] | Should -Be '192.168.0.1'
+        $cfg['Broker'] | Should -Be '192.0.2.1'
         $env:YARBO_BROKER = $null
     }
 
     It 'Get-YarboConfig Overrides take priority over env vars' {
-        $env:YARBO_BROKER = '192.168.0.1'
-        $cfg = Get-YarboConfig -Overrides @{ Broker = '192.168.0.2' }
-        $cfg['Broker'] | Should -Be '192.168.0.2'
+        $env:YARBO_BROKER = '192.0.2.1'
+        $cfg = Get-YarboConfig -Overrides @{ Broker = '192.0.2.2' }
+        $cfg['Broker'] | Should -Be '192.0.2.2'
         $env:YARBO_BROKER = $null
     }
 
@@ -59,7 +59,7 @@ Describe 'ConfigManager' {
     }
 
     It 'Test-YarboConfig returns true when Broker and SN are provided via overrides' {
-        $result = Test-YarboConfig -Overrides @{ Broker = '192.168.0.1'; SN = 'TEST123' }
+        $result = Test-YarboConfig -Overrides @{ Broker = '192.0.2.1'; SN = 'TEST123' }
         $result | Should -BeTrue
     }
 
