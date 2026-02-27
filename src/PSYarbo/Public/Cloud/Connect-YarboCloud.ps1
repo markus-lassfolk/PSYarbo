@@ -32,7 +32,7 @@ function Connect-YarboCloud {
     [CmdletBinding(DefaultParameterSetName = 'Credential')]
     [OutputType([YarboCloudSession])]
     param(
-        [Parameter(Mandatory, ParameterSetName = 'Credential')]
+        [Parameter(ParameterSetName = 'Credential')]
         [string]$Email,
 
         [Parameter(Mandatory, ParameterSetName = 'Credential')]
@@ -48,6 +48,20 @@ function Connect-YarboCloud {
     $session = [YarboCloudSession]::new()
 
     try {
+        if ($PSCmdlet.ParameterSetName -eq 'Credential') {
+            # Resolve email from env or config if not provided (issue #9)
+            if (-not $Email) {
+                $cfg = Get-YarboConfig -Overrides @{}
+                $Email = $cfg['Email']
+            }
+            if (-not $Email) {
+                throw [YarboCloudAuthException]::new(
+                    'Email is required. Provide -Email, set $env:YARBO_EMAIL, or add Email to ~/.psyarbo/config.json.',
+                    'EMAIL_REQUIRED'
+                )
+            }
+        }
+
         if ($PSCmdlet.ParameterSetName -eq 'Token') {
             $session.RefreshToken = $RefreshToken
             $session.RefreshAuth()

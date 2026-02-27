@@ -62,6 +62,24 @@ Describe 'ConfigManager' {
         $result = Test-YarboConfig -Overrides @{ Broker = '192.168.0.1'; SN = 'TEST123' }
         $result | Should -BeTrue
     }
+
+    It 'Get-YarboConfig resolves Email from env YARBO_EMAIL' {
+        $env:YARBO_EMAIL = 'user@example.com'
+        $cfg = Get-YarboConfig
+        $cfg['Email'] | Should -Be 'user@example.com'
+        $env:YARBO_EMAIL = $script:origEmail
+    }
+
+    It 'Merge-YarboConfig merges with priority explicit > env > file > defaults' {
+        $defaults = @{ Port = 1883; Broker = $null }
+        $file = @{ Broker = 'file.broker'; SN = 'file-sn' }
+        $envLayer = @{ Broker = 'env.broker' }
+        $explicit = @{ Broker = 'param.broker' }
+        $merged = Merge-YarboConfig -Defaults $defaults -File $file -Env $envLayer -Explicit $explicit
+        $merged['Broker'] | Should -Be 'param.broker'
+        $merged['SN'] | Should -Be 'file-sn'
+        $merged['Port'] | Should -Be 1883
+    }
 }
 
 Describe 'CredentialHelper' {
