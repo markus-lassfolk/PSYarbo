@@ -1,0 +1,1 @@
+{"topic":"read_schedules","state":0,"msg":"success","data":[{"id":1,"name":"Morning","plan_id":1,"enable":true,"schedule_type":0,"start_time":"08:00","end_time":"10:00","week_day":127,"interval_time":0,"is_weather_schedule":false,"return_method":0,"times":1,"timezone":"Europe/Stockholm"}]}
