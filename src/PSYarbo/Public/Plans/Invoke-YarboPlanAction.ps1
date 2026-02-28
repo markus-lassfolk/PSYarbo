@@ -39,6 +39,7 @@ function Invoke-YarboPlanAction {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "In-plan action '$Action'")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Invoke-YarboPlanAction] Routing via local MQTT → in_plan_action (action=$Action)")
             return Send-MqttCommand -Connection $conn -Command 'in_plan_action' -Payload @{ action = $Action }
         }

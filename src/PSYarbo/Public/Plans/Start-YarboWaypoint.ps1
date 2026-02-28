@@ -37,6 +37,7 @@ function Start-YarboWaypoint {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Start waypoint index=$Index")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Start-YarboWaypoint] Routing via local MQTT → start_way_point (index=$Index)")
             return Send-MqttCommand -Connection $conn -Command 'start_way_point' -Payload @{ index = $Index }
         }
