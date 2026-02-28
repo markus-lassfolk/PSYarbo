@@ -31,6 +31,7 @@ function Stop-YarboShutdown {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Shutdown robot (shutdown) — requires physical restart')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Stop-YarboShutdown] Routing via local MQTT → shutdown")
             return Send-MqttCommand -Connection $conn -Command 'shutdown' -Payload @{}
         }

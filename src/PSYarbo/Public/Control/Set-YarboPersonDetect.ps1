@@ -38,6 +38,7 @@ function Set-YarboPersonDetect {
         $conn = Resolve-YarboConnection -Connection $Connection
         $enable = if ($Enabled) { 1 } else { 0 }
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set person detect enable=$enable")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboPersonDetect] Routing via local MQTT → set_person_detect (enable=$enable)")
             return Send-MqttCommand -Connection $conn -Command 'set_person_detect' -Payload @{ enable = $enable }
         }

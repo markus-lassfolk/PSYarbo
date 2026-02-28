@@ -36,6 +36,7 @@ function Set-YarboCamera {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set camera enabled=$Enabled")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboCamera] Routing via local MQTT → camera_toggle (enabled=$Enabled)")
             return Send-MqttCommand -Connection $conn -Command 'camera_toggle' -Payload @{ enabled = $Enabled }
         }

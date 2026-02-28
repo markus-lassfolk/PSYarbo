@@ -37,6 +37,7 @@ function Set-YarboHeadLight {
         $conn = Resolve-YarboConnection -Connection $Connection
         $state = if ($Enabled) { 1 } else { 0 }
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set head light state=$state")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboHeadLight] Routing via local MQTT → head_light (state=$state)")
             return Send-MqttCommand -Connection $conn -Command 'head_light' -Payload @{ state = $state }
         }

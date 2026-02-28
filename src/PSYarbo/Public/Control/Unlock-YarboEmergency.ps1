@@ -27,6 +27,7 @@ function Unlock-YarboEmergency {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Unlock emergency stop (emergency_unlock)')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Unlock-YarboEmergency] Routing via local MQTT → emergency_unlock")
             return Send-MqttCommand -Connection $conn -Command 'emergency_unlock' -Payload @{}
         }

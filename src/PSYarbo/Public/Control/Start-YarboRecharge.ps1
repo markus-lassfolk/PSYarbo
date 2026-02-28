@@ -17,8 +17,8 @@ function Start-YarboRecharge {
     Save-YarboChargingPoint
     Get-YarboRechargePoint
 #>
-    [CmdletBinding(SupportsShouldProcess)]
-    [OutputType([YarboCommandResult])]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    [OutputType([void])]
     param(
         [Parameter(ValueFromPipeline)]
         [YarboConnection]$Connection
@@ -27,8 +27,9 @@ function Start-YarboRecharge {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Return to charge (cmd_recharge)')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Start-YarboRecharge] Routing via local MQTT → cmd_recharge")
-            return Send-MqttCommand -Connection $conn -Command 'cmd_recharge' -Payload @{}
+            Send-MqttFireAndForget -Connection $conn -Command 'cmd_recharge' -Payload @{}
         }
     }
 }

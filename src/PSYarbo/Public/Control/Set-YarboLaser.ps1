@@ -36,6 +36,7 @@ function Set-YarboLaser {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set laser enabled=$Enabled")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboLaser] Routing via local MQTT → laser_toggle (enabled=$Enabled)")
             return Send-MqttCommand -Connection $conn -Command 'laser_toggle' -Payload @{ enabled = $Enabled }
         }

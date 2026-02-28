@@ -27,6 +27,7 @@ function Stop-Yarbo {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Soft stop (dstop)')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Stop-Yarbo] Routing via local MQTT → dstop")
             return Send-MqttCommand -Connection $conn -Command 'dstop' -Payload @{}
         }

@@ -31,6 +31,7 @@ function Stop-YarboEmergency {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Emergency stop (emergency_stop_active)')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Stop-YarboEmergency] Routing via local MQTT → emergency_stop_active")
             return Send-MqttCommand -Connection $conn -Command 'emergency_stop_active' -Payload @{ state = $true }
         }

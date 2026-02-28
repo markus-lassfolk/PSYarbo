@@ -38,6 +38,7 @@ function Set-YarboSound {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set sound volume=$Volume")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboSound] Routing via local MQTT → set_sound_param (vol=$Volume)")
             return Send-MqttCommand -Connection $conn -Command 'set_sound_param' -Payload @{ vol = $Volume }
         }

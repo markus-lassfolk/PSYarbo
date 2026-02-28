@@ -37,6 +37,7 @@ function Start-YarboSong {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Play song songId=$SongId")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Start-YarboSong] Routing via local MQTT → song_cmd (songId=$SongId)")
             return Send-MqttCommand -Connection $conn -Command 'song_cmd' -Payload @{ songId = $SongId }
         }

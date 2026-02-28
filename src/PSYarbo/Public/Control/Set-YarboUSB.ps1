@@ -36,6 +36,7 @@ function Set-YarboUSB {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set USB enabled=$Enabled")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboUSB] Routing via local MQTT → usb_toggle (enabled=$Enabled)")
             return Send-MqttCommand -Connection $conn -Command 'usb_toggle' -Payload @{ enabled = $Enabled }
         }

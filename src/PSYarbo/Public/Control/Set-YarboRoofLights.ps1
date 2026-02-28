@@ -40,6 +40,7 @@ function Set-YarboRoofLights {
         $conn = Resolve-YarboConnection -Connection $Connection
         $enable = if ($Enabled) { 1 } else { 0 }
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Set roof lights enable=$enable")) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Set-YarboRoofLights] Routing via local MQTT → roof_lights_enable (enable=$enable)")
             return Send-MqttCommand -Connection $conn -Command 'roof_lights_enable' -Payload @{ enable = $enable }
         }

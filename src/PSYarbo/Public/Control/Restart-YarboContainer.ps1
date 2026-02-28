@@ -27,6 +27,7 @@ function Restart-YarboContainer {
     process {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Restart container (restart_container)')) {
+            Assert-YarboController -Connection $conn
             Write-Verbose (Protect-YarboLogMessage "[Restart-YarboContainer] Routing via local MQTT → restart_container")
             return Send-MqttCommand -Connection $conn -Command 'restart_container' -Payload @{}
         }
