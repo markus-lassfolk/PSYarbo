@@ -3,7 +3,9 @@
 using module ../../src/PSYarbo/PSYarbo.psd1
 <#
 .SYNOPSIS
-    Unit tests for the ~30 typed command cmdlets added in issue #30.
+    Unit tests for the ~37 typed command cmdlets added in PR #59.
+    Note: issue #30 covers Find-YarboDevice endpoint discovery (Rover vs DC),
+    which is a separate feature. This test file covers the typed control cmdlets.
 #>
 
 BeforeAll {
