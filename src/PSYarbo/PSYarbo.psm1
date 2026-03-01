@@ -16,13 +16,29 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-#region — Load MQTTnet and C# listener helper
+#region — Load MQTTnet and C# listener helper via isolated AssemblyLoadContext
 $libPath = Join-Path $PSScriptRoot 'lib'
 $mqttDllPath = Join-Path $libPath 'MQTTnet.dll'
 
 if (Test-Path $mqttDllPath) {
-    $script:MqttAssembly = [System.Reflection.Assembly]::LoadFrom((Resolve-Path $mqttDllPath).Path)
-    Write-Verbose "PSYarbo: Loaded MQTTnet from $mqttDllPath"
+    # Load MQTTnet into isolated ALC to avoid version conflicts with other modules
+    $alcName = 'PSYarboMqttContext'
+    $script:MqttALC = [System.Runtime.Loader.AssemblyLoadContext]::new($alcName, $true)
+    $script:MqttAssembly = $script:MqttALC.LoadFromAssemblyPath((Resolve-Path $mqttDllPath).Path)
+    Write-Verbose "PSYarbo: Loaded MQTTnet via isolated AssemblyLoadContext '$alcName'"
+    
+    # Set up assembly resolution so Add-Type can find MQTTnet from the isolated ALC
+    $defaultALC = [System.Runtime.Loader.AssemblyLoadContext]::Default
+    $resolvingHandler = [System.Func[System.Runtime.Loader.AssemblyLoadContext, System.Reflection.AssemblyName, System.Reflection.Assembly]] {
+        param($context, $assemblyName)
+        if ($assemblyName.Name -eq 'MQTTnet') {
+            return $script:MqttAssembly
+        }
+        return $null
+    }
+    $defaultALC.add_Resolving($resolvingHandler)
+    $script:MqttResolvingHandler = $resolvingHandler
+    
     # C# helper: connects, subscribes, and receives messages entirely in C# so the MQTTnet
     # ApplicationMessageReceivedAsync event is attached with += and always fires.
     $listenerCode = @'
