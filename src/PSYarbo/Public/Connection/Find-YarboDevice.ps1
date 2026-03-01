@@ -239,11 +239,13 @@ function Find-YarboDevice {
     $bothPresent = $hasRover -and $hasDC
 
     # ── Console output (table + recommendation text) ────────────────────────
+    # Sort into try-order: recommended first, then others (primary/secondary failover).
+    $tryOrder = @($endpoints | Sort-Object { -not $_.Recommended })
     Write-Information ""
     Write-Information "Yarbo MQTT Endpoints Found:"
     Write-Information ""
     $i = 1
-    foreach ($ep in $endpoints) {
+    foreach ($ep in $tryOrder) {
         $rec = if ($ep.Recommended) { '  ⭐ Recommended' } else { '' }
         $mac = if ($ep.MacAddress) { $ep.MacAddress } else { '(unknown – Rover/DC unclear)' }
         Write-Information ("  {0,2}  {1,-15}  {2,-5}  {3,-17}  {4,-10}{5}" -f $i, $ep.IPAddress, $ep.Path, $mac, $ep.Status, $rec)
@@ -265,7 +267,6 @@ function Find-YarboDevice {
     Write-Information ""
 
     # Output in try-order: recommended first, then others (primary/secondary failover).
-    $tryOrder = @($endpoints | Sort-Object { -not $_.Recommended })
     foreach ($ep in $tryOrder) {
         Write-Output $ep
     }
