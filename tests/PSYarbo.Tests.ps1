@@ -629,7 +629,6 @@ Describe 'Help Documentation' {
     }
 
 }
-}
 
 AfterAll {
     if (Get-Module -Name PSYarbo) { Remove-Module -Name PSYarbo -Force }
