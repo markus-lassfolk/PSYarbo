@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Exports a redacted MQTT/connection bundle for support (e.g. GlitchTip or maintainers).
 
@@ -100,12 +100,12 @@ function Export-YarboSupportBundle {
                 }
             }
             $bundle.Recording = [ordered]@{
-                RecordedAt       = $raw.RecordedAt
-                Broker           = $raw.Broker
-                Port             = $raw.Port
-                DurationSeconds  = $raw.DurationSeconds
-                MessageCount     = $messages.Count
-                Topics           = [ordered]@{}
+                RecordedAt        = $raw.RecordedAt
+                Broker            = $raw.Broker
+                Port              = $raw.Port
+                DurationSeconds   = $raw.DurationSeconds
+                MessageCount      = $messages.Count
+                Topics            = [ordered]@{}
                 DecodedKeysSample = [ordered]@{}
             }
             foreach ($t in ($byTopic.Keys | Sort-Object)) { $bundle.Recording.Topics[$t] = $byTopic[$t] }
@@ -118,10 +118,10 @@ function Export-YarboSupportBundle {
         $cmdArr = $Connection.CommandLog.ToArray() | Select-Object -Last $CommandLogEntries
         $telArr = $Connection.TelemetryLog.ToArray() | Select-Object -Last $TelemetryLogEntries
         $bundle.ConnectionLog = [ordered]@{
-            Broker        = $Connection.Broker
-            Port          = $Connection.Port
-            SerialNumber  = $Connection.SerialNumber
-            CommandLog    = @($cmdArr | ForEach-Object {
+            Broker       = $Connection.Broker
+            Port         = $Connection.Port
+            SerialNumber = $Connection.SerialNumber
+            CommandLog   = @($cmdArr | ForEach-Object {
                     $entry = [ordered]@{
                         Timestamp = $_.Timestamp.ToString('o')
                         Command   = $_.Command

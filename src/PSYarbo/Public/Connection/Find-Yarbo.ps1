@@ -186,7 +186,9 @@ function Find-Yarbo {
             }
         }
     }
+    # One YarboRobot per device (SerialNumber); use first discovered endpoint per device
     foreach ($endpoints in $discovered.Values) {
+        if ($endpoints.Count -eq 0) { continue }
         $ep = $endpoints[0]
         $r = [YarboRobot]::new()
         $r.Broker = $ep.IP

@@ -588,11 +588,11 @@ Describe 'Public Cmdlet Parameter Validation' {
     }
 
     Context 'Connect-YarboCloud' {
-        It 'Has non-mandatory Email parameter in Credential set' {
+        It 'Email in Credential set is optional (resolvable from env/config)' {
             $cmd = Get-Command Connect-YarboCloud
-            $emailParam = $cmd.Parameters['Email'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'Credential' }
-            $emailParam | Should -Not -BeNullOrEmpty
-            $emailParam.Mandatory | Should -BeFalse
+            $credSet = $cmd.Parameters['Email'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'Credential' }
+            $credSet | Should -Not -BeNullOrEmpty
+            $credSet.Mandatory | Should -BeFalse -Because 'Email can be resolved from $env:YARBO_EMAIL or config'
         }
 
         It 'Password is SecureString type' {
