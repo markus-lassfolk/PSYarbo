@@ -71,7 +71,10 @@ function Find-Yarbo {
     )
 
     # ── 1. Resolve subnets to scan (local interfaces or -Subnet) ───────────────
-    if ([string]::IsNullOrWhiteSpace($Subnet)) {
+    $userProvidedSubnet = -not [string]::IsNullOrWhiteSpace($Subnet)
+    if ($userProvidedSubnet) {
+        $subnetsToScan = @($Subnet.Trim())
+    } else {
         $subnetsToScan = @(Get-PSYarboLocalSubnet)
         if ($subnetsToScan.Count -eq 0) {
             $subnetsToScan = @('192.168.1.0/24')
@@ -79,11 +82,9 @@ function Find-Yarbo {
         } else {
             Write-Verbose "[Find-Yarbo] Using local subnets: $($subnetsToScan -join ', ')"
         }
-    } else {
-        $subnetsToScan = @($Subnet.Trim())
     }
 
-    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts)
+    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts -ValidateUserInput:$userProvidedSubnet)
     $hostCount = $ipList.Count
     Write-Verbose "[Find-Yarbo] Scanning $($subnetsToScan.Count) subnet(s), $hostCount hosts for MQTT brokers on port $Port"
     if ($hostCount -gt 512) {

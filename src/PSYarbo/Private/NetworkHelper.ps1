@@ -11,6 +11,9 @@ function Get-PSYarboSubnetIpList {
     .PARAMETER MaxHosts
         Maximum number of host IPs to generate across all subnets.
     
+    .PARAMETER ValidateUserInput
+        When true, throws an exception for invalid subnet prefixes instead of silently skipping them.
+    
     .OUTPUTS
         [string[]] Array of IP addresses to scan.
     #>
@@ -21,7 +24,10 @@ function Get-PSYarboSubnetIpList {
         [string[]]$Subnets,
         
         [Parameter(Mandatory)]
-        [int]$MaxHosts
+        [int]$MaxHosts,
+        
+        [Parameter()]
+        [switch]$ValidateUserInput
     )
     
     $ipList = [System.Collections.Generic.List[string]]::new()
@@ -32,7 +38,21 @@ function Get-PSYarboSubnetIpList {
         $parts = $oneSubnet -split '/'
         if ($parts.Count -lt 2) { continue }
         $prefixLen = [int]$parts[1]
-        if ($prefixLen -lt 16 -or $prefixLen -gt 30) { continue }
+        if ($prefixLen -lt 16 -or $prefixLen -gt 30) {
+            if ($ValidateUserInput) {
+                if ($prefixLen -lt 16) {
+                    throw [System.ArgumentException]::new(
+                        "Subnet prefix /$prefixLen is too large for safety. Use /16 or longer."
+                    )
+                }
+                if ($prefixLen -gt 30) {
+                    throw [System.ArgumentException]::new(
+                        "Subnet prefix /$prefixLen has no scannable host addresses. Use /30 or shorter."
+                    )
+                }
+            }
+            continue
+        }
         $baseIp = [System.Net.IPAddress]::Parse($parts[0].Trim())
         $baseBytes = $baseIp.GetAddressBytes()
         [Array]::Reverse($baseBytes)

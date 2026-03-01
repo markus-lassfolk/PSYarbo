@@ -97,7 +97,10 @@ function Find-YarboDevice {
     }
 
     # ── Resolve subnets to scan (local interfaces or -Subnet) ────────────────
-    if ([string]::IsNullOrWhiteSpace($Subnet)) {
+    $userProvidedSubnet = -not [string]::IsNullOrWhiteSpace($Subnet)
+    if ($userProvidedSubnet) {
+        $subnetsToScan = @($Subnet.Trim())
+    } else {
         $subnetsToScan = @(Get-PSYarboLocalSubnet)
         if ($subnetsToScan.Count -eq 0) {
             $subnetsToScan = @('192.168.1.0/24')
@@ -105,11 +108,9 @@ function Find-YarboDevice {
         } else {
             Write-Verbose "[Find-YarboDevice] Using local subnets: $($subnetsToScan -join ', ')"
         }
-    } else {
-        $subnetsToScan = @($Subnet.Trim())
     }
 
-    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts)
+    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts -ValidateUserInput:$userProvidedSubnet)
     $hostCount = $ipList.Count
     Write-Verbose "[Find-YarboDevice] Scanning $($subnetsToScan.Count) subnet(s), $hostCount hosts"
     if ($hostCount -gt 512) {
