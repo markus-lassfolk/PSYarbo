@@ -113,7 +113,7 @@ function Find-Yarbo {
             }
         } -ThrottleLimit $ThrottleLimit | Where-Object { $null -ne $_ }
     )
-    $candidates = @($tcpCandidates)
+    $candidates = @($tcpCandidates) | Select-Object -Unique
     Write-Verbose "[Find-Yarbo] TCP probe found $($candidates.Count) candidate(s)"
 
     if ($candidates.Count -eq 0) {
