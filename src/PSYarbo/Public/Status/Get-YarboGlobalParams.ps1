@@ -59,11 +59,13 @@ function Get-YarboGlobalParams {
         $p = [YarboGlobalParams]::new()
         $d = $result.Data
         $p.RawData = $d
-        if ($d.PSObject.Properties['mow_speed']) { $p.MowSpeed = [double]$d.mow_speed }
-        if ($d.PSObject.Properties['cutting_height']) { $p.CuttingHeight = [int]$d.cutting_height }
-        if ($d.PSObject.Properties['rain_delay']) { $p.RainDelay = [int]$d.rain_delay }
-        if ($d.PSObject.Properties['obstacle_sensitivity']) { $p.ObstacleSensitivity = [int]$d.obstacle_sensitivity }
-        if ($d.PSObject.Properties['timestamp']) { $p.Timestamp = [double]$d.timestamp }
+        if ($null -ne $d) {
+            if ($d.PSObject.Properties['mow_speed']) { $p.MowSpeed = [double]$d.mow_speed }
+            if ($d.PSObject.Properties['cutting_height']) { $p.CuttingHeight = [int]$d.cutting_height }
+            if ($d.PSObject.Properties['rain_delay']) { $p.RainDelay = [int]$d.rain_delay }
+            if ($d.PSObject.Properties['obstacle_sensitivity']) { $p.ObstacleSensitivity = [int]$d.obstacle_sensitivity }
+            if ($d.PSObject.Properties['timestamp']) { $p.Timestamp = [double]$d.timestamp }
+        }
         return $p
     }
 }
