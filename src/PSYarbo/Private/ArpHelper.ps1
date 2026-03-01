@@ -84,9 +84,10 @@ function Get-MacForIp {
 function Format-MacAddress {
     param([string]$Mac)
     if (-not $Mac) { return $null }
-    $hex = $Mac -replace '[^0-9a-fA-F]', ''
-    if ($hex.Length -ne 12) { return $Mac }
-    return (1..6 | ForEach-Object { $hex.Substring(($_ - 1) * 2, 2) }) -join ':'
+    $octets = $Mac -split '[:-]'
+    if ($octets.Count -ne 6) { return $Mac }
+    $normalized = $octets | ForEach-Object { $_.PadLeft(2, '0') }
+    return $normalized -join ':'
 }
 
 function Test-LocallyAdministeredMac {
@@ -96,10 +97,10 @@ function Test-LocallyAdministeredMac {
         [string]$Mac
     )
     if (-not $Mac) { return $false }
-    $hex = $Mac -replace '[^0-9a-fA-F]', ''
-    if ($hex.Length -lt 2) { return $false }
+    $octets = $Mac -split '[:-]'
+    if ($octets.Count -lt 1 -or -not $octets[0]) { return $false }
     try {
-        $firstOctet = [Convert]::ToByte($hex.Substring(0, 2), 16)
+        $firstOctet = [Convert]::ToByte($octets[0].PadLeft(2, '0'), 16)
         return ($firstOctet -band 0x02) -eq 0x02
     } catch {
         return $false
