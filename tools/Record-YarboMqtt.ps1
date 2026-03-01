@@ -64,7 +64,7 @@ $recordPath = Join-Path $OutDir "PSYarbo-MqttRecording-$stamp.json"
 $reportPath = Join-Path $OutDir "PSYarbo-MqttReport-$stamp.txt"
 
 Write-Host "Recording real MQTT for ${DurationSeconds}s from ${Broker}:${Port} -> $recordPath"
-$summary = Invoke-YarboMqttSniff -Broker $Broker -Port $Port -DurationSeconds $DurationSeconds -RecordPath $recordPath
+Invoke-YarboMqttSniff -Broker $Broker -Port $Port -DurationSeconds $DurationSeconds -RecordPath $recordPath
 
 if (-not $SkipReport -and (Test-Path -LiteralPath $recordPath)) {
     Write-Host ""

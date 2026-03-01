@@ -620,10 +620,12 @@ Describe 'Help Documentation' {
     It 'Every exported function has at least one example' {
         foreach ($fn in $script:exportedFunctions) {
             $help = Get-Help $fn
-            $hasExamplesProp = @($help.PSObject.Properties.Match('examples')).Count -gt 0 -and $help.examples
-            $examples = if ($hasExamplesProp) { $help.examples.example } else { @() }
+            $examplesProp = $help.PSObject.Properties['examples']
+            $examples = if ($null -ne $examplesProp -and $help.examples) { @($help.examples.example) } else { @() }
             $examples.Count | Should -BeGreaterThan 0 -Because "$fn should have at least one example"
         }
+    }
+
     }
 
 }

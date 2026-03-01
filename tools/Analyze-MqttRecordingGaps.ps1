@@ -19,7 +19,7 @@ param(
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $RecordingPath)) { Write-Error "Not found: $RecordingPath"; exit 1 }
 
-function Expand-ZlibBytes {
+function Expand-ZlibByte {
     param([byte[]]$Data)
     if (-not $Data -or $Data.Length -eq 0) { return $null }
     try {
@@ -32,7 +32,7 @@ function Expand-ZlibBytes {
     } catch { return $null }
 }
 
-function Get-AllKeys {
+function Get-AllKey {
     param([PSCustomObject]$Obj, [string]$Prefix = '')
     $keys = [System.Collections.Generic.List[string]]::new()
     if (-not $Obj) { return @() }
@@ -41,7 +41,7 @@ function Get-AllKeys {
         $path = if ($Prefix) { "$Prefix.$name" } else { $name }
         $keys.Add($path)
         $val = $p.Value
-        if ($val -is [PSCustomObject]) { foreach ($sub in (Get-AllKeys -Obj $val -Prefix $path)) { $keys.Add($sub) } }
+        if ($val -is [PSCustomObject]) { foreach ($sub in (Get-AllKey -Obj $val -Prefix $path)) { $keys.Add($sub) } }
         elseif ($val -is [System.Collections.IDictionary]) {
             foreach ($k in $val.Keys) { $keys.Add("$path.$k") }
         }
@@ -88,7 +88,7 @@ foreach ($m in $messages) {
     if ($m.PayloadBase64) {
         try {
             $bytes = [Convert]::FromBase64String($m.PayloadBase64)
-            $decoded = Expand-ZlibBytes -Data $bytes
+            $decoded = Expand-ZlibByte -Data $bytes
             if (-not $decoded) {
                 $str = [System.Text.Encoding]::UTF8.GetString($bytes)
                 if ($str.TrimStart().StartsWith('{')) { $decoded = $str | ConvertFrom-Json }
@@ -96,7 +96,7 @@ foreach ($m in $messages) {
         } catch { $null = $_ }
     }
     if ($decoded) {
-        $keys = Get-AllKeys -Obj $decoded
+        $keys = Get-AllKey -Obj $decoded
         foreach ($k in $keys) { $null = $allSeenKeys.Add($k) }
         foreach ($k in $keys) { $byTopic[$suffix].Add($k) | Out-Null }
     }
