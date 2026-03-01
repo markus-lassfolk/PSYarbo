@@ -81,7 +81,9 @@ function Find-YarboDevice {
         [int]$ThrottleLimit = 64
     )
 
-    $InformationPreference = 'Continue'
+    if (-not $PSBoundParameters.ContainsKey('InformationAction')) {
+        $InformationPreference = 'Continue'
+    }
 
     # ── DNS fast-path: try hostname YARBO (DC may register via DHCP) ─────────
     $dnsFirst = [System.Collections.Generic.List[string]]::new()
