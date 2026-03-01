@@ -22,7 +22,7 @@ function Send-YarboReturnToDock {
     Start-YarboPlan
 #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
-    [Alias('Return-YarboToDock', 'Start-YarboRecharge')]
+    [Alias('Return-YarboToDock')]
     [OutputType([void])]
     param(
         [Parameter(ValueFromPipeline)]
