@@ -242,3 +242,12 @@ $script:DefaultConnection = $null
 
 $script:ModuleVersion = (Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot 'PSYarbo.psd1')).ModuleVersion
 Write-Verbose "PSYarbo module loaded. Version: $script:ModuleVersion"
+
+# Register cleanup handler to remove ALC resolving handler on module removal
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+    if ($script:MqttResolvingHandler) {
+        $defaultALC = [System.Runtime.Loader.AssemblyLoadContext]::Default
+        $defaultALC.remove_Resolving($script:MqttResolvingHandler)
+        $script:MqttResolvingHandler = $null
+    }
+}

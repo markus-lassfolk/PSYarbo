@@ -126,17 +126,18 @@ function Export-YarboSupportBundle {
                         Timestamp = $_.Timestamp.ToString('o')
                         Command   = $_.Command
                         Direction = $_.Direction
-                        Topic     = $_.Topic
                     }
+                    if ($_.PSObject.Properties['Topic']) { $entry['Topic'] = $_.Topic }
                     if ($_.PSObject.Properties['State']) { $entry['State'] = $_.State }
                     if ($_.PSObject.Properties['Message']) { $entry['Message'] = if ($_.Message) { Protect-YarboLogMessage $_.Message } else { $null } }
                     $entry
                 })
             TelemetryLog = @($telArr | ForEach-Object {
                     [ordered]@{
-                        At     = $_.At.ToString('o')
-                        Topic  = $_.Topic
-                        Source = $_.Source
+                        Timestamp   = $_.Timestamp.ToString('o')
+                        MessageType = $_.MessageType
+                        Direction   = $_.Direction
+                        Topic       = $_.Topic
                     }
                 })
         }

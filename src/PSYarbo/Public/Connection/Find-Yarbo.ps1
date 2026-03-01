@@ -187,13 +187,12 @@ function Find-Yarbo {
         }
     }
     foreach ($endpoints in $discovered.Values) {
-        foreach ($ep in $endpoints) {
-            $r = [YarboRobot]::new()
-            $r.Broker = $ep.IP
-            $r.Port = $ep.Port
-            $r.SerialNumber = $ep.SerialNumber
-            $r.LastUpdated = [datetime]::UtcNow
-            Write-Output $r
-        }
+        $ep = $endpoints[0]
+        $r = [YarboRobot]::new()
+        $r.Broker = $ep.IP
+        $r.Port = $ep.Port
+        $r.SerialNumber = $ep.SerialNumber
+        $r.LastUpdated = [datetime]::UtcNow
+        Write-Output $r
     }
 }
