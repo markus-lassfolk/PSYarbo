@@ -157,16 +157,6 @@ Disconnect-Yarbo
 
 ---
 
-## Protocol
-
-PSYarbo uses the `snowbot/{SN}/...` MQTT topic hierarchy discovered by reverse engineering. Payloads are zlib-compressed UTF-8 JSON. Full documentation:
-
-👉 **[markus-lassfolk/yarbo-reversing](https://github.com/markus-lassfolk/yarbo-reversing)**
-
-See also: `Get-Help about_PSYarbo_MQTT`
-
----
-
 ## Contributing
 
 1. Fork the repo
