@@ -23,6 +23,14 @@
         'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
         'Send-YarboCommand', 'Send-YarboReturnToDock',
         'Set-YarboGlobalParams',
+        # Robot Control
+        'Stop-YarboEmergency', 'Unlock-YarboEmergency', 'Stop-Yarbo',
+        'Restart-YarboContainer', 'Stop-YarboShutdown', 'Start-YarboRecharge',
+        # Lights & Sound
+        'Set-YarboHeadLight', 'Set-YarboRoofLights', 'Set-YarboLaser',
+        'Set-YarboSound', 'Start-YarboSong',
+        # Camera & Detection
+        'Set-YarboCamera', 'Set-YarboPersonDetect', 'Set-YarboUSB',
         # State
         'Resume-Yarbo', 'Suspend-Yarbo',
         # Manual Drive
@@ -30,6 +38,16 @@
         # Plans/Maps/Schedules
         'Get-YarboPlan', 'New-YarboPlan', 'Remove-YarboPlan',
         'Get-YarboMap', 'Get-YarboSchedule', 'Set-YarboSchedule', 'Remove-YarboSchedule',
+        # Plans & Scheduling
+        'Get-YarboAllPlans', 'Remove-YarboAllPlans', 'Invoke-YarboPlanAction', 'Get-YarboSchedules',
+        # Navigation & Maps
+        'Start-YarboWaypoint', 'Get-YarboRechargePoint', 'Save-YarboChargingPoint',
+        'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup',
+        # WiFi & Connectivity
+        'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Start-YarboHotspot', 'Get-YarboHubInfo',
+        # Diagnostics
+        'Get-YarboBatteryCellTemps', 'Get-YarboMotorTemps', 'Get-YarboBodyCurrent', 'Get-YarboHeadCurrent',
+        'Get-YarboSpeed', 'Get-YarboOdometer', 'Get-YarboProductCode', 'Get-YarboNoChargePeriod',
         # Telemetry
         'Get-YarboTelemetry', 'Watch-YarboTelemetry', 'Export-YarboTelemetry',
         # Cloud
