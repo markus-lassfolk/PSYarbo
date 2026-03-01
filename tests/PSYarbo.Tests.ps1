@@ -63,7 +63,7 @@ Describe 'Module Manifest' {
             'Get-YarboMap', 'Get-YarboSchedule', 'Set-YarboSchedule',
             'Get-YarboTelemetry', 'Watch-YarboTelemetry', 'Export-YarboTelemetry',
             'Connect-YarboCloud', 'Get-YarboDevice', 'Get-YarboVideo', 'Get-YarboPlanHistory',
-            'Test-YarboConnection', 'Get-YarboLog'
+            'Test-YarboConnection', 'Get-YarboLog', 'Get-YarboMqttRecordingReport', 'Export-YarboSupportBundle'
         )
 
         foreach ($fn in $expected) {

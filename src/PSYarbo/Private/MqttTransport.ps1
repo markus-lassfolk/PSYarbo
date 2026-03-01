@@ -31,7 +31,14 @@ function Send-MqttCommand {
 
     # Compress payload
     $compressed = ConvertTo-ZlibPayload -Payload $Payload
-    Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Payload JSON: $($Payload | ConvertTo-Json -Compress)")
+    if (Test-YarboDebugMode) {
+        $payloadStr = if (Test-YarboDebugRaw) {
+            "[raw base64] $([Convert]::ToBase64String($compressed))"
+        } else {
+            "Payload: $($Payload | ConvertTo-Json -Compress)"
+        }
+        Write-YarboDebugMessage "[Send-MqttCommand] SENT $topic | $payloadStr"
+    }
 
     # Acquire semaphore to serialize commands
     if (-not $Connection.CommandSemaphore.Wait(30000)) {
@@ -81,6 +88,14 @@ function Send-MqttCommand {
             if ($Connection.ResponseQueue.TryDequeue([ref]$response)) {
                 if ($response.topic -eq $Command) {
                     $result = [YarboCommandResult]::new($response)
+                    if (Test-YarboDebugMode) {
+                        $respStr = if (Test-YarboDebugRaw) {
+                            "state=$($result.State) msg=$($result.Message) data=$(if ($result.Data) { $result.Data | ConvertTo-Json -Compress } else { 'null' })"
+                        } else {
+                            "Received: topic=$($result.Topic) state=$($result.State) message=$($result.Message)" + $(if ($result.Data) { " data=$($result.Data | ConvertTo-Json -Compress)" } else { '' })
+                        }
+                        Write-YarboDebugMessage "[Send-MqttCommand] RECV $Command | $respStr"
+                    }
                     # Log response
                     $Connection.CommandLog.Enqueue([PSCustomObject]@{
                             Timestamp = [datetime]::UtcNow
@@ -92,7 +107,11 @@ function Send-MqttCommand {
                     return $result
                 }
                 # Not our response — could be for a different command, re-enqueue and re-signal
-                Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'")
+                if (Test-YarboDebugMode) {
+                    Write-YarboDebugMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'"
+                } else {
+                    Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Got feedback for '$($response.topic)' while waiting for '$Command'")
+                }
                 $Connection.ResponseQueue.Enqueue($response)
                 $Connection.ResponseSignal.Release() | Out-Null
                 # Brief yield to prevent a tight CPU spin when responses keep arriving for other commands
@@ -101,7 +120,11 @@ function Send-MqttCommand {
         }
 
         # Timeout
-        Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Timeout waiting for '$Command' after ${TimeoutMs}ms on $topic @ $($Connection.Broker):$($Connection.Port)")
+        if (Test-YarboDebugMode) {
+            Write-YarboDebugMessage "[Send-MqttCommand] Timeout waiting for '$Command' after ${TimeoutMs}ms on $topic @ $($Connection.Broker):$($Connection.Port)"
+        } else {
+            Write-Debug (Protect-YarboLogMessage "[Send-MqttCommand] Timeout waiting for '$Command' after ${TimeoutMs}ms on $topic @ $($Connection.Broker):$($Connection.Port)")
+        }
 
         if ($ThrowOnTimeout) {
             throw [YarboTimeoutException]::new($Command, $TimeoutMs)
@@ -134,6 +157,14 @@ function Send-MqttFireAndForget {
     Write-Verbose (Protect-YarboLogMessage "[Send-MqttFireAndForget] Routing via local MQTT → $topic @ $($Connection.Broker):$($Connection.Port)")
 
     $compressed = ConvertTo-ZlibPayload -Payload $Payload
+    if (Test-YarboDebugMode) {
+        $payloadStr = if (Test-YarboDebugRaw) {
+            "[raw base64] $([Convert]::ToBase64String($compressed))"
+        } else {
+            "Payload: $($Payload | ConvertTo-Json -Compress)"
+        }
+        Write-YarboDebugMessage "[Send-MqttFireAndForget] SENT $topic | $payloadStr"
+    }
 
     if ($null -eq $Connection.MqttClient) {
         throw [YarboConnectionException]::new("MQTT client is not connected.", $Connection.Broker)

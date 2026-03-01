@@ -70,7 +70,7 @@
         'Set-YarboRobotName', 'Add-YarboRobotBinding', 'Remove-YarboRobotBinding',
         'Get-YarboNotificationSetting', 'Get-YarboDeviceMessage',
         # Utility
-        'Test-YarboConnection', 'Get-YarboLog', 'Get-YarboMqttRecordingReport'
+        'Test-YarboConnection', 'Get-YarboLog', 'Get-YarboMqttRecordingReport', 'Export-YarboSupportBundle'
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()

@@ -82,6 +82,7 @@ LONG DESCRIPTION
 
 SEE ALSO
     about_PSYarbo
+    about_PSYarbo_Debug
     Connect-Yarbo
     Find-Yarbo
     Send-YarboCommand

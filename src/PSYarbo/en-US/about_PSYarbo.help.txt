@@ -57,7 +57,15 @@ LONG DESCRIPTION
         If SecretManagement is not installed, a file-based fallback (~/.psyarbo/credentials.json)
         is used. Use a SecretManagement vault named 'PSYarbo' for secure storage.
 
+    DEBUG LOGGING AND SUPPORT BUNDLES
+
+        To see what is sent and received over MQTT, use -Debug on any MQTT cmdlet or set
+        $env:PSYARBO_DEBUG = "1". To export a redacted support bundle for GlitchTip or
+        issue reports, use Export-YarboSupportBundle. See about_PSYarbo_Debug for full
+        documentation.
+
 SEE ALSO
     about_PSYarbo_MQTT
+    about_PSYarbo_Debug
     Connect-Yarbo
     Connect-YarboCloud

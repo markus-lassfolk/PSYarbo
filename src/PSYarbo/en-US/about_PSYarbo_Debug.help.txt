@@ -1,0 +1,107 @@
+TOPIC
+    about_PSYarbo_Debug
+
+SHORT DESCRIPTION
+    Debug logging and support bundles for troubleshooting MQTT and reporting issues.
+
+LONG DESCRIPTION
+    PSYarbo provides debug output and a support-bundle export so you can see
+    exactly what is sent and received over MQTT, and share redacted dumps with
+    maintainers or GlitchTip. This aligns with the Debug Logging feature in
+    python-yarbo (see GitHub issue #59).
+
+    WHEN TO USE
+        - Troubleshooting firmware versions or heads/attachments you cannot test yourself
+        - Seeing the raw MQTT command and response for a single call
+        - Preparing a "full MQTT dump" for an issue report or GlitchTip
+
+    DEBUG LOGGING (WHAT IS SENT AND RECEIVED)
+
+        You can enable debug output in two ways:
+
+        1. -Debug switch (per command)
+           Pass the common -Debug parameter to any cmdlet that uses MQTT.
+           PowerShell sets $DebugPreference to 'Continue' for that command only,
+           so you see Write-Debug output (topic, payload, response).
+
+           Example:
+             Get-YarboStatus -Debug
+             Send-YarboCommand -Command read_global_params -Debug
+
+        2. Environment variable PSYARBO_DEBUG (session-wide)
+           Set $env:PSYARBO_DEBUG = "1" or $env:PSYARBO_DEBUG = "true" so that
+           every MQTT send/receive prints without passing -Debug each time.
+           Output is written to the information stream so it appears in the console.
+
+           Example:
+             $env:PSYARBO_DEBUG = "1"
+             Get-YarboStatus
+             Send-YarboCommand -Command get_device_msg
+
+        OUTPUT FORMAT
+            By default, payloads are shown in human-readable form:
+              - Sent: topic and JSON payload (decoded)
+              - Received: topic, state, message, and optional data
+
+            For raw (base64) payloads instead of JSON, set:
+              $env:PSYARBO_DEBUG_RAW = "1"
+            or "true". This shows the zlib-compressed bytes as base64.
+
+        REDACTION
+            All debug and support-bundle output is passed through Protect-YarboLogMessage.
+            JWT tokens, Authorization headers, refresh_token, accessToken, and password
+            fields are redacted before being written.
+
+    SUPPORT BUNDLE (FULL MQTT DUMP FOR GLITCHTIP / ISSUES)
+
+        Export-YarboSupportBundle produces a redacted JSON file you can attach to
+        an issue or upload to GlitchTip. It does not contain raw payload bodies
+        or credentials; it includes topic lists, message counts, decoded payload
+        keys (for recordings), and recent CommandLog/TelemetryLog entries.
+
+        SOURCES
+            -RecordingPath  Path to a recording file from Invoke-YarboMqttSniff -RecordPath.
+                            The bundle will include topic counts and decoded key
+                            samples per topic (values redacted).
+
+            -Connection     A YarboConnection. The bundle will include the last N
+                            CommandLog and TelemetryLog entries (default 100 and 50).
+                            No raw payloads are stored in those logs, so this is safe.
+
+        You must provide at least one of -RecordingPath or -Connection.
+
+        PARAMETERS
+            -Path                 (required) Output JSON file path.
+            -RecordingPath        Recording from Invoke-YarboMqttSniff -RecordPath.
+            -Connection          Connection to export recent logs from.
+            -CommandLogEntries    When using -Connection, how many CommandLog entries (default 100).
+            -TelemetryLogEntries  When using -Connection, how many TelemetryLog entries (default 50).
+
+        EXAMPLES
+            # From an MQTT recording
+            Invoke-YarboMqttSniff -Broker 192.0.2.1 -DurationSeconds 60 -RecordPath ./recording.json
+            Export-YarboSupportBundle -Path ./support-bundle.json -RecordingPath ./recording.json
+
+            # From the current connection (after running some commands)
+            $conn = Connect-Yarbo -Broker 192.0.2.1 -SerialNumber YB123
+            Get-YarboStatus -Connection $conn
+            Export-YarboSupportBundle -Path ./support-bundle.json -Connection $conn
+
+            # Both sources
+            Export-YarboSupportBundle -Path ./bundle.json -RecordingPath ./recording.json -Connection $conn
+
+        After generating the file, attach it to your GitHub issue or upload to
+        your GlitchTip project as needed.
+
+    RELATED CMDLETS
+        Get-YarboLog              View in-memory CommandLog and TelemetryLog.
+        Invoke-YarboMqttSniff     Capture MQTT traffic to a file (-RecordPath).
+        Get-YarboMqttRecordingReport  Report topic coverage from a recording.
+
+SEE ALSO
+    about_PSYarbo
+    about_PSYarbo_MQTT
+    Export-YarboSupportBundle
+    Get-YarboLog
+    Invoke-YarboMqttSniff
+    https://github.com/markus-lassfolk/python-yarbo/issues/59
