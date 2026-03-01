@@ -30,6 +30,11 @@
     If set, save a JSON recording of all messages (Topic, PayloadBase64, Index) to this file.
     Use with Get-YarboMqttRecordingReport to see topic coverage vs. cmdlets.
 
+\.EXAMPLE
+    Invoke-YarboMqttSniff -Broker 192.168.1.50 -DurationSeconds 30 -RecordPath ./mqtt-recording.json
+
+    Records 30 seconds of Yarbo MQTT traffic and saves a JSON recording for later analysis.
+
 .OUTPUTS
     PSCustomObject[] with Topic, PayloadBytes, At (timestamp).
 #>
