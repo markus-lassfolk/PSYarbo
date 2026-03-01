@@ -20,7 +20,7 @@ class YarboTelemetry {
     [double]$Heading
     [int]$RtkHeadingStatus
     [string]$RtkStatus
-    [double]$RtkDop
+    [double]$RtkHeadingDop
     [double]$OdomConfidence
     [double]$RtkGgaAtnDis
     [double]$RtkHeadingAtnDis

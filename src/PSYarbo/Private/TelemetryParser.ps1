@@ -121,7 +121,7 @@ function ConvertTo-YarboTelemetry {
         $t.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
         $rtk = $DeviceMsg.RTKMSG.PSObject.Properties
         if ($rtk['heading_status']) { $t.RtkHeadingStatus = [int]$rtk['heading_status'].Value }
-        if ($rtk['heading_dop']) { $t.RtkDop = [double]$rtk['heading_dop'].Value }
+        if ($rtk['heading_dop']) { $t.RtkHeadingDop = [double]$rtk['heading_dop'].Value }
         if ($rtk['gga_atn_dis']) { $t.RtkGgaAtnDis = [double]$rtk['gga_atn_dis'].Value }
         if ($rtk['heading_atn_dis']) { $t.RtkHeadingAtnDis = [double]$rtk['heading_atn_dis'].Value }
         if ($rtk['heading_multi']) { $t.RtkHeadingMulti = [int]$rtk['heading_multi'].Value }
