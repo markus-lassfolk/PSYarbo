@@ -166,20 +166,14 @@ function Find-Yarbo {
                 # Topic: snowbot/{SN}/device/...
                 $parts = $first.Topic -split '/'
                 $sn = if ($parts.Count -ge 2 -and $parts[1] -ne '+') { $parts[1] } else { $null }
-                if ($sn -and -not $discovered.ContainsKey($sn)) {
-                    Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$sn at ${ip}:${Port} (topic: $($first.Topic))"
-                    $r = [YarboRobot]::new()
-                    $r.Broker = $ip
-                    $r.Port = $Port
-                    $r.SerialNumber = $sn
-                    $r.LastUpdated = [datetime]::UtcNow
-                    $discovered[$sn] = $r
-                } else {
-                    if ($sn) {
-                        Write-Verbose "[Find-Yarbo] ${ip}:${Port} — same device as already discovered (SN=$sn, skipped duplicate)"
-                    } else {
-                        Write-Verbose "[Find-Yarbo] ${ip}:${Port} — received topic without SN (skipped)"
+                if ($sn) {
+                    if (-not $discovered.ContainsKey($sn)) {
+                        $discovered[$sn] = [System.Collections.Generic.List[hashtable]]::new()
                     }
+                    Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$sn at ${ip}:${Port} (topic: $($first.Topic))"
+                    $discovered[$sn].Add(@{ IP = $ip; Port = $Port; SerialNumber = $sn })
+                } else {
+                    Write-Verbose "[Find-Yarbo] ${ip}:${Port} — received topic without SN (skipped)"
                 }
             } else {
                 Write-Verbose "[Find-Yarbo] ${ip}:${Port} — no Yarbo message within ${TimeoutSeconds}s (skipped)"
@@ -192,7 +186,14 @@ function Find-Yarbo {
             }
         }
     }
-    foreach ($r in $discovered.Values) {
-        Write-Output $r
+    foreach ($endpoints in $discovered.Values) {
+        foreach ($ep in $endpoints) {
+            $r = [YarboRobot]::new()
+            $r.Broker = $ep.IP
+            $r.Port = $ep.Port
+            $r.SerialNumber = $ep.SerialNumber
+            $r.LastUpdated = [datetime]::UtcNow
+            Write-Output $r
+        }
     }
 }
