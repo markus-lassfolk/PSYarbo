@@ -32,7 +32,7 @@ function Connect-YarboCloud {
     [CmdletBinding(DefaultParameterSetName = 'Credential')]
     [OutputType([YarboCloudSession])]
     param(
-        [Parameter(ParameterSetName = 'Credential')]
+        [Parameter(Mandatory, ParameterSetName = 'Credential')]
         [string]$Email,
 
         [Parameter(ParameterSetName = 'Credential')]
