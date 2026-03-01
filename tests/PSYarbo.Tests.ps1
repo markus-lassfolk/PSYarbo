@@ -621,8 +621,8 @@ Describe 'Help Documentation' {
         foreach ($fn in $script:exportedFunctions) {
             $help = Get-Help $fn
             $examplesProp = $help.PSObject.Properties['examples']
-            $examples = if ($null -ne $examplesProp -and $help.examples) { @($help.examples.example) } else { @() }
-            $examples.Count | Should -BeGreaterThan 0 -Because "$fn should have at least one example"
+            $examples = if ($null -ne $examplesProp -and $help.examples -and $help.examples.example) { $help.examples.example } else { @() }
+            @($examples).Count | Should -BeGreaterThan 0 -Because "$fn should have at least one example"
         }
     }
 
