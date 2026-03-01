@@ -138,7 +138,7 @@ InModuleScope PSYarbo {
 
         It 'Has ShouldProcess support' {
             $cmd = Get-Command Start-YarboRecharge
-            if ($cmd -is [System.Management.Automation.AliasInfo]) { $cmd = Get-Command $cmd.ResolvedCommand.Name }
+
             $attr = $cmd.ScriptBlock.Attributes | Where-Object { $_ -is [System.Management.Automation.CmdletBindingAttribute] }
             $attr.SupportsShouldProcess | Should -BeTrue
         }
