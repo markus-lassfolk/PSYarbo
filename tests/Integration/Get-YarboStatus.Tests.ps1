@@ -1,13 +1,15 @@
 #Requires -Version 7.4
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
-BeforeAll {
-    $moduleRoot = Join-Path $PSScriptRoot '..' '..' 'src' 'PSYarbo'
-    $fixturesDir = Join-Path $PSScriptRoot '..' 'Fixtures'
-    if (Get-Module -Name PSYarbo) { Remove-Module -Name PSYarbo -Force }
-    Import-Module (Join-Path $moduleRoot 'PSYarbo.psd1') -Force -WarningAction SilentlyContinue
-    . (Join-Path $PSScriptRoot '..' 'Helpers' 'MockMqttClient.ps1')
-}
+$moduleRoot = Join-Path $PSScriptRoot '..' '..' 'src' 'PSYarbo'
+if (Get-Module -Name PSYarbo) { Remove-Module -Name PSYarbo -Force }
+Import-Module (Join-Path $moduleRoot 'PSYarbo.psd1') -Force -WarningAction SilentlyContinue
+
 InModuleScope PSYarbo {
+    BeforeAll {
+        $fixturesDir = Join-Path $PSScriptRoot '..' 'Fixtures'
+        . (Join-Path $PSScriptRoot '..' 'Helpers' 'MockMqttClient.ps1')
+    }
+
     Describe 'Get-YarboStatus (mocked MQTT)' -Tag Mocked {
         It 'Returns YarboRobot when Send-MqttCommand returns fixture data' {
             $conn = New-MockYarboConnection -SerialNumber 'MOCK-SN' -Broker '192.0.2.1'
@@ -21,7 +23,7 @@ InModuleScope PSYarbo {
                 $status = Get-YarboStatus -Connection $conn
                 $status | Should -Not -BeNullOrEmpty
                 $status.SerialNumber | Should -Be 'MOCK-SN'
-                $status.Battery | Should -Be '83%'
+                $status.BatteryCapacity | Should -Be 83
             } finally {
                 $script:DefaultConnection = $null
             }

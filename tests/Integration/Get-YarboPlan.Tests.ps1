@@ -6,15 +6,16 @@
     Tag: Mocked
 #>
 
-BeforeAll {
-    $moduleRoot = Join-Path $PSScriptRoot '..' '..' 'src' 'PSYarbo'
-    $fixturesDir = Join-Path $PSScriptRoot '..' 'Fixtures'
-    if (Get-Module -Name PSYarbo) { Remove-Module -Name PSYarbo -Force }
-    Import-Module (Join-Path $moduleRoot 'PSYarbo.psd1') -Force -WarningAction SilentlyContinue
-    . (Join-Path $PSScriptRoot '..' 'Helpers' 'MockMqttClient.ps1')
-}
+$moduleRoot = Join-Path $PSScriptRoot '..' '..' 'src' 'PSYarbo'
+if (Get-Module -Name PSYarbo) { Remove-Module -Name PSYarbo -Force }
+Import-Module (Join-Path $moduleRoot 'PSYarbo.psd1') -Force -WarningAction SilentlyContinue
 
 InModuleScope PSYarbo {
+    BeforeAll {
+        $fixturesDir = Join-Path $PSScriptRoot '..' 'Fixtures'
+        . (Join-Path $PSScriptRoot '..' 'Helpers' 'MockMqttClient.ps1')
+    }
+
     Describe 'Get-YarboPlan (mocked MQTT)' -Tag Mocked {
         It 'Returns YarboPlan array when Send-MqttCommand returns read_all_plan fixture' {
             $conn = New-MockYarboConnection -SerialNumber 'MOCK-SN'
