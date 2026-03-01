@@ -16,7 +16,6 @@ InModuleScope PSYarbo {
     BeforeAll {
         . (Join-Path $PSScriptRoot '..' 'Helpers' 'MockMqttClient.ps1')
     }
-
     Describe 'Assert-YarboController' {
         It 'Does nothing when ControllerAcquired is already true' {
             $conn = New-MockYarboConnection -SerialNumber 'GUARD-SN'

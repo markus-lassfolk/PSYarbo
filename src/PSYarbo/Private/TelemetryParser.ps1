@@ -99,9 +99,9 @@ function ConvertTo-YarboTelemetry {
         $t.BatteryCapacity = [int]($DeviceMsg.BatteryMSG.capacity)
         $t.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
         $t.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["timestamp"]) { $t.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["current"]) { $t.BatteryCurrent = [double]($DeviceMsg.BatteryMSG.current) }
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["voltage"]) { $t.BatteryVoltage = [double]($DeviceMsg.BatteryMSG.voltage) }
+        if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $t.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
+        $cur = $DeviceMsg.BatteryMSG.PSObject.Properties['current']; if ($cur) { $t.BatteryCurrent = [double]$cur.Value }
+        $vol = $DeviceMsg.BatteryMSG.PSObject.Properties['voltage']; if ($vol) { $t.BatteryVoltage = [double]$vol.Value }
     }
 
     # Body (BodyMsg)
@@ -118,40 +118,50 @@ function ConvertTo-YarboTelemetry {
 
     if ($DeviceMsg.RTKMSG) {
         $t.Heading = [double]($DeviceMsg.RTKMSG.heading)
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_status"]) { $t.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $t.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_dop"]) { $t.RtkDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["gga_atn_dis"]) { $t.RtkGgaAtnDis = [double]($DeviceMsg.RTKMSG.gga_atn_dis) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_atn_dis"]) { $t.RtkHeadingAtnDis = [double]($DeviceMsg.RTKMSG.heading_atn_dis) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_multi"]) { $t.RtkHeadingMulti = [int]($DeviceMsg.RTKMSG.heading_multi) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_obs"]) { $t.RtkHeadingObs = [int]($DeviceMsg.RTKMSG.heading_obs) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["pre4_timestamp"]) { $t.RtkPre4Timestamp = [double]($DeviceMsg.RTKMSG.pre4_timestamp) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["rtk_version"]) { $t.RtkVersion = [string]($DeviceMsg.RTKMSG.rtk_version) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["sat_num"]) { $t.RtkSatNum = [int]($DeviceMsg.RTKMSG.sat_num) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["timestamp"]) { $t.RtkTimestamp = [double]($DeviceMsg.RTKMSG.timestamp) }
+        $rtk = $DeviceMsg.RTKMSG.PSObject.Properties
+        if ($rtk['heading_status']) { $t.RtkHeadingStatus = [int]$rtk['heading_status'].Value }
+        if ($rtk['heading_dop']) { $t.RtkDop = [double]$rtk['heading_dop'].Value }
+        if ($rtk['gga_atn_dis']) { $t.RtkGgaAtnDis = [double]$rtk['gga_atn_dis'].Value }
+        if ($rtk['heading_atn_dis']) { $t.RtkHeadingAtnDis = [double]$rtk['heading_atn_dis'].Value }
+        if ($rtk['heading_multi']) { $t.RtkHeadingMulti = [int]$rtk['heading_multi'].Value }
+        if ($rtk['heading_obs']) { $t.RtkHeadingObs = [int]$rtk['heading_obs'].Value }
+        if ($rtk['pre4_timestamp']) { $t.RtkPre4Timestamp = [double]$rtk['pre4_timestamp'].Value }
+        if ($rtk['rtk_version']) { $t.RtkVersion = [string]$rtk['rtk_version'].Value }
+        if ($rtk['sat_num']) { $t.RtkSatNum = [int]$rtk['sat_num'].Value }
+        if ($rtk['timestamp']) { $t.RtkTimestamp = [double]$rtk['timestamp'].Value }
     }
-    if ($DeviceMsg.PSObject.Properties["combined_odom_confidence"]) {
-        $t.OdomConfidence = [double]($DeviceMsg.combined_odom_confidence)
+    $root = $DeviceMsg.PSObject.Properties
+    if ($root['combined_odom_confidence']) { $t.OdomConfidence = [double]$root['combined_odom_confidence'].Value }
+    if ($root['rtcm_age']) { $t.RtcmAge = [double]$root['rtcm_age'].Value }
+    if ($root['rtcm_info']) { $t.RtcmInfo = $root['rtcm_info'].Value }
+    if ($DeviceMsg.rtk_base_data) {
+        $rbd = $DeviceMsg.rtk_base_data.PSObject.Properties
+        if ($rbd['rover']) {
+            $roverProp = $rbd['rover'].Value.PSObject.Properties['heading']
+            if ($roverProp) { $t.RoverHeading = [string]$roverProp.Value }
+        }
+        if ($rbd['base']) {
+            $baseProp = $rbd['base'].Value.PSObject.Properties['gngga']
+            if ($baseProp) { $t.BaseGngga = [string]$baseProp.Value }
+        }
     }
-    if ($DeviceMsg.PSObject.Properties["rtcm_age"]) { $t.RtcmAge = [double]($DeviceMsg.rtcm_age) }
-    if ($DeviceMsg.PSObject.Properties["rtcm_info"]) { $t.RtcmInfo = $DeviceMsg.rtcm_info }
-    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.PSObject.Properties["rover"] -and $DeviceMsg.rtk_base_data.rover.PSObject.Properties["heading"]) { $t.RoverHeading = [string]($DeviceMsg.rtk_base_data.rover.heading) }
-    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.PSObject.Properties["base"] -and $DeviceMsg.rtk_base_data.base.PSObject.Properties["gngga"]) { $t.BaseGngga = [string]($DeviceMsg.rtk_base_data.base.gngga) }
 
     # Running status
     if ($DeviceMsg.RunningStatusMSG) {
         $t.ChuteAngle = [int]($DeviceMsg.RunningStatusMSG.chute_angle)
         $t.RainSensorData = [int]($DeviceMsg.RunningStatusMSG.rain_sensor_data)
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["chute_steering_engine_info"]) { $t.ChuteSteeringEngineInfo = [int]($DeviceMsg.RunningStatusMSG.chute_steering_engine_info) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["chute_steering_run_status"]) { $t.ChuteSteeringRunStatus = [int]($DeviceMsg.RunningStatusMSG.chute_steering_run_status) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["head_gyro_pitch"]) { $t.HeadGyroPitch = [double]($DeviceMsg.RunningStatusMSG.head_gyro_pitch) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["head_gyro_roll"]) { $t.HeadGyroRoll = [double]($DeviceMsg.RunningStatusMSG.head_gyro_roll) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["push_pod_status"]) { $t.PushPodStatus = [int]($DeviceMsg.RunningStatusMSG.push_pod_status) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["push_rod_place"]) { $t.PushRodPlace = [int]($DeviceMsg.RunningStatusMSG.push_rod_place) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["snow_pipe_run_status"]) { $t.SnowPipeRunStatus = [int]($DeviceMsg.RunningStatusMSG.snow_pipe_run_status) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["snow_roller_motor"]) { $t.SnowRollerMotor = [int]($DeviceMsg.RunningStatusMSG.snow_roller_motor) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["elec_navigation_front_right_sensor"]) { $t.ElecNavigationFrontRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_front_right_sensor) }
-        if ($DeviceMsg.RunningStatusMSG.PSObject.Properties["elec_navigation_rear_right_sensor"]) { $t.ElecNavigationRearRightSensor = [int]($DeviceMsg.RunningStatusMSG.elec_navigation_rear_right_sensor) }
+        $run = $DeviceMsg.RunningStatusMSG.PSObject.Properties
+        if ($run['chute_steering_engine_info']) { $t.ChuteSteeringEngineInfo = [int]$run['chute_steering_engine_info'].Value }
+        if ($run['chute_steering_run_status']) { $t.ChuteSteeringRunStatus = [int]$run['chute_steering_run_status'].Value }
+        if ($run['head_gyro_pitch']) { $t.HeadGyroPitch = [double]$run['head_gyro_pitch'].Value }
+        if ($run['head_gyro_roll']) { $t.HeadGyroRoll = [double]$run['head_gyro_roll'].Value }
+        if ($run['push_pod_status']) { $t.PushPodStatus = [int]$run['push_pod_status'].Value }
+        if ($run['push_rod_place']) { $t.PushRodPlace = [int]$run['push_rod_place'].Value }
+        if ($run['snow_pipe_run_status']) { $t.SnowPipeRunStatus = [int]$run['snow_pipe_run_status'].Value }
+        if ($run['snow_roller_motor']) { $t.SnowRollerMotor = [int]$run['snow_roller_motor'].Value }
+        if ($run['elec_navigation_front_right_sensor']) { $t.ElecNavigationFrontRightSensor = [int]$run['elec_navigation_front_right_sensor'].Value }
+        if ($run['elec_navigation_rear_right_sensor']) { $t.ElecNavigationRearRightSensor = [int]$run['elec_navigation_rear_right_sensor'].Value }
     }
 
     # State
@@ -162,15 +172,16 @@ function ConvertTo-YarboTelemetry {
         $t.IsPlanning = ([int]($DeviceMsg.StateMSG.on_going_planning) -gt 0)
         $t.IsPaused = ([int]($DeviceMsg.StateMSG.planning_paused) -gt 0)
         $t.IsRecharging = ([int]($DeviceMsg.StateMSG.on_going_recharging) -gt 0)
-        if ($DeviceMsg.StateMSG.PSObject.Properties["adjustangle_status"]) { $t.AdjustAngleStatus = [int]($DeviceMsg.StateMSG.adjustangle_status) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["auto_draw_waiting_state"]) { $t.AutoDrawWaitingState = [int]($DeviceMsg.StateMSG.auto_draw_waiting_state) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["en_state_led"]) { $t.EnStateLed = [int]($DeviceMsg.StateMSG.en_state_led) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["en_warn_led"]) { $t.EnWarnLed = [int]($DeviceMsg.StateMSG.en_warn_led) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["on_going_to_start_point"]) { $t.OnGoingToStartPoint = ([int]($DeviceMsg.StateMSG.on_going_to_start_point) -gt 0) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["on_mul_points"]) { $t.OnMulPoints = ([int]($DeviceMsg.StateMSG.on_mul_points) -gt 0) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["robot_follow_state"]) { $t.RobotFollowState = [int]($DeviceMsg.StateMSG.robot_follow_state) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["schedule_cancel"]) { $t.ScheduleCancel = [int]($DeviceMsg.StateMSG.schedule_cancel) }
-        if ($DeviceMsg.StateMSG.PSObject.Properties["vision_auto_draw_state"]) { $t.VisionAutoDrawState = [int]($DeviceMsg.StateMSG.vision_auto_draw_state) }
+        $state = $DeviceMsg.StateMSG.PSObject.Properties
+        if ($state['adjustangle_status']) { $t.AdjustAngleStatus = [int]$state['adjustangle_status'].Value }
+        if ($state['auto_draw_waiting_state']) { $t.AutoDrawWaitingState = [int]$state['auto_draw_waiting_state'].Value }
+        if ($state['en_state_led']) { $t.EnStateLed = [int]$state['en_state_led'].Value }
+        if ($state['en_warn_led']) { $t.EnWarnLed = [int]$state['en_warn_led'].Value }
+        if ($state['on_going_to_start_point']) { $t.OnGoingToStartPoint = ([int]$state['on_going_to_start_point'].Value -gt 0) }
+        if ($state['on_mul_points']) { $t.OnMulPoints = ([int]$state['on_mul_points'].Value -gt 0) }
+        if ($state['robot_follow_state']) { $t.RobotFollowState = [int]$state['robot_follow_state'].Value }
+        if ($state['schedule_cancel']) { $t.ScheduleCancel = [int]$state['schedule_cancel'].Value }
+        if ($state['vision_auto_draw_state']) { $t.VisionAutoDrawState = [int]$state['vision_auto_draw_state'].Value }
     }
 
     # Ultrasonic sensors
@@ -189,36 +200,46 @@ function ConvertTo-YarboTelemetry {
     }
 
     # LED (led, LedInfoMSG, HeadMsg.head_led_brightness)
-    if ($DeviceMsg.PSObject.Properties["led"]) { $t.LedRegister = [string]($DeviceMsg.led) }
-    if ($DeviceMsg.PSObject.Properties["LedInfoMSG"]) { $t.LedInfo = $DeviceMsg.LedInfoMSG }
-    if ($DeviceMsg.HeadMsg -and $DeviceMsg.HeadMsg.PSObject.Properties["head_led_brightness"]) { $t.HeadLedBrightness = [int]($DeviceMsg.HeadMsg.head_led_brightness) }
+    if ($root['led']) { $t.LedRegister = [string]$root['led'].Value }
+    if ($root['LedInfoMSG']) { $t.LedInfo = $root['LedInfoMSG'].Value }
+    if ($DeviceMsg.HeadMsg) {
+        $headProp = $DeviceMsg.HeadMsg.PSObject.Properties['head_led_brightness']
+        if ($headProp) { $t.HeadLedBrightness = [int]$headProp.Value }
+    }
 
     # Electric (EletricMSG)
-    if ($DeviceMsg.PSObject.Properties["EletricMSG"]) {
-        if ($DeviceMsg.EletricMSG.PSObject.Properties["brushless_motor_current"]) { $t.BrushlessMotorCurrent = [double]($DeviceMsg.EletricMSG.brushless_motor_current) }
-        if ($DeviceMsg.EletricMSG.PSObject.Properties["ntc_temperature"]) { $t.NtcTemperature = [double]($DeviceMsg.EletricMSG.ntc_temperature) }
-        if ($DeviceMsg.EletricMSG.PSObject.Properties["push_pod_current"]) { $t.PushPodCurrent = [double]($DeviceMsg.EletricMSG.push_pod_current) }
+    if ($root['EletricMSG']) {
+        $elec = $root['EletricMSG'].Value.PSObject.Properties
+        if ($elec['brushless_motor_current']) { $t.BrushlessMotorCurrent = [double]$elec['brushless_motor_current'].Value }
+        if ($elec['ntc_temperature']) { $t.NtcTemperature = [double]$elec['ntc_temperature'].Value }
+        if ($elec['push_pod_current']) { $t.PushPodCurrent = [double]$elec['push_pod_current'].Value }
     }
 
     # Misc (base_status, switches, system_info, DebugMsg)
-    if ($DeviceMsg.PSObject.Properties["base_status"]) { $t.BaseStatus = $DeviceMsg.base_status }
-    if ($DeviceMsg.PSObject.Properties["green_grass_update_switch"]) { $t.GreenGrassUpdateSwitch = [int]($DeviceMsg.green_grass_update_switch) }
-    if ($DeviceMsg.PSObject.Properties["ipcamera_ota_switch"]) { $t.IpcameraOtaSwitch = [int]($DeviceMsg.ipcamera_ota_switch) }
-    if ($DeviceMsg.PSObject.Properties["system_info"]) { $t.SystemInfo = $DeviceMsg.system_info }
-    if ($DeviceMsg.PSObject.Properties["DebugMsg"]) { $t.DebugMsg = $DeviceMsg.DebugMsg }
+    if ($root['base_status']) { $t.BaseStatus = $root['base_status'].Value }
+    if ($root['green_grass_update_switch']) { $t.GreenGrassUpdateSwitch = [int]$root['green_grass_update_switch'].Value }
+    if ($root['ipcamera_ota_switch']) { $t.IpcameraOtaSwitch = [int]$root['ipcamera_ota_switch'].Value }
+    if ($root['system_info']) { $t.SystemInfo = $root['system_info'].Value }
+    if ($root['DebugMsg']) { $t.DebugMsg = $root['DebugMsg'].Value }
 
     # Device message timestamp (root)
-    if ($DeviceMsg.PSObject.Properties["timestamp"]) { $t.DeviceTimestamp = [double]($DeviceMsg.timestamp) }
+    if ($root['timestamp']) { $t.DeviceTimestamp = [double]$root['timestamp'].Value }
 
     # GPS — parse GNGGA NMEA sentence from rtk_base_data.rover.gngga
-    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.rover -and $DeviceMsg.rtk_base_data.rover.gngga) {
-        $gnggaRaw = [string]$DeviceMsg.rtk_base_data.rover.gngga
-        $t.GnggaRaw = $gnggaRaw
-        $gps = ConvertFrom-GnggaSentence -Sentence $gnggaRaw
-        $t.FixQuality = $gps.FixQuality
-        $t.Latitude = $gps.Latitude
-        $t.Longitude = $gps.Longitude
-        $t.Altitude = $gps.Altitude
+    if ($DeviceMsg.rtk_base_data) {
+        $rbdGps = $DeviceMsg.rtk_base_data.PSObject.Properties['rover']
+        if ($rbdGps) {
+            $gnggaProp = $rbdGps.Value.PSObject.Properties['gngga']
+            if ($gnggaProp) {
+                $gnggaRaw = [string]$gnggaProp.Value
+                $t.GnggaRaw = $gnggaRaw
+                $gps = ConvertFrom-GnggaSentence -Sentence $gnggaRaw
+                $t.FixQuality = $gps.FixQuality
+                $t.Latitude = $gps.Latitude
+                $t.Longitude = $gps.Longitude
+                $t.Altitude = $gps.Altitude
+            }
+        }
     }
 
     return $t
@@ -260,9 +281,9 @@ function ConvertTo-YarboRobot {
         $r.BatteryCapacity = [int]($DeviceMsg.BatteryMSG.capacity)
         $r.BatteryStatus = [int]($DeviceMsg.BatteryMSG.status)
         $r.BatteryTempError = [bool]($DeviceMsg.BatteryMSG.temp_err)
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["timestamp"]) { $r.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["current"]) { $r.BatteryCurrent = [double]($DeviceMsg.BatteryMSG.current) }
-        if ($DeviceMsg.BatteryMSG.PSObject.Properties["voltage"]) { $r.BatteryVoltage = [double]($DeviceMsg.BatteryMSG.voltage) }
+        if ($null -ne $DeviceMsg.BatteryMSG.timestamp) { $r.BatteryTimestamp = [double]($DeviceMsg.BatteryMSG.timestamp) }
+        $cur = $DeviceMsg.BatteryMSG.PSObject.Properties['current']; if ($cur) { $r.BatteryCurrent = [double]$cur.Value }
+        $vol = $DeviceMsg.BatteryMSG.PSObject.Properties['voltage']; if ($vol) { $r.BatteryVoltage = [double]$vol.Value }
     }
 
     # Body (BodyMsg)
@@ -299,25 +320,34 @@ function ConvertTo-YarboRobot {
     }
     if ($DeviceMsg.RTKMSG) {
         $r.Heading = [double]($DeviceMsg.RTKMSG.heading)
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_status"]) { $r.RtkHeadingStatus = [int]($DeviceMsg.RTKMSG.heading_status) }
         $r.RtkStatus = [string]($DeviceMsg.RTKMSG.status)
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_dop"]) { $r.RtkHeadingDop = [double]($DeviceMsg.RTKMSG.heading_dop) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["gga_atn_dis"]) { $r.RtkGgaAtnDis = [double]($DeviceMsg.RTKMSG.gga_atn_dis) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_atn_dis"]) { $r.RtkHeadingAtnDis = [double]($DeviceMsg.RTKMSG.heading_atn_dis) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_multi"]) { $r.RtkHeadingMulti = [int]($DeviceMsg.RTKMSG.heading_multi) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["heading_obs"]) { $r.RtkHeadingObs = [int]($DeviceMsg.RTKMSG.heading_obs) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["pre4_timestamp"]) { $r.RtkPre4Timestamp = [double]($DeviceMsg.RTKMSG.pre4_timestamp) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["rtk_version"]) { $r.RtkVersion = [string]($DeviceMsg.RTKMSG.rtk_version) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["sat_num"]) { $r.RtkSatNum = [int]($DeviceMsg.RTKMSG.sat_num) }
-        if ($DeviceMsg.RTKMSG.PSObject.Properties["timestamp"]) { $r.RtkTimestamp = [double]($DeviceMsg.RTKMSG.timestamp) }
+        $rtk = $DeviceMsg.RTKMSG.PSObject.Properties
+        if ($rtk['heading_status']) { $r.RtkHeadingStatus = [int]$rtk['heading_status'].Value }
+        if ($rtk['heading_dop']) { $r.RtkHeadingDop = [double]$rtk['heading_dop'].Value }
+        if ($rtk['gga_atn_dis']) { $r.RtkGgaAtnDis = [double]$rtk['gga_atn_dis'].Value }
+        if ($rtk['heading_atn_dis']) { $r.RtkHeadingAtnDis = [double]$rtk['heading_atn_dis'].Value }
+        if ($rtk['heading_multi']) { $r.RtkHeadingMulti = [int]$rtk['heading_multi'].Value }
+        if ($rtk['heading_obs']) { $r.RtkHeadingObs = [int]$rtk['heading_obs'].Value }
+        if ($rtk['pre4_timestamp']) { $r.RtkPre4Timestamp = [double]$rtk['pre4_timestamp'].Value }
+        if ($rtk['rtk_version']) { $r.RtkVersion = [string]$rtk['rtk_version'].Value }
+        if ($rtk['sat_num']) { $r.RtkSatNum = [int]$rtk['sat_num'].Value }
+        if ($rtk['timestamp']) { $r.RtkTimestamp = [double]$rtk['timestamp'].Value }
     }
-    if ($DeviceMsg.PSObject.Properties["combined_odom_confidence"]) {
-        $r.OdomConfidence = [double]($DeviceMsg.combined_odom_confidence)
+    $rootR = $DeviceMsg.PSObject.Properties
+    if ($rootR['combined_odom_confidence']) { $r.OdomConfidence = [double]$rootR['combined_odom_confidence'].Value }
+    if ($rootR['rtcm_age']) { $r.RtcmAge = [double]$rootR['rtcm_age'].Value }
+    if ($rootR['rtcm_info']) { $r.RtcmInfo = $rootR['rtcm_info'].Value }
+    if ($DeviceMsg.rtk_base_data) {
+        $rbdR = $DeviceMsg.rtk_base_data.PSObject.Properties
+        if ($rbdR['rover']) {
+            $roverPropR = $rbdR['rover'].Value.PSObject.Properties['heading']
+            if ($roverPropR) { $r.RoverHeading = [string]$roverPropR.Value }
+        }
+        if ($rbdR['base']) {
+            $basePropR = $rbdR['base'].Value.PSObject.Properties['gngga']
+            if ($basePropR) { $r.BaseGngga = [string]$basePropR.Value }
+        }
     }
-    if ($DeviceMsg.PSObject.Properties["rtcm_age"]) { $r.RtcmAge = [double]($DeviceMsg.rtcm_age) }
-    if ($DeviceMsg.PSObject.Properties["rtcm_info"]) { $r.RtcmInfo = $DeviceMsg.rtcm_info }
-    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.PSObject.Properties["rover"] -and $DeviceMsg.rtk_base_data.rover.PSObject.Properties["heading"]) { $r.RoverHeading = [string]($DeviceMsg.rtk_base_data.rover.heading) }
-    if ($DeviceMsg.rtk_base_data -and $DeviceMsg.rtk_base_data.PSObject.Properties["base"] -and $DeviceMsg.rtk_base_data.base.PSObject.Properties["gngga"]) { $r.BaseGngga = [string]($DeviceMsg.rtk_base_data.base.gngga) }
 
     # Hardware (RunningStatusMSG, led, wireless_recharge)
     if ($DeviceMsg.RunningStatusMSG) {
