@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Mock MQTT client and YarboConnection factory for unit tests.
+    Mock MQTT client and YarboConnection factory for unit tests (§8.3).
 .DESCRIPTION
     Provides New-MockYarboConnection which creates a YarboConnection wired
-    to an in-memory fake MQTT client. Tests can:
-      - Enqueue responses into the ResponseQueue directly
-      - Enqueue push events into the TelemetryQueue directly
-      - Inspect what was published via $conn.__PublishedMessages
+    to an in-memory fake MQTT client (duck-typed; no real IMqttClient). Tests can:
+      - Inspect published messages via $conn.__PublishedMessages
+      - Simulate responses via Push-MockCommandResponse (topic → payload)
+      - Simulate push telemetry via Push-MockTelemetryEvent
     No network connection is required.
 #>
 

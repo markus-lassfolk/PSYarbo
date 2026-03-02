@@ -23,10 +23,10 @@
             <TableColumnItems>
               <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>SerialNumber</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>"$($_.BatteryCapacity)%"</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if($_.WorkingState){'Active'}else{'Idle'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Battery</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>RtkStatus</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>[math]::Round($_.Heading, 1)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>HeadingDisplay</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>ErrorCode</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -34,7 +34,7 @@
       </TableControl>
     </View>
 
-    <!-- YarboRobot List View -->
+    <!-- YarboRobot List View (Battery and State match table view; raw fields kept for scripting) -->
     <View>
       <Name>YarboRobotList</Name>
       <ViewSelectedBy>
@@ -46,6 +46,8 @@
             <ListItems>
               <ListItem><PropertyName>SerialNumber</PropertyName></ListItem>
               <ListItem><PropertyName>Name</PropertyName></ListItem>
+              <ListItem><PropertyName>Battery</PropertyName></ListItem>
+              <ListItem><PropertyName>State</PropertyName></ListItem>
               <ListItem><PropertyName>HeadType</PropertyName></ListItem>
               <ListItem><PropertyName>BatteryCapacity</PropertyName></ListItem>
               <ListItem><PropertyName>BatteryStatus</PropertyName></ListItem>
@@ -53,6 +55,7 @@
               <ListItem><PropertyName>ChargingStatus</PropertyName></ListItem>
               <ListItem><PropertyName>ErrorCode</PropertyName></ListItem>
               <ListItem><PropertyName>Heading</PropertyName></ListItem>
+              <ListItem><PropertyName>HeadingDisplay</PropertyName></ListItem>
               <ListItem><PropertyName>RtkStatus</PropertyName></ListItem>
               <ListItem><PropertyName>OdomConfidence</PropertyName></ListItem>
               <ListItem><PropertyName>ChuteAngle</PropertyName></ListItem>
@@ -83,14 +86,14 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
-              <TableColumnItem><ScriptBlock>$_.Timestamp.ToString('HH:mm:ss.ff')</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>"$($_.BatteryCapacity)%"</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if($_.WorkingState){'Active'}else{'Idle'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Time</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Battery</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>RtkStatus</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>[math]::Round($_.Heading, 1)</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>[math]::Round($_.X, 3)</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>[math]::Round($_.Y, 3)</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>[math]::Round($_.OdomConfidence, 3)</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>HeadingDisplay</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>XDisplay</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>YDisplay</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>OdomConfidenceDisplay</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>
@@ -129,6 +132,36 @@
       </TableControl>
     </View>
 
+    <!-- YarboEndpoint Table View (issue #30: Rover vs DC discovery) -->
+    <View>
+      <Name>YarboEndpoint</Name>
+      <ViewSelectedBy>
+        <TypeName>YarboEndpoint</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>IPAddress</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Port</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Path</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>MacAddress</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Recommended</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>10</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>IPAddress</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Port</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Path</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>MacAddress</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>RecommendedDisplay</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
     <!-- YarboPlan Table View -->
     <View>
       <Name>YarboPlan</Name>
@@ -147,8 +180,8 @@
             <TableColumnItems>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>$_.AreaIds -join ', '</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if($_.EnableSelfOrder){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Areas</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>SelfOrder</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>
@@ -178,14 +211,11 @@
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>PlanId</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if($_.Enabled){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>
-                if ($_.WeekDay -eq 127) { 'Daily' }
-                else { ($_.GetDays() | ForEach-Object { $_.ToString().Substring(0,3) }) -join ',' }
-              </ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>EnabledDisplay</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Days</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>StartTime</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>EndTime</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if($_.IsWeatherSchedule){'✓'}else{'✗'}</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>WeatherDisplay</PropertyName></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

@@ -43,7 +43,7 @@ body:
       render: powershell
       placeholder: |
         # Example:
-        Connect-Yarbo -MowerSerial 'YB-XXXX' -MqttServer '192.168.1.100'
+        Connect-Yarbo -Broker '<rover-ip>' -SerialNumber '<serial-number>'
         Get-YarboStatus | Format-List
 
   - type: checkboxes

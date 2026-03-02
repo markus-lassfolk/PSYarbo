@@ -13,7 +13,7 @@ function Get-YarboStatus {
     Get-YarboStatus
 
 .EXAMPLE
-    Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227 | Get-YarboStatus
+    Connect-Yarbo -Broker <rover-ip> -SerialNumber <serial-number> | Get-YarboStatus
 
 .LINK
     Get-YarboRobot

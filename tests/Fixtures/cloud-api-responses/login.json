@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "fixture-access-token",
+    "refreshToken": "fixture-refresh-token",
+    "expiresIn": 7200,
+    "snList": ["ROBOT-SN-001"]
+  }
+}

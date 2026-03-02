@@ -5,6 +5,7 @@ on:
     branches: [develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -72,19 +73,61 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
 
-      - name: Run Pester tests
+      - name: Install MQTTnet (for module load in tests)
+        shell: pwsh
+        run: ./build/Install-Dependencies.ps1
+
+      - name: Run Unit tests
         shell: pwsh
         run: |
           Import-Module Pester -MinimumVersion 5.0.0 -Force
-          $config = New-PesterConfiguration
-          $config.Run.Path              = './tests'
-          $config.Run.Exit              = $true
-          $config.Output.Verbosity      = 'Detailed'
-          $config.TestResult.Enabled    = $true
-          $config.TestResult.OutputPath = 'output/test-results/pester-${{ matrix.os }}.xml'
-          $config.TestResult.OutputFormat = 'NUnitXml'
           New-Item -ItemType Directory -Path 'output/test-results' -Force | Out-Null
-          Invoke-Pester -Configuration $config
+          $unitConfig = New-PesterConfiguration
+          $unitConfig.Run.Path              = './tests/Unit'
+          $unitConfig.Run.Exit              = $true
+          $unitConfig.Output.Verbosity      = 'Detailed'
+          $unitConfig.Filter.ExcludeTag    = 'Integration'
+          $unitConfig.TestResult.Enabled   = $true
+          $unitConfig.TestResult.OutputPath = 'output/test-results/pester-unit-${{ matrix.os }}.xml'
+          $unitConfig.TestResult.OutputFormat = 'NUnitXml'
+          $unitResult = Invoke-Pester -Configuration $unitConfig
+
+      - name: Run Integration tests (mocked; excludes real-robot Integration tag)
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $intConfig = New-PesterConfiguration
+          $intConfig.Run.Path              = './tests/Integration'
+          $intConfig.Run.Exit              = $false
+          $intConfig.Run.PassThru          = $true
+          $intConfig.Filter.Tag            = 'Mocked'
+          $intConfig.Output.Verbosity      = 'Detailed'
+          $intConfig.TestResult.Enabled    = $true
+          $intConfig.TestResult.OutputPath = 'output/test-results/pester-integration-${{ matrix.os }}.xml'
+          $intConfig.TestResult.OutputFormat = 'NUnitXml'
+          # ErrorOnNoTests removed — not available in all Pester versions
+          $intResult = Invoke-Pester -Configuration $intConfig
+          if ($intResult.TotalCount -eq 0) {
+            Write-Error "Integration test step ran 0 tests — check that mocked test files exist and are tagged 'Mocked'"
+            exit 1
+          }
+          if ($intResult.FailedCount -gt 0) {
+            exit 1
+          }
+
+      - name: Run root tests (PSYarbo.Tests, PSScriptAnalyzer) and exit on failure
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $rootConfig = New-PesterConfiguration
+          $rootConfig.Run.Path              = './tests/PSYarbo.Tests.ps1', './tests/PSScriptAnalyzer.Tests.ps1'
+          $rootConfig.Run.Exit              = $true
+          $rootConfig.Filter.ExcludeTag     = 'Integration'
+          $rootConfig.Output.Verbosity      = 'Detailed'
+          $rootConfig.TestResult.Enabled    = $true
+          $rootConfig.TestResult.OutputPath = 'output/test-results/pester-root-${{ matrix.os }}.xml'
+          $rootConfig.TestResult.OutputFormat = 'NUnitXml'
+          Invoke-Pester -Configuration $rootConfig
 
       - name: Upload test results
         if: always()

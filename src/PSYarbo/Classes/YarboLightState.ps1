@@ -31,6 +31,14 @@ class YarboLightState {
         return [YarboLightState]::new()
     }
 
+    # Body accent lights only (red channels; matches python-yarbo lights_body())
+    static [YarboLightState] BodyOn() {
+        $s = [YarboLightState]::new()
+        $s.BodyLeftRed = 255
+        $s.BodyRightRed = 255
+        return $s
+    }
+
     [string] ToString() {
         return "Head:$($this.HeadLight) L:$($this.LeftWhite) R:$($this.RightWhite) BL:$($this.BodyLeftRed) BR:$($this.BodyRightRed) TL:$($this.TailLeftRed) TR:$($this.TailRightRed)"
     }

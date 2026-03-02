@@ -5,6 +5,8 @@
 ## Quick Links
 
 - 📖 [Full Documentation (README)](https://github.com/markus-lassfolk/PSYarbo/blob/main/README.md)
+- 📋 [Commands and Properties](Commands-and-Properties.md) — how to get status, telemetry, battery, RTK, LEDs, system info
+- 🔧 **In-product help** — After installing: `Get-Help about_PSYarbo`, `Get-Help about_PSYarbo_MQTT`, `Get-Help about_PSYarbo_Debug` (debug logging and support bundles)
 - 🐛 [Report a Bug](https://github.com/markus-lassfolk/PSYarbo/issues/new?template=bug_report.yml)
 - 💡 [Request a Feature](https://github.com/markus-lassfolk/PSYarbo/issues/new?template=feature_request.yml)
 - 💬 [Discussions](https://github.com/markus-lassfolk/PSYarbo/discussions)

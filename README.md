@@ -61,7 +61,7 @@ Write-Host "Found: $($robot.SerialNumber) at $($robot.Broker)"
 $conn = $robot | Connect-Yarbo
 
 # — OR — connect directly
-$conn = Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
+$conn = Connect-Yarbo -Broker <rover-ip> -SerialNumber <serial-number>
 
 # Check status
 Get-YarboStatus
@@ -82,13 +82,21 @@ Disconnect-Yarbo
 
 ---
 
+## Commands and properties (how to get information)
+
+For detailed examples of **which cmdlets to use** and **which properties to read** (battery, RTK, LEDs, `SystemInfo.cpu.Temperature`, `LedInfo`, telemetry, etc.), see:
+
+📖 **[Commands and Properties](docs/Commands-and-Properties.md)** — status vs telemetry, property reference, and example snippets.
+
+---
+
 ## Cmdlet Reference
 
 ### Connection
 
 | Cmdlet | Description |
 |--------|-------------|
-| `Find-Yarbo` | Auto-discover Yarbo robots via MQTT `heart_beat`. Returns `YarboRobot[]`. |
+| `Find-Yarbo` | Auto-discover Yarbo robots via MQTT (DeviceMSG, data_feedback, heart_beat; aligned with [python-yarbo](https://github.com/markus-lassfolk/python-yarbo)). Returns `YarboRobot[]`. |
 | `Connect-Yarbo` | Connect to a robot's MQTT broker. Returns `YarboConnection`. |
 | `Disconnect-Yarbo` | Disconnect and dispose resources. |
 | `Test-YarboConnection` | Test if a connection is alive. |
@@ -155,6 +163,52 @@ Disconnect-Yarbo
 | `Get-YarboVideo` | Get video token/URL. |
 | `Get-YarboPlanHistory` | Get plan execution history from cloud. |
 
+### Utility
+
+| Cmdlet | Description |
+|--------|-------------|
+| `Test-YarboConnection` | Test if a connection is alive. |
+| `Get-YarboLog` | View CommandLog and TelemetryLog (sent/received MQTT). |
+| `Get-YarboMqttRecordingReport` | Report topic coverage from an MQTT recording. |
+| `Export-YarboSupportBundle` | Export a redacted MQTT/connection bundle for support (e.g. GlitchTip). |
+
+---
+
+## Debug logging and support bundles
+
+To see what is being **sent and received** over MQTT (useful for troubleshooting firmware or unsupported heads/attachments), use either:
+
+- **`-Debug`** — Pass the common `-Debug` switch to any cmdlet that uses MQTT. Debug output shows topic, payload (human-readable JSON), and responses.
+- **Environment variable `PSYARBO_DEBUG`** — Set `$env:PSYARBO_DEBUG = "1"` (or `"true"`) so that debug output is shown for all MQTT traffic without passing `-Debug` every time. Output is written as information stream so it appears in the console.
+
+For **raw payloads** (base64 of the zlib-compressed bytes) instead of human-readable JSON, set **`PSYARBO_DEBUG_RAW=1`** (or `"true"`).
+
+```powershell
+# One-off debug for a single command
+Get-YarboStatus -Debug
+
+# Session-wide debug (no -Debug needed)
+$env:PSYARBO_DEBUG = "1"
+Get-YarboStatus
+Send-YarboCommand -Command read_global_params
+
+# Raw payload format
+$env:PSYARBO_DEBUG_RAW = "1"
+Get-YarboStatus -Debug
+```
+
+To provide a **full MQTT dump** for support (e.g. GlitchTip or when opening an issue), use **`Export-YarboSupportBundle`**. It produces a redacted JSON file from a recording and/or the current connection log. You can upload that file to your issue tracker.
+
+```powershell
+# From an MQTT recording (Invoke-YarboMqttSniff -RecordPath ...)
+Export-YarboSupportBundle -Path ./support-bundle.json -RecordingPath ./mqtt-recording.json
+
+# From the current connection (recent CommandLog + TelemetryLog)
+Export-YarboSupportBundle -Path ./support-bundle.json -Connection $conn
+```
+
+Full in-product documentation: `Get-Help about_PSYarbo_Debug`. This aligns with [python-yarbo #59 — Debug Logging](https://github.com/markus-lassfolk/python-yarbo/issues/59).
+
 ---
 
 ## Protocol
@@ -164,6 +218,8 @@ PSYarbo uses the `snowbot/{SN}/...` MQTT topic hierarchy discovered by reverse e
 👉 **[markus-lassfolk/yarbo-reversing](https://github.com/markus-lassfolk/yarbo-reversing)**
 
 See also: `Get-Help about_PSYarbo_MQTT`
+
+**Discovery:** Find-Yarbo and Find-YarboDevice use the same strategy as [python-yarbo](https://github.com/markus-lassfolk/python-yarbo): anonymous MQTT client, subscribe to `snowbot/+/device/DeviceMSG`, `snowbot/+/device/data_feedback`, and `snowbot/+/device/heart_beat`, and derive the robot serial number from the first message received. By default, discovery scans all networks this machine has an IP on; pass `-Subnet` (e.g. `192.0.2.0/24`) if you want to limit the scan. If discovery finds no robots, run from a host on the same LAN as the Yarbo and ensure the robot is powered and connected.
 
 ---
 

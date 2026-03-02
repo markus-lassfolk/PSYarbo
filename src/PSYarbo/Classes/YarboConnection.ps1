@@ -88,7 +88,20 @@ class YarboConnection {
 
     # Implement IDisposable — dispose all owned IDisposable members.
     # Disconnect-Yarbo calls this indirectly; classes holding a YarboConnection can also call it directly.
+    # Resolve adapter type at runtime so the class can load when ScriptsToProcess runs before the .psm1 defines it.
     [void] Dispose() {
+        try {
+            if ($null -ne $this.MqttClient) {
+                $adapterType = [System.AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object { $_.GetType('PSYarbo.Mqtt.MessageReceivedAdapter') } | Where-Object { $_ } | Select-Object -First 1
+                if ($null -ne $adapterType) {
+                    $handlerDelegate = $adapterType.GetMethod('GetHandler').Invoke($null, @($this.MqttClient))
+                    if ($null -ne $handlerDelegate) {
+                        $this.MqttClient.GetType().GetMethod('remove_ApplicationMessageReceivedAsync').Invoke($this.MqttClient, @($handlerDelegate)) | Out-Null
+                    }
+                    $adapterType.GetMethod('UnregisterCallback').Invoke($null, @($this.MqttClient))
+                }
+            }
+        } catch { $null = $_ }
         try { if ($null -ne $this.CancellationSource) { $this.CancellationSource.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.CommandSemaphore) { $this.CommandSemaphore.Dispose() } } catch { $null = $_ }
         try { if ($null -ne $this.ResponseSignal) { $this.ResponseSignal.Dispose() } } catch { $null = $_ }

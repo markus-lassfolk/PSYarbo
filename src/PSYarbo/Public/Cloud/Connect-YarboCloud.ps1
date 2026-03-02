@@ -32,10 +32,10 @@ function Connect-YarboCloud {
     [CmdletBinding(DefaultParameterSetName = 'Credential')]
     [OutputType([YarboCloudSession])]
     param(
-        [Parameter(Mandatory, ParameterSetName = 'Credential')]
+        [Parameter(ParameterSetName = 'Credential')]
         [string]$Email,
 
-        [Parameter(Mandatory, ParameterSetName = 'Credential')]
+        [Parameter(ParameterSetName = 'Credential')]
         [SecureString]$Password,
 
         [Parameter(Mandatory, ParameterSetName = 'Token')]
@@ -48,6 +48,66 @@ function Connect-YarboCloud {
     $session = [YarboCloudSession]::new()
 
     try {
+        if ($PSCmdlet.ParameterSetName -eq 'Credential') {
+            # Resolve email from env or config if not provided (issue #9)
+            if (-not $Email) {
+                $cfg = Get-YarboConfig -Overrides @{}
+                $Email = $cfg['Email']
+            }
+            if (-not $Email) {
+                throw [YarboCloudAuthException]::new(
+                    'Email is required. Provide -Email, set $env:YARBO_EMAIL, or add Email to ~/.psyarbo/config.json.',
+                    'EMAIL_REQUIRED'
+                )
+            }
+            # When -Email without -Password, try stored credentials (issue #10)
+            if (-not $Password) {
+                $stored = Get-YarboCloudCredential -Email $Email
+                if ($stored) {
+                    if ($stored.RefreshToken) {
+                        try {
+                            $session.Email = $Email
+                            $session.RefreshToken = $stored.RefreshToken
+                            $session.RefreshAuth()
+                            # Fetch bound serial numbers if not populated by RefreshAuth
+                            if (-not $session.BoundSerialNumbers) {
+                                try {
+                                    $deviceData = $session.Invoke('GET', '/yarbo/robot-service/commonUser/userRobotBind/getUserRobotBindVos', $null)
+                                    if ($deviceData.deviceList) {
+                                        $session.BoundSerialNumbers = @($deviceData.deviceList | ForEach-Object { $_.sn })
+                                    }
+                                } catch {
+                                    Write-Verbose "[Connect-YarboCloud] Could not fetch bound serial numbers: $($_.Exception.Message)"
+                                }
+                            }
+                            # Persist potentially-rotated refresh token (issue #10)
+                            try {
+                                Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                                if ($session.Email) {
+                                    Save-YarboCloudCredential -Email $session.Email -Password $stored.Password -RefreshToken $session.RefreshToken
+                                }
+                                Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
+                            } catch {
+                                Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
+                            }
+                            if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
+                            $script:YarboCloudSession = $session
+                            return $session
+                        } catch {
+                            Write-Verbose "[Connect-YarboCloud] Refresh token failed, falling back to password: $($_.Exception.Message)"
+                        }
+                    }
+                    if ($stored.Password) { $Password = $stored.Password }
+                }
+                if (-not $Password) {
+                    throw [YarboCloudAuthException]::new(
+                        'Password is required. Provide -Password or save credentials with Connect-YarboCloud -Email -Password first.',
+                        'PASSWORD_REQUIRED'
+                    )
+                }
+            }
+        }
+
         if ($PSCmdlet.ParameterSetName -eq 'Token') {
             $session.RefreshToken = $RefreshToken
             $session.RefreshAuth()
@@ -122,10 +182,12 @@ function Connect-YarboCloud {
             $session.TokenExpiry = [datetime]::UtcNow.AddSeconds($result.data.expiresIn)
             $session.BoundSerialNumbers = @($result.data.snList)
 
-            # Persist refresh token for future sessions (allows auto-login via:
-            #   Connect-YarboCloud -RefreshToken (Get-YarboCredential -Name 'CloudRefreshToken'))
+            # Persist refresh token for future sessions (issue #10: SecretManagement + email-keyed storage)
             try {
                 Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                if ($session.Email) {
+                    Save-YarboCloudCredential -Email $session.Email -Password $Password -RefreshToken $session.RefreshToken
+                }
                 Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
             } catch {
                 Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"

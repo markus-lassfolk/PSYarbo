@@ -10,11 +10,26 @@
     PowerShellVersion    = '7.4'
     # MQTTnet loaded via AssemblyLoadContext in PSYarbo.psm1 — not via RequiredAssemblies
     # RequiredAssemblies = @()
+    # Load class definitions before root module so [YarboRobot], [YarboConnection], etc. are visible to OutputType/attributes
+    ScriptsToProcess     = @(
+        'Classes/YarboExceptions.ps1'
+        'Classes/YarboLightState.ps1'
+        'Classes/YarboCommandResult.ps1'
+        'Classes/YarboTelemetry.ps1'
+        'Classes/YarboPlan.ps1'
+        'Classes/YarboSchedule.ps1'
+        'Classes/YarboRobot.ps1'
+        'Classes/YarboGlobalParams.ps1'
+        'Classes/YarboEndpoint.ps1'
+        'Classes/YarboConnection.ps1'
+        'Classes/YarboCloudSession.ps1'
+    )
     FormatsToProcess     = @('PSYarbo.Format.ps1xml')
-    TypesToProcess       = @('PSYarbo.Types.ps1xml')
+    # Types loaded in .psm1 with Update-TypeData -Force to avoid "already present" on re-import
+    # TypesToProcess       = @('PSYarbo.Types.ps1xml')
     FunctionsToExport    = @(
         # Connection
-        'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
+        'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice', 'Invoke-YarboMqttSniff',
         # Status
         'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
         'Get-YarboGlobalParams',
@@ -22,7 +37,13 @@
         'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
         'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
         'Send-YarboCommand', 'Send-YarboReturnToDock',
-        'Set-YarboGlobalParams',
+        'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit', 'Set-YarboBladeHeight', 'Set-YarboTurnType',
+        'Push-YarboSnowDir', 'Set-YarboChuteSteeringWork', 'Set-YarboRollerSpeed',
+        'Set-YarboMotorProtect', 'Set-YarboTrimmer', 'Set-YarboEdgeBlowing', 'Set-YarboSmartBlowing',
+        'Set-YarboHeatingFilm', 'Set-YarboModuleLock', 'Set-YarboFollowState', 'Start-YarboDrawCmd',
+        'Set-YarboGreengrassUpdateSwitch', 'Set-YarboIpcameraOtaSwitch', 'Update-YarboFirmware',
+        'Set-YarboSmartVision', 'Set-YarboVideoRecord', 'Set-YarboBagRecord',
+        'Set-YarboChildLock', 'Set-YarboGeoFence', 'Set-YarboElecFence', 'Set-YarboNgzEdge',
         # Robot Control
         'Stop-YarboEmergency', 'Unlock-YarboEmergency', 'Stop-Yarbo',
         'Restart-YarboContainer', 'Stop-YarboShutdown', 'Start-YarboRecharge',
@@ -30,7 +51,7 @@
         'Set-YarboHeadLight', 'Set-YarboRoofLights', 'Set-YarboLaser',
         'Set-YarboSound', 'Start-YarboSong',
         # Camera & Detection
-        'Set-YarboCamera', 'Set-YarboPersonDetect', 'Set-YarboUSB',
+        'Set-YarboCamera', 'Set-YarboPersonDetect', 'Set-YarboUSB', 'Get-YarboCameraStatus', 'Invoke-YarboCameraCalibration',
         # State
         'Resume-Yarbo', 'Suspend-Yarbo',
         # Manual Drive
@@ -42,9 +63,9 @@
         'Get-YarboAllPlans', 'Remove-YarboAllPlans', 'Invoke-YarboPlanAction', 'Get-YarboSchedules',
         # Navigation & Maps
         'Start-YarboWaypoint', 'Get-YarboRechargePoint', 'Save-YarboChargingPoint',
-        'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup',
+        'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup', 'Clear-YarboMap', 'Restore-YarboMap', 'Save-YarboCurrentMap',
         # WiFi & Connectivity
-        'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Start-YarboHotspot', 'Get-YarboHubInfo',
+        'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Get-YarboSavedWifiList', 'Start-YarboHotspot', 'Get-YarboHubInfo',
         # Diagnostics
         'Get-YarboBatteryCellTemps', 'Get-YarboMotorTemps', 'Get-YarboBodyCurrent', 'Get-YarboHeadCurrent',
         'Get-YarboSpeed', 'Get-YarboOdometer', 'Get-YarboProductCode', 'Get-YarboNoChargePeriod',
@@ -55,7 +76,7 @@
         'Set-YarboRobotName', 'Add-YarboRobotBinding', 'Remove-YarboRobotBinding',
         'Get-YarboNotificationSetting', 'Get-YarboDeviceMessage',
         # Utility
-        'Test-YarboConnection', 'Get-YarboLog'
+        'Test-YarboConnection', 'Get-YarboLog', 'Get-YarboMqttRecordingReport', 'Export-YarboSupportBundle'
     )
     CmdletsToExport      = @()
     VariablesToExport    = @()

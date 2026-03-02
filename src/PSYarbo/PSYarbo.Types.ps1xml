@@ -11,13 +11,29 @@
   <Type>
     <Name>YarboRobot</Name>
     <Members>
+      <ScriptProperty>
+        <Name>Battery</Name>
+        <GetScriptBlock>"$($this.BatteryCapacity)%"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>State</Name>
+        <GetScriptBlock>if($this.WorkingState){'Active'}else{'Idle'}</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>HeadingDisplay</Name>
+        <GetScriptBlock>[math]::Round($this.Heading, 1)</GetScriptBlock>
+      </ScriptProperty>
       <PropertySet>
         <Name>DefaultDisplayPropertySet</Name>
         <ReferencedProperties>
           <Name>SerialNumber</Name>
           <Name>Name</Name>
+          <Name>Battery</Name>
+          <Name>State</Name>
+          <Name>HeadingDisplay</Name>
           <Name>HeadType</Name>
           <Name>BatteryCapacity</Name>
+          <Name>BatteryStatus</Name>
           <Name>WorkingState</Name>
           <Name>ChargingStatus</Name>
           <Name>ErrorCode</Name>
@@ -48,19 +64,51 @@
     </Members>
   </Type>
 
-  <!-- YarboTelemetry: key telemetry fields -->
+  <!-- YarboTelemetry: key telemetry fields. Battery and State match YarboRobot for consistent display. -->
   <Type>
     <Name>YarboTelemetry</Name>
     <Members>
+      <ScriptProperty>
+        <Name>Battery</Name>
+        <GetScriptBlock>"$($this.BatteryCapacity)%"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>State</Name>
+        <GetScriptBlock>if($this.WorkingState){'Active'}else{'Idle'}</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Time</Name>
+        <GetScriptBlock>$this.Timestamp.ToString('HH:mm:ss.ff')</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>HeadingDisplay</Name>
+        <GetScriptBlock>[math]::Round($this.Heading, 1)</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>XDisplay</Name>
+        <GetScriptBlock>[math]::Round($this.X, 3)</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>YDisplay</Name>
+        <GetScriptBlock>[math]::Round($this.Y, 3)</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>OdomConfidenceDisplay</Name>
+        <GetScriptBlock>[math]::Round($this.OdomConfidence, 3)</GetScriptBlock>
+      </ScriptProperty>
       <PropertySet>
         <Name>DefaultDisplayPropertySet</Name>
         <ReferencedProperties>
+          <Name>Time</Name>
           <Name>Timestamp</Name>
           <Name>SerialNumber</Name>
+          <Name>Battery</Name>
+          <Name>State</Name>
           <Name>BatteryCapacity</Name>
           <Name>WorkingState</Name>
           <Name>RtkStatus</Name>
           <Name>Heading</Name>
+          <Name>HeadingDisplay</Name>
           <Name>X</Name>
           <Name>Y</Name>
           <Name>OdomConfidence</Name>
@@ -69,36 +117,61 @@
     </Members>
   </Type>
 
-  <!-- YarboPlan: key plan fields -->
+  <!-- YarboPlan: key plan fields. Areas and SelfOrder match table view. -->
   <Type>
     <Name>YarboPlan</Name>
     <Members>
+      <ScriptProperty>
+        <Name>Areas</Name>
+        <GetScriptBlock>if($this.AreaIds){$this.AreaIds -join ', '}else{''}</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>SelfOrder</Name>
+        <GetScriptBlock>if($this.EnableSelfOrder){'✓'}else{'✗'}</GetScriptBlock>
+      </ScriptProperty>
       <PropertySet>
         <Name>DefaultDisplayPropertySet</Name>
         <ReferencedProperties>
           <Name>Id</Name>
           <Name>Name</Name>
+          <Name>Areas</Name>
           <Name>AreaIds</Name>
+          <Name>SelfOrder</Name>
           <Name>EnableSelfOrder</Name>
         </ReferencedProperties>
       </PropertySet>
     </Members>
   </Type>
 
-  <!-- YarboSchedule: key schedule fields -->
+  <!-- YarboSchedule: key schedule fields. Days, EnabledDisplay, WeatherDisplay match table view. -->
   <Type>
     <Name>YarboSchedule</Name>
     <Members>
+      <ScriptProperty>
+        <Name>Days</Name>
+        <GetScriptBlock>if($this.WeekDay -eq 127){'Daily'}else{($this.GetDays() | ForEach-Object{$_.ToString().Substring(0,3)}) -join ','}</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>EnabledDisplay</Name>
+        <GetScriptBlock>if($this.Enabled){'✓'}else{'✗'}</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>WeatherDisplay</Name>
+        <GetScriptBlock>if($this.IsWeatherSchedule){'✓'}else{'✗'}</GetScriptBlock>
+      </ScriptProperty>
       <PropertySet>
         <Name>DefaultDisplayPropertySet</Name>
         <ReferencedProperties>
           <Name>Id</Name>
           <Name>Name</Name>
           <Name>PlanId</Name>
+          <Name>EnabledDisplay</Name>
           <Name>Enabled</Name>
+          <Name>Days</Name>
           <Name>WeekDay</Name>
           <Name>StartTime</Name>
           <Name>EndTime</Name>
+          <Name>WeatherDisplay</Name>
           <Name>IsWeatherSchedule</Name>
         </ReferencedProperties>
       </PropertySet>
@@ -118,6 +191,29 @@
           <Name>State</Name>
           <Name>Message</Name>
           <Name>Timestamp</Name>
+        </ReferencedProperties>
+      </PropertySet>
+    </Members>
+  </Type>
+
+  <!-- YarboEndpoint: discovery result. RecommendedDisplay matches table view. -->
+  <Type>
+    <Name>YarboEndpoint</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>RecommendedDisplay</Name>
+        <GetScriptBlock>if($this.Recommended){'⭐ Yes'}else{''}</GetScriptBlock>
+      </ScriptProperty>
+      <PropertySet>
+        <Name>DefaultDisplayPropertySet</Name>
+        <ReferencedProperties>
+          <Name>IPAddress</Name>
+          <Name>Port</Name>
+          <Name>Path</Name>
+          <Name>MacAddress</Name>
+          <Name>RecommendedDisplay</Name>
+          <Name>Recommended</Name>
+          <Name>Status</Name>
         </ReferencedProperties>
       </PropertySet>
     </Members>

@@ -131,6 +131,9 @@ class YarboCloudSession {
             if ($result.data.refreshToken) {
                 $this.RefreshToken = ConvertTo-SecureString -String $result.data.refreshToken -AsPlainText -Force
             }
+            if ($result.data.snList) {
+                $this.BoundSerialNumbers = @($result.data.snList)
+            }
         } else {
             $codeStr = if ($null -ne $result.code) { $result.code.ToString() } else { 'UNKNOWN' }
             throw [YarboCloudAuthException]::new("Token refresh failed: $($result.message)", $codeStr)

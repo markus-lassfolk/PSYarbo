@@ -50,20 +50,20 @@ Describe 'Module Manifest' {
 
         # Core cmdlets that must be present
         $expected = @(
-            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo',
+            'Connect-Yarbo', 'Disconnect-Yarbo', 'Find-Yarbo', 'Find-YarboDevice', 'Invoke-YarboMqttSniff',
             'Get-YarboStatus', 'Get-YarboRobot', 'Get-YarboBattery', 'Get-YarboFirmware',
             'Get-YarboGlobalParams',
             'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
             'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
             'Send-YarboCommand', 'Send-YarboReturnToDock',
-            'Set-YarboGlobalParams',
+            'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit',
             'Resume-Yarbo', 'Suspend-Yarbo',
             'Start-YarboManualDrive', 'Set-YarboVelocity', 'Set-YarboRoller', 'Set-YarboChute', 'Stop-YarboManualDrive',
             'Get-YarboPlan', 'New-YarboPlan', 'Remove-YarboPlan',
             'Get-YarboMap', 'Get-YarboSchedule', 'Set-YarboSchedule',
             'Get-YarboTelemetry', 'Watch-YarboTelemetry', 'Export-YarboTelemetry',
             'Connect-YarboCloud', 'Get-YarboDevice', 'Get-YarboVideo', 'Get-YarboPlanHistory',
-            'Test-YarboConnection', 'Get-YarboLog'
+            'Test-YarboConnection', 'Get-YarboLog', 'Get-YarboMqttRecordingReport', 'Export-YarboSupportBundle'
         )
 
         foreach ($fn in $expected) {
@@ -101,7 +101,7 @@ Describe 'Module Structure' {
 
     It 'Classes directory exists' {
         Join-Path $moduleRoot 'Classes' | Should -Exist
-        (Get-ChildItem -Path (Join-Path $moduleRoot 'Classes') -Filter '*.ps1').Count | Should -Be 9
+        (Get-ChildItem -Path (Join-Path $moduleRoot 'Classes') -Filter '*.ps1').Count | Should -Be 11
     }
 
     It 'Format file exists' {
@@ -123,7 +123,7 @@ Describe 'Classes' {
         $classFiles = @(
             'YarboExceptions', 'YarboLightState', 'YarboCommandResult',
             'YarboTelemetry', 'YarboPlan', 'YarboSchedule', 'YarboRobot',
-            'YarboConnection', 'YarboCloudSession'
+            'YarboConnection', 'YarboCloudSession', 'YarboGlobalParams', 'YarboEndpoint'
         )
         foreach ($class in $classFiles) {
             . (Join-Path $moduleRoot "Classes/$class.ps1")
@@ -231,10 +231,10 @@ Describe 'Classes' {
 
         It 'ToString formats correctly' {
             $conn = [YarboConnection]::new()
-            $conn.Broker = '192.168.1.24'
+            $conn.Broker = '192.0.2.1'
             $conn.Port = 1883
             $conn.SerialNumber = 'TEST123'
-            $conn.ToString() | Should -Be 'Yarbo[TEST123@192.168.1.24:1883]'
+            $conn.ToString() | Should -Be 'Yarbo[TEST123@192.0.2.1:1883]'
         }
     }
 
@@ -247,9 +247,9 @@ Describe 'Classes' {
         }
 
         It 'YarboConnectionException includes broker info' {
-            $ex = [YarboConnectionException]::new('Connection failed', '192.168.1.24')
-            $ex.Broker | Should -Be '192.168.1.24'
-            $ex.Remediation | Should -BeLike '*192.168.1.24*'
+            $ex = [YarboConnectionException]::new('Connection failed', '192.0.2.1')
+            $ex.Broker | Should -Be '192.0.2.1'
+            $ex.Remediation | Should -BeLike '*192.0.2.1*'
         }
 
         It 'YarboCommandException wraps result' {
@@ -370,7 +370,7 @@ Describe 'Private Functions' {
         }
 
         It 'Parses into YarboRobot' {
-            $r = ConvertTo-YarboRobot -DeviceMsg $fixture -SerialNumber 'TEST-SN' -Broker '192.168.1.24' -Port 1883
+            $r = ConvertTo-YarboRobot -DeviceMsg $fixture -SerialNumber 'TEST-SN' -Broker '192.0.2.1' -Port 1883
             $r.SerialNumber | Should -Be 'TEST-SN'
             $r.BatteryCapacity | Should -Be 83
             $r.HeadType | Should -Be 1
@@ -402,7 +402,7 @@ Describe 'Private Functions' {
         }
 
         It 'Passes through non-sensitive messages unchanged' {
-            $msg = "Connecting to 192.168.1.24:1883"
+            $msg = "Connecting to 192.0.2.1:1883"
             $redacted = Protect-YarboLogMessage -Message $msg
             $redacted | Should -Be $msg
         }
@@ -588,10 +588,11 @@ Describe 'Public Cmdlet Parameter Validation' {
     }
 
     Context 'Connect-YarboCloud' {
-        It 'Has mandatory Email parameter in Credential set' {
+        It 'Email in Credential set is optional (resolvable from env/config)' {
             $cmd = Get-Command Connect-YarboCloud
-            $emailParam = $cmd.Parameters['Email'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'Credential' -and $_.Mandatory }
-            $emailParam | Should -Not -BeNullOrEmpty
+            $credSet = $cmd.Parameters['Email'].Attributes | Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'Credential' }
+            $credSet | Should -Not -BeNullOrEmpty
+            $credSet.Mandatory | Should -BeFalse -Because 'Email can be resolved from $env:YARBO_EMAIL or config'
         }
 
         It 'Password is SecureString type' {
@@ -620,12 +621,14 @@ Describe 'Help Documentation' {
     It 'Every exported function has at least one example' {
         foreach ($fn in $script:exportedFunctions) {
             $help = Get-Help $fn
-            $examples = if ($help.PSObject.Properties.Match('examples').Count -gt 0 -and $help.examples) { $help.examples.example } else { @() }
-            $examples.Count | Should -BeGreaterThan 0 -Because "$fn should have at least one example"
+            $examplesProp = $help.PSObject.Properties['examples']
+            $examples = if ($null -ne $examplesProp -and $help.examples -and $help.examples.example) { $help.examples.example } else { @() }
+            @($examples).Count | Should -BeGreaterThan 0 -Because "$fn should have at least one example"
         }
     }
 
-}
+    }
+
 }
 
 AfterAll {

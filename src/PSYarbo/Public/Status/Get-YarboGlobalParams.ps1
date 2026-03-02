@@ -25,7 +25,7 @@ function Get-YarboGlobalParams {
         'PSUseSingularNouns', '',
         Justification = '"Params" is an established abbreviation for Parameters; renaming would break the documented API')]
     [CmdletBinding()]
-    [OutputType([PSCustomObject])]
+    [OutputType([YarboGlobalParams])]
     param(
         [Parameter(ValueFromPipeline)]
         [YarboConnection]$Connection
@@ -56,6 +56,16 @@ function Get-YarboGlobalParams {
             return
         }
 
-        return $result.Data
+        $p = [YarboGlobalParams]::new()
+        $d = $result.Data
+        $p.RawData = $d
+        if ($null -ne $d) {
+            if ($d.PSObject.Properties['mow_speed']) { $p.MowSpeed = [double]$d.mow_speed }
+            if ($d.PSObject.Properties['cutting_height']) { $p.CuttingHeight = [int]$d.cutting_height }
+            if ($d.PSObject.Properties['rain_delay']) { $p.RainDelay = [int]$d.rain_delay }
+            if ($d.PSObject.Properties['obstacle_sensitivity']) { $p.ObstacleSensitivity = [int]$d.obstacle_sensitivity }
+            if ($d.PSObject.Properties['timestamp']) { $p.Timestamp = [double]$d.timestamp }
+        }
+        return $p
     }
 }

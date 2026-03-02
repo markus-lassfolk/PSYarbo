@@ -1,0 +1,9 @@
+{
+  "deviceList": [
+    {
+      "sn": "ROBOT-SN-001",
+      "name": "My Yarbo",
+      "model": "Yarbo S1"
+    }
+  ]
+}

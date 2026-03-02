@@ -18,7 +18,7 @@ LONG DESCRIPTION
     QUICK START
 
         # Connect to your robot
-        Connect-Yarbo -Broker 192.168.1.24 -SerialNumber 24400102L8HO5227
+        Connect-Yarbo -Broker <rover-ip> -SerialNumber <serial-number>
 
         # Check status
         Get-YarboStatus
@@ -44,10 +44,28 @@ LONG DESCRIPTION
     CONFIGURATION
 
         1. Explicit cmdlet parameters
-        2. Environment variables ($env:YARBO_BROKER, etc.)
-        3. Module defaults
+        2. Environment variables ($env:YARBO_BROKER, $env:YARBO_SN, $env:YARBO_PORT, $env:YARBO_EMAIL)
+        3. Config file (~/.psyarbo/config.json)
+        4. Module defaults
+
+    CLOUD CREDENTIALS (SecretManagement)
+
+        Connect-YarboCloud integrates with Microsoft.PowerShell.SecretManagement when available.
+        On successful login, credentials are stored keyed by email (password and refresh token).
+        On subsequent sessions, Connect-YarboCloud -Email <email> (without -Password) retrieves
+        stored credentials so you can reconnect without re-entering the password.
+        If SecretManagement is not installed, a file-based fallback (~/.psyarbo/credentials.json)
+        is used. Use a SecretManagement vault named 'PSYarbo' for secure storage.
+
+    DEBUG LOGGING AND SUPPORT BUNDLES
+
+        To see what is sent and received over MQTT, use -Debug on any MQTT cmdlet or set
+        $env:PSYARBO_DEBUG = "1". To export a redacted support bundle for GlitchTip or
+        issue reports, use Export-YarboSupportBundle. See about_PSYarbo_Debug for full
+        documentation.
 
 SEE ALSO
     about_PSYarbo_MQTT
+    about_PSYarbo_Debug
     Connect-Yarbo
     Connect-YarboCloud

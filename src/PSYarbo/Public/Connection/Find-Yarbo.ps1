@@ -15,9 +15,7 @@ function Find-Yarbo {
     TimeoutSeconds are silently skipped.
 
 .PARAMETER Subnet
-    Network subnet to scan in CIDR notation. Default: 192.168.1.0/24.
-    Prefix length must be /16 or longer (/24 recommended).
-    To allow scanning larger subnets, specify -MaxHosts explicitly.
+    Network subnet(s) to scan in CIDR notation (e.g. 192.0.2.0/24). When not specified, scans all networks this machine has an IP on (LAN, Wi‑Fi, etc.). Prefix must be /16–/30.
 
 .PARAMETER TimeoutSeconds
     How long to wait for each broker to produce a heart_beat. Default: 5.
@@ -26,20 +24,20 @@ function Find-Yarbo {
     MQTT port to scan. Default: 1883.
 
 .PARAMETER MaxHosts
-    Maximum number of hosts to scan. Acts as a safety guard against
-    accidentally scanning huge subnets. Default: 256.
+    Maximum number of hosts to scan. Default: 512 (so a single /23 is fully scanned).
 
 .PARAMETER ThrottleLimit
     Maximum number of concurrent TCP probe tasks. Default: 64.
 
 .EXAMPLE
     Find-Yarbo
+    Scans all local networks (auto-detected).
 
 .EXAMPLE
-    Find-Yarbo -Subnet 10.0.0.0/24 -TimeoutSeconds 10
+    Find-Yarbo -Subnet 192.0.2.0/24 -TimeoutSeconds 10
 
 .EXAMPLE
-    Find-Yarbo -Subnet 192.168.0.0/22 -MaxHosts 1024
+    Find-Yarbo -Subnet 192.0.2.0/22 -MaxHosts 1024
 
 .LINK
     Connect-Yarbo
@@ -49,8 +47,12 @@ function Find-Yarbo {
     [OutputType([YarboRobot])]
     param(
         [Parameter()]
-        [ValidatePattern('^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$')]
-        [string]$Subnet = '192.168.1.0/24',
+        [AllowEmptyString()]
+        [ValidateScript({
+                if ([string]::IsNullOrEmpty($_)) { return $true }
+                $_ -match '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+            })]
+        [string]$Subnet = '',
 
         [Parameter()]
         [ValidateRange(1, 120)]
@@ -61,77 +63,57 @@ function Find-Yarbo {
 
         [Parameter()]
         [ValidateRange(1, 65534)]
-        [int]$MaxHosts = 256,
+        [int]$MaxHosts = 512,
 
         [Parameter()]
         [ValidateRange(1, 256)]
         [int]$ThrottleLimit = 64
     )
 
-    # ── 1. Parse and validate CIDR ─────────────────────────────────────────────
-    $parts = $Subnet -split '/'
-    $prefixLen = [int]$parts[1]
-
-    if ($prefixLen -lt 16) {
-        throw [System.ArgumentException]::new(
-            "Subnet prefix /$prefixLen is too large for safety. Use /16 or longer, or set -MaxHosts explicitly."
-        )
+    # ── 1. Resolve subnets to scan (local interfaces or -Subnet) ───────────────
+    $userProvidedSubnet = -not [string]::IsNullOrWhiteSpace($Subnet)
+    if ($userProvidedSubnet) {
+        $subnetsToScan = @($Subnet.Trim())
+    } else {
+        $subnetsToScan = @(Get-PSYarboLocalSubnet)
+        if ($subnetsToScan.Count -eq 0) {
+            $subnetsToScan = @('192.168.1.0/24')
+            Write-Verbose "[Find-Yarbo] No local subnets detected; using fallback $($subnetsToScan[0])"
+        } else {
+            Write-Verbose "[Find-Yarbo] Using local subnets: $($subnetsToScan -join ', ')"
+        }
     }
 
-    if ($prefixLen -gt 30) {
-        throw [System.ArgumentException]::new(
-            "Subnet prefix /$prefixLen has no scannable host addresses. Use /30 or shorter (/$prefixLen has $([math]::Max(0, [math]::Pow(2, 32 - $prefixLen) - 2)) usable hosts)."
-        )
+    $ipList = @(Get-PSYarboSubnetIpList -Subnets $subnetsToScan -MaxHosts $MaxHosts -ValidateUserInput:$userProvidedSubnet)
+    $hostCount = $ipList.Count
+    Write-Verbose "[Find-Yarbo] Scanning $($subnetsToScan.Count) subnet(s), $hostCount hosts for MQTT brokers on port $Port"
+    if ($hostCount -gt 512) {
+        Write-Warning "Find-Yarbo: Scanning $hostCount hosts; this may be slow. Consider using a more specific -Subnet or reducing -MaxHosts to speed up the scan."
     }
-
-    $baseIp = [System.Net.IPAddress]::Parse($parts[0])
-    $baseBytes = $baseIp.GetAddressBytes()
-    # Ensure network address (zero host bits)
-    [Array]::Reverse($baseBytes)
-    $hostBits = 32 - $prefixLen
-    $baseVal = [System.BitConverter]::ToUInt32($baseBytes, 0)
-    $baseVal = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
-    $baseBytes = [System.BitConverter]::GetBytes($baseVal)
-    $hostCount = [math]::Min([math]::Pow(2, $hostBits) - 2, $MaxHosts)
-
-    Write-Verbose "[Find-Yarbo] Scanning $Subnet ($hostCount hosts) for MQTT brokers on port $Port"
 
     # ── 2. Parallel TCP probe — collect candidates ────────────────────────────
     $tcpTimeoutMs = [int]($TimeoutSeconds * 1000 * 0.4)  # 40% budget for TCP
-    $semaphore = [System.Threading.SemaphoreSlim]::new($ThrottleLimit, $ThrottleLimit)
-    $tasks = [System.Collections.Generic.List[object]]::new()
-    $candidateIps = [System.Collections.Concurrent.ConcurrentBag[string]]::new()
 
-    for ($i = 1; $i -le $hostCount; $i++) {
-        $ipVal = ([System.BitConverter]::ToUInt32($baseBytes, 0)) + $i
-        $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
-        # Restore to network byte order for IPAddress constructor
-        [Array]::Reverse($newBytes)
-        $ip = [System.Net.IPAddress]::new($newBytes).ToString()
-
-        $semaphore.Wait() | Out-Null
-
-        $task = [System.Threading.Tasks.Task]::Run([scriptblock] {
+    $tcpCandidates = @(
+        $ipList | ForEach-Object -Parallel {
+            $ip = $_
+            $port = $using:Port
+            $timeoutMs = $using:tcpTimeoutMs
+            try {
+                $c = [System.Net.Sockets.TcpClient]::new()
                 try {
-                    $c = [System.Net.Sockets.TcpClient]::new()
-                    try {
-                        if ($c.ConnectAsync($ip, $Port).Wait($tcpTimeoutMs) -and $c.Connected) {
-                            $candidateIps.Add($ip)
-                        }
-                    } finally {
-                        $c.Dispose()
+                    if ($c.ConnectAsync($ip, $port).Wait($timeoutMs) -and $c.Connected) {
+                        $ip
                     }
-                } catch {
-                    Write-Debug "[Find-Yarbo] TCP probe error for ${ip}: $($_.Exception.Message)"
                 } finally {
-                    $semaphore.Release() | Out-Null
+                    $c.Dispose()
                 }
-            }.GetNewClosure())
-        $tasks.Add($task)
-    }
-    [System.Threading.Tasks.Task]::WhenAll($tasks.ToArray()).GetAwaiter().GetResult() | Out-Null
-
-    $candidates = @($candidateIps)
+            } catch {
+                Write-Debug "[Find-Yarbo] TCP probe error for ${ip}: $($_.Exception.Message)"
+            }
+        } -ThrottleLimit $ThrottleLimit | Where-Object { $null -ne $_ }
+    )
+    $candidates = @($tcpCandidates) | Select-Object -Unique
     Write-Verbose "[Find-Yarbo] TCP probe found $($candidates.Count) candidate(s)"
 
     if ($candidates.Count -eq 0) {
@@ -139,7 +121,8 @@ function Find-Yarbo {
         return
     }
 
-    # ── 3. MQTT discovery — confirm each candidate has a Yarbo heart_beat ─────
+    # ── 3. MQTT discovery — only brokers that publish Yarbo topics ─────────────
+    # Use C# YarboMqttListener so the message-received handler runs in-process (reliable).
     if ($null -eq $script:MqttAssembly) {
         Write-Warning "[Find-Yarbo] MQTTnet assembly not loaded. Returning TCP-only results with unknown SerialNumber."
         foreach ($ip in $candidates) {
@@ -151,79 +134,67 @@ function Find-Yarbo {
         return
     }
 
+    $listenerType = 'PSYarbo.Mqtt.YarboMqttListener' -as [type]
+    if (-not $listenerType) {
+        Write-Warning "[Find-Yarbo] YarboMqttListener not available. Returning TCP-only results."
+        foreach ($ip in $candidates) {
+            $r = [YarboRobot]::new()
+            $r.Broker = $ip
+            $r.Port = $Port
+            Write-Output $r
+        }
+        return
+    }
+
     $mqttTimeoutMs = [int](($TimeoutSeconds * 1000) * 0.6)  # 60% budget for MQTT
+    # Only subscribe to Yarbo device topics (snowbot/{SN}/device/...) — filters out non-Yarbo brokers
+    $yarboTopicFilters = @('snowbot/+/device/DeviceMSG', 'snowbot/+/device/data_feedback', 'snowbot/+/device/heart_beat')
 
+    $discovered = @{}
     foreach ($ip in $candidates) {
-        Write-Verbose "[Find-Yarbo] MQTT probe: connecting to ${ip}:${Port}"
+        Write-Verbose "[Find-Yarbo] MQTT probe: connecting to ${ip}:${Port} (Yarbo topics only)"
 
-        $factory = $null
-        $client = $null
-        $signal = [System.Threading.SemaphoreSlim]::new(0, 1)
-        $detectedSN = $null
-
+        $listener = $null
         try {
-            $factory = [System.Activator]::CreateInstance($script:MqttAssembly.GetType('MQTTnet.MqttFactory'))
-            $client = $factory.CreateMqttClient()
+            $listener = [PSYarbo.Mqtt.YarboMqttListener]::new()
+            # Anonymous client ID for discovery (matches python-yarbo)
+            $listener.Connect($ip, $Port, [string]::Empty, [TimeSpan]::FromSeconds(3))
+            $listener.Subscribe([string[]]$yarboTopicFilters)
 
-            $clientId = "PSYarbo-Discover-$([guid]::NewGuid().ToString('N').Substring(0,8))"
-            $options = $factory.CreateClientOptionsBuilder().WithTcpServer($ip, $Port).WithClientId($clientId).WithTimeout(
-                [TimeSpan]::FromSeconds(3)
-            ).Build()
-
-            $client.ConnectAsync($options, [System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
-
-            # Subscribe to wildcard heart_beat
-            $subOpts = $factory.CreateSubscribeOptionsBuilder().WithTopicFilter('snowbot/+/device/heart_beat').Build()
-            $client.SubscribeAsync($subOpts, [System.Threading.CancellationToken]::None).GetAwaiter().GetResult() | Out-Null
-
-            # Capture first heart_beat message
-            $localSignal = $signal
-            $snRef = [ref]$detectedSN
-            $client.ApplicationMessageReceivedAsync.Add({
-                    param($ea)
-                    $seg = $ea.ApplicationMessage.PayloadSegment
-                    if ($null -ne $seg -and $seg.Count -gt 0) {
-                        $topicParts = $ea.ApplicationMessage.Topic -split '/'
-                        # topic = snowbot/{SN}/device/heart_beat — SN is index 1
-                        if ($topicParts.Count -ge 2 -and $topicParts[1] -ne '+') {
-                            $snRef.Value = $topicParts[1]
-                            try { $localSignal.Release() | Out-Null } catch { $null = $_ }
-                        }
+            $first = $listener.WaitForFirstMessage($mqttTimeoutMs)
+            if ($null -ne $first -and $first.Topic.Length -gt 0) {
+                # Topic: snowbot/{SN}/device/...
+                $parts = $first.Topic -split '/'
+                $sn = if ($parts.Count -ge 2 -and $parts[1] -ne '+') { $parts[1] } else { $null }
+                if ($sn) {
+                    if (-not $discovered.ContainsKey($sn)) {
+                        $discovered[$sn] = [System.Collections.Generic.List[hashtable]]::new()
                     }
-                    return [System.Threading.Tasks.Task]::CompletedTask
-                }.GetNewClosure())
-
-            # Wait for heart_beat
-            $gotHb = $signal.Wait($mqttTimeoutMs)
-
-            if ($gotHb -and $snRef.Value) {
-                Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$($snRef.Value) at ${ip}:${Port}"
-
-                # Attempt to parse state from heart_beat payload for richer YarboRobot
-                $r = [YarboRobot]::new()
-                $r.Broker = $ip
-                $r.Port = $Port
-                $r.SerialNumber = $snRef.Value
-                $r.LastUpdated = [datetime]::UtcNow
-                Write-Output $r
+                    Write-Verbose "[Find-Yarbo] Discovered Yarbo SN=$sn at ${ip}:${Port} (topic: $($first.Topic))"
+                    $discovered[$sn].Add(@{ IP = $ip; Port = $Port; SerialNumber = $sn })
+                } else {
+                    Write-Verbose "[Find-Yarbo] ${ip}:${Port} — received topic without SN (skipped)"
+                }
             } else {
-                Write-Verbose "[Find-Yarbo] ${ip}:${Port} — no Yarbo heart_beat received within ${TimeoutSeconds}s (skipped)"
+                Write-Verbose "[Find-Yarbo] ${ip}:${Port} — no Yarbo message within ${TimeoutSeconds}s (skipped)"
             }
         } catch {
             Write-Verbose "[Find-Yarbo] ${ip}:${Port} — MQTT connect failed: $($_.Exception.Message)"
         } finally {
-            if ($client) {
-                try {
-                    $client.DisconnectAsync(
-                        $factory.CreateClientDisconnectOptionsBuilder().Build(),
-                        [System.Threading.CancellationToken]::None
-                    ).GetAwaiter().GetResult() | Out-Null
-                } catch {
-                    Write-Debug "[Find-Yarbo] MQTT disconnect error (non-fatal): $($_.Exception.Message)"
-                }
-                try { if ($client -is [System.IDisposable]) { $client.Dispose() } } catch { $null = $_ }
+            if ($listener) {
+                try { $listener.Dispose() } catch { Write-Debug "[Find-Yarbo] Listener dispose: $($_.Exception.Message)" }
             }
-            $signal.Dispose()
         }
+    }
+    # One YarboRobot per device (SerialNumber); use first discovered endpoint per device
+    foreach ($endpoints in $discovered.Values) {
+        if ($endpoints.Count -eq 0) { continue }
+        $ep = $endpoints[0]
+        $r = [YarboRobot]::new()
+        $r.Broker = $ep.IP
+        $r.Port = $ep.Port
+        $r.SerialNumber = $ep.SerialNumber
+        $r.LastUpdated = [datetime]::UtcNow
+        Write-Output $r
     }
 }

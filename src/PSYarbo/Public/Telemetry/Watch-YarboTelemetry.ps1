@@ -30,6 +30,10 @@ function Watch-YarboTelemetry {
 .PARAMETER IncludePlanFeedback
     Also emit plan_feedback and recharge_feedback messages in the stream as raw PSCustomObject.
 
+.PARAMETER Raw
+    Emit raw PSCustomObject (decoded DeviceMSG) instead of [YarboTelemetry] for DeviceMSG events.
+    Heartbeat and feedback events are always raw when included.
+
 .PARAMETER Connection
     The connection to use. Defaults to the current default.
 
@@ -75,7 +79,10 @@ function Watch-YarboTelemetry {
         [switch]$IncludeHeartbeat,
 
         [Parameter()]
-        [switch]$IncludePlanFeedback
+        [switch]$IncludePlanFeedback,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -120,17 +127,21 @@ function Watch-YarboTelemetry {
 
                 # Emit in requested format
                 if ($event.MessageType -eq 'DeviceMSG') {
-                    switch ($OutputFormat) {
-                        'Object' {
-                            $telemetry = ConvertTo-YarboTelemetry -DeviceMsg $event.Data -SerialNumber $conn.SerialNumber
-                            $PSCmdlet.WriteObject($telemetry)
-                        }
-                        'Json' {
-                            $PSCmdlet.WriteObject(($event.Data | ConvertTo-Json -Compress -Depth 10))
-                        }
-                        'Summary' {
-                            $t = ConvertTo-YarboTelemetry -DeviceMsg $event.Data -SerialNumber $conn.SerialNumber
-                            $PSCmdlet.WriteObject("$($t.Timestamp.ToString('HH:mm:ss')) | Bat:$($t.BatteryCapacity)% | State:$($t.WorkingState) | Pos:$([math]::Round($t.X,2)),$([math]::Round($t.Y,2))")
+                    if ($Raw) {
+                        $PSCmdlet.WriteObject($event.Data)
+                    } else {
+                        switch ($OutputFormat) {
+                            'Object' {
+                                $telemetry = ConvertTo-YarboTelemetry -DeviceMsg $event.Data -SerialNumber $conn.SerialNumber
+                                $PSCmdlet.WriteObject($telemetry)
+                            }
+                            'Json' {
+                                $PSCmdlet.WriteObject(($event.Data | ConvertTo-Json -Compress -Depth 10))
+                            }
+                            'Summary' {
+                                $t = ConvertTo-YarboTelemetry -DeviceMsg $event.Data -SerialNumber $conn.SerialNumber
+                                $PSCmdlet.WriteObject("$($t.Timestamp.ToString('HH:mm:ss')) | Bat:$($t.BatteryCapacity)% | State:$($t.WorkingState) | Pos:$([math]::Round($t.X,2)),$([math]::Round($t.Y,2))")
+                            }
                         }
                     }
                 } else {

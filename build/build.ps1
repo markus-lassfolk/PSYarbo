@@ -76,6 +76,8 @@ $lintFindings = @()
 foreach ($file in $psFiles) {
     $lintFindings += Invoke-ScriptAnalyzer -Path $file.FullName -Settings $settings -Severity Error, Warning
 }
+# Only fail on Error/Warning (exclude Information e.g. TypeNotFound in class files loaded via ScriptsToProcess)
+$lintFindings = @($lintFindings | Where-Object { $_.Severity -in 'Error', 'Warning' })
 
 if ($lintFindings.Count -gt 0) {
     $lintFindings | Format-Table -AutoSize
