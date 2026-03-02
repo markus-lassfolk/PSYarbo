@@ -65,12 +65,16 @@ function Connect-YarboCloud {
                 $stored = Get-YarboCloudCredential -Email $Email
                 if ($stored) {
                     if ($stored.RefreshToken) {
-                        $session.Email = $Email
-                        $session.RefreshToken = $stored.RefreshToken
-                        $session.RefreshAuth()
-                        if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
-                        $script:YarboCloudSession = $session
-                        return $session
+                        try {
+                            $session.Email = $Email
+                            $session.RefreshToken = $stored.RefreshToken
+                            $session.RefreshAuth()
+                            if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
+                            $script:YarboCloudSession = $session
+                            return $session
+                        } catch {
+                            Write-Verbose "[Connect-YarboCloud] Refresh token failed, falling back to password: $($_.Exception.Message)"
+                        }
                     }
                     if ($stored.Password) { $Password = $stored.Password }
                 }

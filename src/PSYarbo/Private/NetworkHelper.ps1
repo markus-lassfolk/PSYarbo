@@ -38,16 +38,16 @@ function Get-PSYarboSubnetIpList {
         $parts = $oneSubnet -split '/'
         if ($parts.Count -lt 2) { continue }
         $prefixLen = [int]$parts[1]
-        if ($prefixLen -lt 16 -or $prefixLen -gt 30) {
+        if ($prefixLen -lt 16 -or $prefixLen -gt 31) {
             if ($ValidateUserInput) {
                 if ($prefixLen -lt 16) {
                     throw [System.ArgumentException]::new(
                         "Subnet prefix /$prefixLen is too large for safety. Use /16 or longer."
                     )
                 }
-                if ($prefixLen -gt 30) {
+                if ($prefixLen -gt 31) {
                     throw [System.ArgumentException]::new(
-                        "Subnet prefix /$prefixLen has no scannable host addresses. Use /30 or shorter."
+                        "Subnet prefix /$prefixLen has no scannable host addresses. Use /31 or shorter."
                     )
                 }
             }
@@ -59,10 +59,16 @@ function Get-PSYarboSubnetIpList {
         $hostBits = 32 - $prefixLen
         $baseVal = [System.BitConverter]::ToUInt32($baseBytes, 0)
         $baseVal = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
-        $maxInSubnet = [math]::Pow(2, $hostBits) - 2
+        if ($prefixLen -eq 31) {
+            $maxInSubnet = 2
+            $startOffset = 0
+        } else {
+            $maxInSubnet = [math]::Pow(2, $hostBits) - 2
+            $startOffset = 1
+        }
         $take = [math]::Min([int]$maxInSubnet, $remaining)
-        for ($i = 1; $i -le $take; $i++) {
-            $ipVal = $baseVal + $i
+        for ($i = 0; $i -lt $take; $i++) {
+            $ipVal = $baseVal + $startOffset + $i
             $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
             [Array]::Reverse($newBytes)
             $ipList.Add([System.Net.IPAddress]::new($newBytes).ToString())
@@ -88,7 +94,7 @@ function Get-PSYarboLocalSubnet {
                 if ($addr.Address.AddressFamily -ne [System.Net.Sockets.AddressFamily]::InterNetwork) { continue }
                 $ip = $addr.Address
                 $plen = $addr.PrefixLength
-                if ($plen -lt 16 -or $plen -gt 30) { continue }
+                if ($plen -lt 16 -or $plen -gt 31) { continue }
                 $bytes = $ip.GetAddressBytes()
                 [Array]::Reverse($bytes)
                 $val = [System.BitConverter]::ToUInt32($bytes, 0)

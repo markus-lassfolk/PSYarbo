@@ -123,7 +123,7 @@ Describe 'Classes' {
         $classFiles = @(
             'YarboExceptions', 'YarboLightState', 'YarboCommandResult',
             'YarboTelemetry', 'YarboPlan', 'YarboSchedule', 'YarboRobot',
-            'YarboConnection', 'YarboCloudSession'
+            'YarboConnection', 'YarboCloudSession', 'YarboGlobalParams', 'YarboEndpoint'
         )
         foreach ($class in $classFiles) {
             . (Join-Path $moduleRoot "Classes/$class.ps1")
