@@ -216,7 +216,7 @@ function Save-YarboCloudCredential {
         [Parameter(Mandatory)]
         [string]$Email,
 
-        [Parameter(Mandatory)]
+        [Parameter()]
         [SecureString]$Password,
 
         [Parameter()]
@@ -224,7 +224,9 @@ function Save-YarboCloudCredential {
     )
 
     $safeKey = $Email -replace '[^a-zA-Z0-9._@-]', '_'
-    Save-YarboCredential -Name "$safeKey-Password" -Value $Password
+    if ($Password) {
+        Save-YarboCredential -Name "$safeKey-Password" -Value $Password
+    }
     if ($RefreshToken) {
         Save-YarboCredential -Name "$safeKey-RefreshToken" -Value $RefreshToken
     }
