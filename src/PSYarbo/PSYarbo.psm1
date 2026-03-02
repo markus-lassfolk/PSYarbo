@@ -195,6 +195,7 @@ namespace PSYarbo.Mqtt {
     }
 } else {
     $script:MqttAssembly = $null
+    $script:MqttResolvingHandler = $null
     Write-Warning "MQTTnet.dll not found at '$mqttDllPath'. MQTT cmdlets will not work. Run build/Install-Dependencies.ps1 to download it."
 }
 #endregion

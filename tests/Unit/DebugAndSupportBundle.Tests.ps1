@@ -147,9 +147,10 @@ InModuleScope PSYarbo {
                     Broker    = '192.0.2.1:1883'
                 })
             $conn.TelemetryLog.Enqueue([PSCustomObject]@{
-                    At     = [datetime]::UtcNow
-                    Topic  = 'snowbot/BUNDLE-SN/device/DeviceMSG'
-                    Source = 'DeviceMSG'
+                    Timestamp   = [datetime]::UtcNow
+                    MessageType = 'DeviceMSG'
+                    Direction   = 'Pushed'
+                    Topic       = 'snowbot/BUNDLE-SN/device/DeviceMSG'
                 })
 
             $out = Join-Path ([System.IO.Path]::GetTempPath()) "PSYarbo-SupportBundle-$(Get-Random).json"
