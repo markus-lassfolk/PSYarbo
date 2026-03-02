@@ -63,7 +63,7 @@ function Get-PSYarboSubnetIpList {
         $maxInSubnet = [math]::Pow(2, $hostBits) - 2
         $take = [math]::Min([int]$maxInSubnet, $remaining)
         for ($i = 1; $i -le $take; $i++) {
-            $ipVal = ([System.BitConverter]::ToUInt32($baseBytes, 0)) + $i
+            $ipVal = $baseVal + $i
             $newBytes = [System.BitConverter]::GetBytes([uint32]$ipVal)
             [Array]::Reverse($newBytes)
             $ipList.Add([System.Net.IPAddress]::new($newBytes).ToString())

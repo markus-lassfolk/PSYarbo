@@ -115,9 +115,9 @@ function Connect-Yarbo {
 
             # Attach message handler before connecting (MQTTnet requirement)
             $callback = [Func[object, System.Threading.Tasks.Task]] {
-                param($args)
-                $topic = $args.ApplicationMessage.Topic
-                $payload = $args.ApplicationMessage.PayloadSegment.ToArray()
+                param($eventArgs)
+                $topic = $eventArgs.ApplicationMessage.Topic
+                $payload = $eventArgs.ApplicationMessage.PayloadSegment.ToArray()
 
                 if ($null -eq $payload -or $payload.Length -eq 0) {
                     return [System.Threading.Tasks.Task]::CompletedTask
