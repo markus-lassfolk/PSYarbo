@@ -50,7 +50,7 @@ $status = Get-YarboStatus    # or: Get-YarboRobot
 | `SerialNumber` | string | Robot serial number |
 | `HeadSerialNumber` | string | Attached head serial |
 | `Name` | string | Robot name (if set) — **from cloud only, not MQTT** |
-| `HeadType` | int | Head type identifier |
+| `HeadType` | int | Head type identifier (0=NoHead, 1=SnowBlower, 2=LeafBlower, 3=LawnMower, 4=SmartCover, 5=LawnMowerPro, 99=Trimmer). See `Get-Help about_PSYarbo_Heads` for full list. |
 
 **Robot name (the one you gave it):** Local MQTT does **not** provide the robot’s friendly name. That name comes from the **cloud API**. Use `Get-YarboDevice` (after `Connect-YarboCloud`) to get it; each device has a `.name` property (e.g. `"My Yarbo"`). You can match by `SerialNumber` and assign it to your status object if you want:
 

@@ -56,7 +56,7 @@ Describe 'Module Manifest' {
             'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
             'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
             'Send-YarboCommand', 'Send-YarboReturnToDock',
-            'Set-YarboGlobalParams',
+            'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit',
             'Resume-Yarbo', 'Suspend-Yarbo',
             'Start-YarboManualDrive', 'Set-YarboVelocity', 'Set-YarboRoller', 'Set-YarboChute', 'Stop-YarboManualDrive',
             'Get-YarboPlan', 'New-YarboPlan', 'Remove-YarboPlan',

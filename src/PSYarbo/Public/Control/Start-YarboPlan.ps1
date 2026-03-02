@@ -12,6 +12,9 @@ function Start-YarboPlan {
 .PARAMETER Name
     Plan name — resolved to PlanId via Get-YarboPlan.
 
+.PARAMETER Percent
+    Optional start percentage (0–100). When set, the plan may start from that progress point (firmware-dependent). Aligns with python-yarbo start_plan(percent=).
+
 .PARAMETER Connection
     The connection to use. Defaults to the current default.
 
@@ -36,7 +39,12 @@ function Start-YarboPlan {
         [int]$PlanId,
 
         [Parameter(Mandatory, ParameterSetName = 'ByName')]
-        [string]$Name
+        [string]$Name,
+
+        [Parameter(ParameterSetName = 'ById')]
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateRange(0, 100)]
+        [int]$Percent = -1
     )
 
     process {
@@ -55,8 +63,12 @@ function Start-YarboPlan {
 
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, "Start plan $resolvedId")) {
             Assert-YarboController -Connection $conn
+            $payload = @{ planId = [int]$resolvedId }
+            if ($Percent -ge 0) {
+                $payload['percent'] = [int]$Percent
+            }
             Write-Verbose (Protect-YarboLogMessage "[Start-YarboPlan] Routing via local MQTT → start_plan (planId=$resolvedId)")
-            $result = Send-MqttCommand -Connection $conn -Command 'start_plan' -Payload @{ planId = [int]$resolvedId }
+            $result = Send-MqttCommand -Connection $conn -Command 'start_plan' -Payload $payload
             if ($result -and -not $result.Success) {
                 $PSCmdlet.WriteError((New-YarboError -Message "start_plan failed: $($result.Message)" -ErrorId 'PSYarbo.CommandFailed.StartPlan' -Category 'InvalidResult' -TargetObject $result))
             }

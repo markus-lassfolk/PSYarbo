@@ -4,7 +4,7 @@ function Stop-YarboPlan {
     Stops the currently running plan.
 
 .DESCRIPTION
-    Sends the stop command to halt plan execution.
+    Sends the stop_plan command to halt plan execution. Aligns with python-yarbo.
 
 .PARAMETER Connection
     The connection to use. Defaults to the current default.
@@ -27,7 +27,7 @@ function Stop-YarboPlan {
         $conn = Resolve-YarboConnection -Connection $Connection
         if ($PSCmdlet.ShouldProcess($conn.SerialNumber, 'Stop plan')) {
             Assert-YarboController -Connection $conn
-            return Send-MqttCommand -Connection $conn -Command 'stop' -Payload @{}
+            return Send-MqttCommand -Connection $conn -Command 'stop_plan' -Payload @{}
         }
     }
 }

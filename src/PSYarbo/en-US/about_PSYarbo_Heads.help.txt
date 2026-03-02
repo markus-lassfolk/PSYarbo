@@ -1,0 +1,44 @@
+Topic
+    about_PSYarbo_Heads
+
+Short Description
+    Head type values and LED channel reference (aligned with python-yarbo).
+
+Long Description
+    The robot reports the attached head in Get-YarboStatus / Get-YarboRobot
+    as HeadType (integer). The following values are used by the firmware
+    (aligned with python-yarbo and home-assistant-yarbo):
+
+    HeadType  Name
+    -------   ----
+    0         NoHead
+    1         SnowBlower
+    2         LeafBlower
+    3         LawnMower
+    4         SmartCover (SAM)
+    5         LawnMowerPro
+    99        Trimmer
+
+    Some cmdlets are only applicable to certain heads (e.g. Set-YarboChute
+    and Set-YarboBladeSpeed). Check each cmdlet's help for head requirements.
+
+    LED channels (YarboLightState / Set-YarboLight)
+    -----------------------------------------------
+    The robot has 7 independent LED channels (0-255). Names match the
+    light_ctrl MQTT payload and python-yarbo YarboLightState:
+
+    HeadLight     led_head      Front/head white
+    LeftWhite     led_left_w    Left fill (white)
+    RightWhite    led_right_w   Right fill (white)
+    BodyLeftRed   body_left_r   Left body accent (red)
+    BodyRightRed  body_right_r  Right body accent (red)
+    TailLeftRed   tail_left_r   Left tail (red)
+    TailRightRed  tail_right_r  Right tail (red)
+
+    Use [YarboLightState]::AllOn(), ::AllOff(), or ::BodyOn() for presets.
+
+See Also
+    Get-YarboStatus
+    Set-YarboLight
+    about_PSYarbo
+    about_PSYarbo_MQTT

@@ -37,7 +37,7 @@
         'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
         'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
         'Send-YarboCommand', 'Send-YarboReturnToDock',
-        'Set-YarboGlobalParams',
+        'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit',
         # Robot Control
         'Stop-YarboEmergency', 'Unlock-YarboEmergency', 'Stop-Yarbo',
         'Restart-YarboContainer', 'Stop-YarboShutdown', 'Start-YarboRecharge',
@@ -59,7 +59,7 @@
         'Start-YarboWaypoint', 'Get-YarboRechargePoint', 'Save-YarboChargingPoint',
         'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup',
         # WiFi & Connectivity
-        'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Start-YarboHotspot', 'Get-YarboHubInfo',
+        'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Get-YarboSavedWifiList', 'Start-YarboHotspot', 'Get-YarboHubInfo',
         # Diagnostics
         'Get-YarboBatteryCellTemps', 'Get-YarboMotorTemps', 'Get-YarboBodyCurrent', 'Get-YarboHeadCurrent',
         'Get-YarboSpeed', 'Get-YarboOdometer', 'Get-YarboProductCode', 'Get-YarboNoChargePeriod',
