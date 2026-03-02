@@ -64,39 +64,39 @@ function Connect-YarboCloud {
             if (-not $Password) {
                 $stored = Get-YarboCloudCredential -Email $Email
                 if ($stored) {
-                if ($stored.RefreshToken) {
-                    try {
-                        $session.Email = $Email
-                        $session.RefreshToken = $stored.RefreshToken
-                        $session.RefreshAuth()
-                        # Fetch bound serial numbers if not populated by RefreshAuth
-                        if (-not $session.BoundSerialNumbers) {
-                            try {
-                                $deviceData = $session.Invoke('GET', '/yarbo/robot-service/commonUser/userRobotBind/getUserRobotBindVos', $null)
-                                if ($deviceData.deviceList) {
-                                    $session.BoundSerialNumbers = @($deviceData.deviceList | ForEach-Object { $_.sn })
-                                }
-                            } catch {
-                                Write-Verbose "[Connect-YarboCloud] Could not fetch bound serial numbers: $($_.Exception.Message)"
-                            }
-                        }
-                        # Persist potentially-rotated refresh token (issue #10)
+                    if ($stored.RefreshToken) {
                         try {
-                            Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
-                            if ($session.Email) {
-                                Save-YarboCloudCredential -Email $session.Email -Password $stored.Password -RefreshToken $session.RefreshToken
+                            $session.Email = $Email
+                            $session.RefreshToken = $stored.RefreshToken
+                            $session.RefreshAuth()
+                            # Fetch bound serial numbers if not populated by RefreshAuth
+                            if (-not $session.BoundSerialNumbers) {
+                                try {
+                                    $deviceData = $session.Invoke('GET', '/yarbo/robot-service/commonUser/userRobotBind/getUserRobotBindVos', $null)
+                                    if ($deviceData.deviceList) {
+                                        $session.BoundSerialNumbers = @($deviceData.deviceList | ForEach-Object { $_.sn })
+                                    }
+                                } catch {
+                                    Write-Verbose "[Connect-YarboCloud] Could not fetch bound serial numbers: $($_.Exception.Message)"
+                                }
                             }
-                            Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
+                            # Persist potentially-rotated refresh token (issue #10)
+                            try {
+                                Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                                if ($session.Email) {
+                                    Save-YarboCloudCredential -Email $session.Email -Password $stored.Password -RefreshToken $session.RefreshToken
+                                }
+                                Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
+                            } catch {
+                                Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
+                            }
+                            if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
+                            $script:YarboCloudSession = $session
+                            return $session
                         } catch {
-                            Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
+                            Write-Verbose "[Connect-YarboCloud] Refresh token failed, falling back to password: $($_.Exception.Message)"
                         }
-                        if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
-                        $script:YarboCloudSession = $session
-                        return $session
-                    } catch {
-                        Write-Verbose "[Connect-YarboCloud] Refresh token failed, falling back to password: $($_.Exception.Message)"
                     }
-                }
                     if ($stored.Password) { $Password = $stored.Password }
                 }
                 if (-not $Password) {
