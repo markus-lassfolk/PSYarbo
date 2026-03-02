@@ -69,6 +69,16 @@ function Connect-YarboCloud {
                             $session.Email = $Email
                             $session.RefreshToken = $stored.RefreshToken
                             $session.RefreshAuth()
+                            # Persist potentially-rotated refresh token (issue #10)
+                            try {
+                                Save-YarboCredential -Name 'CloudRefreshToken' -Value $session.RefreshToken
+                                if ($session.Email) {
+                                    Save-YarboCloudCredential -Email $session.Email -Password $stored.Password -RefreshToken $session.RefreshToken
+                                }
+                                Write-Verbose "[Connect-YarboCloud] Refresh token saved via CredentialHelper for future sessions"
+                            } catch {
+                                Write-Verbose "[Connect-YarboCloud] Could not save refresh token: $($_.Exception.Message)"
+                            }
                             if ($script:YarboCloudSession) { $script:YarboCloudSession.Dispose() }
                             $script:YarboCloudSession = $session
                             return $session
