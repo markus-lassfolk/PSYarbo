@@ -59,7 +59,6 @@ function Get-PSYarboSubnetIpList {
         $hostBits = 32 - $prefixLen
         $baseVal = [System.BitConverter]::ToUInt32($baseBytes, 0)
         $baseVal = [uint32]($baseVal -band ([uint32]::MaxValue -shl $hostBits))
-        $baseBytes = [System.BitConverter]::GetBytes($baseVal)
         $maxInSubnet = [math]::Pow(2, $hostBits) - 2
         $take = [math]::Min([int]$maxInSubnet, $remaining)
         for ($i = 1; $i -le $take; $i++) {
