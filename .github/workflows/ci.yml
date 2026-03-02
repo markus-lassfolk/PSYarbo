@@ -98,7 +98,7 @@ jobs:
           Import-Module Pester -MinimumVersion 5.0.0 -Force
           $intConfig = New-PesterConfiguration
           $intConfig.Run.Path              = './tests/Integration'
-          $intConfig.Run.Exit              = $true
+          $intConfig.Run.Exit              = $false
           $intConfig.Filter.ExcludeTag     = 'Integration'
           $intConfig.Output.Verbosity      = 'Detailed'
           $intConfig.TestResult.Enabled    = $true
@@ -106,6 +106,13 @@ jobs:
           $intConfig.TestResult.OutputFormat = 'NUnitXml'
           # ErrorOnNoTests removed — not available in all Pester versions
           $intResult = Invoke-Pester -Configuration $intConfig
+          if ($intResult.TotalCount -eq 0) {
+            Write-Error "Integration test step ran 0 tests — check that mocked test files exist and are tagged 'Mocked'"
+            exit 1
+          }
+          if ($intResult.FailedCount -gt 0) {
+            exit 1
+          }
 
       - name: Run root tests (PSYarbo.Tests, PSScriptAnalyzer) and exit on failure
         shell: pwsh
