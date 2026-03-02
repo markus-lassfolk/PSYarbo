@@ -37,7 +37,13 @@
         'Set-YarboLight', 'Start-YarboBuzzer', 'Stop-YarboBuzzer',
         'Start-YarboPlan', 'Stop-YarboPlan', 'Suspend-YarboPlan', 'Resume-YarboPlan',
         'Send-YarboCommand', 'Send-YarboReturnToDock',
-        'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit',
+        'Set-YarboGlobalParams', 'Set-YarboBladeSpeed', 'Set-YarboChargeLimit', 'Set-YarboBladeHeight', 'Set-YarboTurnType',
+        'Push-YarboSnowDir', 'Set-YarboChuteSteeringWork', 'Set-YarboRollerSpeed',
+        'Set-YarboMotorProtect', 'Set-YarboTrimmer', 'Set-YarboEdgeBlowing', 'Set-YarboSmartBlowing',
+        'Set-YarboHeatingFilm', 'Set-YarboModuleLock', 'Set-YarboFollowState', 'Start-YarboDrawCmd',
+        'Set-YarboGreengrassUpdateSwitch', 'Set-YarboIpcameraOtaSwitch', 'Update-YarboFirmware',
+        'Set-YarboSmartVision', 'Set-YarboVideoRecord', 'Set-YarboBagRecord',
+        'Set-YarboChildLock', 'Set-YarboGeoFence', 'Set-YarboElecFence', 'Set-YarboNgzEdge',
         # Robot Control
         'Stop-YarboEmergency', 'Unlock-YarboEmergency', 'Stop-Yarbo',
         'Restart-YarboContainer', 'Stop-YarboShutdown', 'Start-YarboRecharge',
@@ -45,7 +51,7 @@
         'Set-YarboHeadLight', 'Set-YarboRoofLights', 'Set-YarboLaser',
         'Set-YarboSound', 'Start-YarboSong',
         # Camera & Detection
-        'Set-YarboCamera', 'Set-YarboPersonDetect', 'Set-YarboUSB',
+        'Set-YarboCamera', 'Set-YarboPersonDetect', 'Set-YarboUSB', 'Get-YarboCameraStatus', 'Invoke-YarboCameraCalibration',
         # State
         'Resume-Yarbo', 'Suspend-Yarbo',
         # Manual Drive
@@ -57,7 +63,7 @@
         'Get-YarboAllPlans', 'Remove-YarboAllPlans', 'Invoke-YarboPlanAction', 'Get-YarboSchedules',
         # Navigation & Maps
         'Start-YarboWaypoint', 'Get-YarboRechargePoint', 'Save-YarboChargingPoint',
-        'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup',
+        'Get-YarboCleanArea', 'Get-YarboMapBackup', 'Save-YarboMapBackup', 'Clear-YarboMap', 'Restore-YarboMap', 'Save-YarboCurrentMap',
         # WiFi & Connectivity
         'Get-YarboWifiList', 'Get-YarboConnectedWifi', 'Get-YarboSavedWifiList', 'Start-YarboHotspot', 'Get-YarboHubInfo',
         # Diagnostics
