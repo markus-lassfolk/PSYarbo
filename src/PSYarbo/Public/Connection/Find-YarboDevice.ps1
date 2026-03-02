@@ -191,18 +191,13 @@ function Find-YarboDevice {
         Invoke-ArpPrime -IPAddress $v.IP
     }
     $endpoints = [System.Collections.Generic.List[YarboEndpoint]]::new()
-    $hasRover = $false
-    $hasDC = $false
     foreach ($v in $verified) {
         $mac = Get-MacForIp -IPAddress $v.IP
         $isDC = $false
         if ($mac) {
             $isDC = Test-LocallyAdministeredMac -Mac $mac
-            if ($isDC) { $hasDC = $true } else { $hasRover = $true }
-        } else {
-            # Unknown MAC: treat as Rover to avoid wrongly recommending
-            $hasRover = $true
         }
+        # Unknown MAC: treat as Rover to avoid wrongly recommending
         $path = if ($isDC) { 'DC' } else { 'Rover' }
         $ep = [YarboEndpoint]::new()
         $ep.IPAddress = $v.IP
@@ -239,7 +234,17 @@ function Find-YarboDevice {
             foreach ($r in $rovers) { $r.Recommended = ($r -eq $toRecommend) }
         }
     }
-    $bothPresent = $hasRover -and $hasDC
+    # Only show "Both endpoints reach the same broker" when at least one device has both Rover and DC (per SerialNumber).
+    $bothPresentForAnyDevice = $false
+    foreach ($sn in $bySerial.Keys) {
+        $group = $bySerial[$sn]
+        $hasDc = (@($group | Where-Object { $_.Path -eq 'DC' }).Count) -gt 0
+        $hasRoverInGroup = (@($group | Where-Object { $_.Path -eq 'Rover' }).Count) -gt 0
+        if ($hasDc -and $hasRoverInGroup) {
+            $bothPresentForAnyDevice = $true
+            break
+        }
+    }
 
     # ── Console output (table + recommendation text) ────────────────────────
     # Sort into try-order: recommended first, then others (primary/secondary failover).
@@ -254,7 +259,7 @@ function Find-YarboDevice {
         Write-Information ("  {0,2}  {1,-15}  {2,-5}  {3,-17}  {4,-10}{5}" -f $i, $ep.IPAddress, $ep.Path, $mac, $ep.Status, $rec)
         $i++
     }
-    if ($bothPresent) {
+    if ($bothPresentForAnyDevice) {
         Write-Information ""
         Write-Information "Both endpoints reach the same MQTT broker on the Rover."
         Write-Information "The DC path is recommended — it stays connected via HaLow"

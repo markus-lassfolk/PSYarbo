@@ -80,6 +80,8 @@ function Set-YarboCommonFields {
     .SYNOPSIS
         Maps common DeviceMSG fields to a target object (YarboTelemetry or YarboRobot).
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Internal helper only mutates in-memory object; no system state change.')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification = 'CommonFields denotes the shared DeviceMSG field group; singular would be misleading.')]
     param(
         [Parameter(Mandatory)]
         [PSCustomObject]$DeviceMsg,
