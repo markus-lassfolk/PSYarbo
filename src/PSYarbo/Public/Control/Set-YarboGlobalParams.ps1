@@ -52,13 +52,6 @@ function Set-YarboGlobalParams {
                 foreach ($prop in $Parameters.RawData.PSObject.Properties) {
                     $ht[$prop.Name] = $prop.Value
                 }
-                
-                # Sync typed properties back to payload to prevent silent data loss
-                if ($null -ne $Parameters.MowSpeed) { $ht['mow_speed'] = $Parameters.MowSpeed }
-                if ($null -ne $Parameters.CuttingHeight) { $ht['cutting_height'] = $Parameters.CuttingHeight }
-                if ($null -ne $Parameters.RainDelay) { $ht['rain_delay'] = $Parameters.RainDelay }
-                if ($null -ne $Parameters.ObstacleSensitivity) { $ht['obstacle_sensitivity'] = $Parameters.ObstacleSensitivity }
-                
                 $ht
             } else {
                 throw "YarboGlobalParams object has no RawData. Use Get-YarboGlobalParams to retrieve current parameters first."
