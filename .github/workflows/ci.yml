@@ -99,6 +99,7 @@ jobs:
           $intConfig = New-PesterConfiguration
           $intConfig.Run.Path              = './tests/Integration'
           $intConfig.Run.Exit              = $false
+          $intConfig.Run.PassThru          = $true
           $intConfig.Filter.ExcludeTag     = 'Integration'
           $intConfig.Output.Verbosity      = 'Detailed'
           $intConfig.TestResult.Enabled    = $true
